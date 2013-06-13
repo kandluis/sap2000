@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from sap2000.sap_base import SapBase
 
 

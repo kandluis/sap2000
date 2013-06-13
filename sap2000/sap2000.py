@@ -11,11 +11,12 @@ class Sap2000(object):
     super(Sap2000, self).__init__()
 
     # create the Sap2000 COM-object
-    sap_com_object = win32.gencache.EnsureDispatch("SAP2000v15.sapobject")
+    sap_com_object = win32.Dispatch("SAP2000v15.sapobject")
     self.sap_com_object = sap_com_object
 
     # Each of the following attributes represents an object of the SAP2000 type library.
     # Each attribute is an instance of a subclass of SapBase.
+    self.model_initialized = False
     self.groups = SapGroups(sap_com_object)
     self.area_elements = SapAreaElements(sap_com_object)
     self.point_elements = SapPointElements(sap_com_object)
@@ -43,6 +44,8 @@ class Sap2000(object):
     """ If the model file is saved then it is saved with its current name. """
     self.sap_com_object.ApplicationExit(save_file)
     self.sap_com_object = None
+    if self.model_initialized :
+      self.sap_com_object.SapModel = None
 
   def hide(self):
     """
@@ -82,8 +85,20 @@ class Sap2000(object):
     has not been saved previously) and this function is called with no file name specified, an
     error will be returned.
     """
-    return_value = self.sap_com_object.SapModel.File.SaveFile(filename)
+    return_value = self.sap_com_object.SapModel.File.Save(filename)
     assert return_value == 0        # Ensure that everything went as expected
+
+  def initializeModel(self):
+    """
+    This functions initializes a new SapModel and returns a way to directly access it
+    """
+    model = self.sap_com_object.SapModel
+    return_value = model.InitializeNewModel()
+    assert return_value == 0        # Ensure everything went as expected
+
+    self.model_initialized = True    # Keep track of model
+
+    return model
 
 
 if __name__=='__main__':

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from collections import namedtuple
 from sap2000.sap_base import SapBase
 

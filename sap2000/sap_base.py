@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from collections import namedtuple
 import win32com.client as win32
 from sap2000.constants import UNITS

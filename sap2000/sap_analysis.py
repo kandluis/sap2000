@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 class SapAnalysis(object):
   def __init__(self, sap_com_object):
     super(SapAnalysis, self).__init__()

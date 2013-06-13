@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 FRAME_TYPES = {
   "PortalFrame" : 0,
   "ConcentricBraced" : 1,
