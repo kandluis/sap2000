@@ -28,20 +28,28 @@ if __name__ == "__main__":
     elif opt in ("-o", "--ofile"):
       outputfile = arg
 
+  # use default output file if none or empty given
   if outputfile != "":
     program, model = io(inputfile, outputfile)
   else:
     program, model = io(inputfile)
 
-  if not hide:
-    program.show()
+  # The program is hidden by default. Here it is
+  # shown if the --hidden flag is not passed
+  if hide:
+    program.hide()
 
   # DO SOME STUFF HERE
-  # analyzes and creates the analysis model
-  results_model = program.analysis.run()._obj
+
+  # creates the analysis model
+  program.analysis.run()
+
+  # preparing to acquire results
+  ret = model.Results.Setup.DeselectAllCasesAndCombosForOutput;
+  ret = model.Results.Setup.SetCaseSelectedForOutput('DEAD');
 
   # exit application
-  program.exit()
+  #program.exit()
 
 else:
   print ("This utility should be called from the commandline. Opens the specified file, analyzes it for general information, and returns.")

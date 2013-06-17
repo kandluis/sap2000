@@ -1,7 +1,9 @@
 import os
 from sap2000 import sap2000
-from sap2000.constants import FRAME_TYPES
 from helpers import path_exists
+
+# temp
+# from sap2000.constants import FRAME_TYPES
 
 def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """
@@ -12,7 +14,6 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   # start program
   program = sap2000.Sap2000()
   program.start(filename=inputfile)
-  program.hide()
 
   # open model if specified
   if inputfile == "":
@@ -20,9 +21,9 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
 
     '''
     Temp test code below
-    '''
     ret = model.File.New2DFrame(FRAME_TYPES["PortalFrame"],3,124,3,200)
     assert ret == 0
+    '''
   else:
     model = program.sap_com_object.SapModel
 
