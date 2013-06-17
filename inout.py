@@ -1,5 +1,6 @@
 import os
-from sap2000 import sap2000
+from sap2000 import sap2000, variables
+from sap2000.contants import UNITS
 from helpers import path_exists
 
 # temp
@@ -18,12 +19,9 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   # open model if specified
   if inputfile == "":
     model = program.initializeModel()
+    return_value = model.File.NewBlank()
+    assert return_value == 0
 
-    '''
-    Temp test code below
-    ret = model.File.New2DFrame(FRAME_TYPES["PortalFrame"],3,124,3,200)
-    assert ret == 0
-    '''
   else:
     model = program.sap_com_object.SapModel
 
@@ -31,5 +29,8 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   path = os.path.dirname(outputfile)
   path_exists(path)
   program.save(outputfile)
+
+  # reset the correct units
+  model.SetPresentUnits(UNITS[variables.program_units])
 
   return program, model

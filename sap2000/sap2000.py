@@ -4,7 +4,7 @@ from sap2000.sap_groups import SapGroups
 from sap2000.sap_areas import SapAreaObjects, SapAreaElements
 from sap2000.sap_points import SapPointObjects, SapPointElements
 from sap2000.sap_lines import SapLineElements
-from sap2000.sap_lines import SapFrameObjects
+from sap2000.sap_frames import SapFrameObjects
 from sap2000.sap_analysis import SapAnalysis
 
 
@@ -112,7 +112,7 @@ class Sap2000(object):
     return_value = self.sap_com_object.SapModel.View.RefreshView(window, zoom)
     assert return_value == 0
 
-  def refreshwindown(self,window):
+  def refreshwindown(self,window = 0):
     '''
     This functions updates the Program Windows. Should be used after adding,
     removing, or significantly modifying a new object/element in the model.

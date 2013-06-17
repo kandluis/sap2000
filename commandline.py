@@ -39,17 +39,5 @@ if __name__ == "__main__":
   if hide:
     program.hide()
 
-  # DO SOME STUFF HERE
-
-  # creates the analysis model
-  program.analysis.run()
-
-  # preparing to acquire results
-  ret = model.Results.Setup.DeselectAllCasesAndCombosForOutput;
-  ret = model.Results.Setup.SetCaseSelectedForOutput('DEAD');
-
-  # exit application
-  #program.exit()
-
 else:
-  print ("This utility should be called from the commandline. Opens the specified file, analyzes it for general information, and returns.")
+  program, model = io("")

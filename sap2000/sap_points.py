@@ -66,8 +66,9 @@ class SapPointObjects(SapPointsBase):
     nonzero value.
     '''
     x,y,z = pos
-    return_value, name = self._obj.AddCartesian(x,y,z,name,name,mergeOff, mergeNumber, csys)
+    return_value, name = self._obj.AddCartesian(x,y,z,name,name,csys, mergeOff, mergeNumber)
     assert return_value == 0
+    return name
 
   def addcylindrical(self,pos,name = "1", csys = "Global", mergeOff = False, mergeNumber = 0):
     '''
@@ -75,8 +76,9 @@ class SapPointObjects(SapPointsBase):
     form (r, theta, z)
     '''
     r, theta ,z = pos
-    return_value, name = self._obj.AddCylindrical(x,theta,z,name,name,mergeOff, mergeNumber, csys)
+    return_value, name = self._obj.AddCylindrical(x,theta,z,name,name,csys, mergeOff, mergeNumber)
     assert return_value == 0
+    return name
 
   def addspherical(self,pos,name = "1", csys = "Global", mergeOff = False, mergeNumber = 0):
     '''
@@ -84,8 +86,9 @@ class SapPointObjects(SapPointsBase):
     pos should be in form (r, a, b) where a is the angle on the xy-plane and 
     '''
     r, a, b = pos
-    return_value, name = self._obj.AddSpherical(x,y,z,name,name,mergeOff, mergeNumber, csys)
+    return_value, name = self._obj.AddSpherical(x,y,z,name,name,csys,mergeOff,mergeNumber)
     assert return_value == 0
+    return name
 
 
 class SapPointElements(SapPointsBase):

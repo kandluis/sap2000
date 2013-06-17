@@ -18,7 +18,7 @@ class SapFramesBase(SapBase):
 
 class SapFrameObjects(SapFramesBase):
   def __init__(self, sap_com_object):
-    super(SapAreaObjects, self).__init__(sap_com_object, sap_com_object.SapModel.FrameObj)
+    super(SapFrameObjects, self).__init__(sap_com_object, sap_com_object.SapModel.FrameObj)
 
   def get_frame_elements(self, frame_object_name):
     """
@@ -35,5 +35,16 @@ class SapFrameObjects(SapFramesBase):
     The function returns zero if the frame object is successfully added, otherwise 
     it returns a nonzero value.
     '''
+    return_value = self._obj.AddByPoint(p1,p2,name,propName,name)
+    assert return_value == 0
 
+  def addbycoord(self,p1,p2,name, propName = "Default"):
+    '''
+    This function adds a new frame object whose end points are specified by coordinate.
+    The function returns zero if the frame object is successfully added, otherwise 
+    it returns a nonzero value.
+    '''
+    x1,y1,z1 = p1
+    x2,y2,z2 = p2
+    return_value = self._obj.AddByCoord(x1,y1,z1,x2,y2,z2,name, propName,name)
 

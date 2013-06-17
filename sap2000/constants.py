@@ -72,3 +72,12 @@ EOBJECT_TYPES = {
   5 : "areas",
   6 : "solids",
   7 : "links"}
+
+OBJECT_TYPES = {
+  "points": 1,
+  "frames": 2,
+  "cables": 3,
+  "tendons": 4,
+  "areas",: 5
+  "solids": 6,
+  "links": 7}
