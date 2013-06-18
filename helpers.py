@@ -115,6 +115,13 @@ def make_vector(p1,p2):
   '''
   return sub_vectors(p2,p1)
 
+def make_unit(v):
+  ''' 
+  Returns a unit vector in the same direction as v
+  '''
+  dist = distance(v)
+  return tuple(x / dist for x in v)
+
 def sub_vectors(v1,v2):
   '''
   Subtracts the second vector from the first

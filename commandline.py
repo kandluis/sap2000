@@ -6,7 +6,7 @@ def run(input = "", output = ""):
   if output != "":
     return io(input, output)
   else:
-    return io(input)
+    return io(inputfile)
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
