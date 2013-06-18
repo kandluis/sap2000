@@ -78,6 +78,6 @@ OBJECT_TYPES = {
   "frames": 2,
   "cables": 3,
   "tendons": 4,
-  "areas",: 5
+  "areas": 5,
   "solids": 6,
   "links": 7}

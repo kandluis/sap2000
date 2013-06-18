@@ -8,12 +8,17 @@ import math
 
 class Structure:
   def __init__(self):
-    # size of the box
+    # number of boxes
     self.num = variables.num_x, variables.num_y, variables.num_z
+
+    # size of each box
+    self.box_size = variables.dim_x / variables.num_x, variables.dim_y / variables.num_y, variables.dim_y / variables.num_y
+
+    # size of the entire structure
     self.size = variables.dim_x, variables.dim_y, variables.dim_z
 
     # Storage of information
-    self.model =  [[[{} for k in range(self.num_x)] for j in range(self.num_y)] in range(self.num_z)]
+    self.model =  [[[{} for k in range(variables.num_x)] for j in range(variables.num_y)] for i in range(variables.num_z)]
 
   def __get_indeces(self,point):
     '''
@@ -37,9 +42,9 @@ class Structure:
     but might return multiple points in the same box. The set of points also includes coord1, coord2
     '''
     # The beam isn't long enough to span multiple boxes
-    minimum_size = min(self.size)
+    minimum_size = min(self.box_size)
     if variables.beam_length < minimum_size:
-      return None
+      return [coord1,coord2]
 
     # Otherwise, trace the path by moving minimum_size along the beam
     else:
@@ -97,7 +102,7 @@ class Structure:
 
     # Add endpoints
     total_boxes = 0
-    for point in self.__path(coord1, coord2):
+    for point in self.__path(p1, p2):
       total_boxes += addpoint(point)
 
     # If something went wrong, kill the program
@@ -114,7 +119,7 @@ class Structure:
     '''
     # no point given, so cycle through entire structure
     deleted = False
-    if point = None:
+    if point == None:
       for wall in self.model:
         for column in wall:
           for box in colum:

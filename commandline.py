@@ -1,6 +1,13 @@
 import sys, getopt
 from inout import io
 
+def run(input = "", output = ""):
+  # use default output file if none or empty given
+  if output != "":
+    return io(input, output)
+  else:
+    return io(input)
+
 if __name__ == "__main__":
   argv = sys.argv[1:]
   program = sys.argv[0]
@@ -28,16 +35,9 @@ if __name__ == "__main__":
     elif opt in ("-o", "--ofile"):
       outputfile = arg
 
-  # use default output file if none or empty given
-  if outputfile != "":
-    program, model = io(inputfile, outputfile)
-  else:
-    program, model = io(inputfile)
+  model, program = run(inputfile,outputfile)
 
   # The program is hidden by default. Here it is
   # shown if the --hidden flag is not passed
   if hide:
     program.hide()
-
-else:
-  program, model = io("")

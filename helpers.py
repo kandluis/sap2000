@@ -6,10 +6,10 @@ def check(return_value, message):
   Used to check that the return value of the SAP2000 functions is zero. Provides nice failure in
   case it's not.
   '''
-  if return_value = 0:
+  if return_value == 0:
     pass
   else:
-    print message
+    print(message)
     assert return_value == 0
 
 def path_exists(path):

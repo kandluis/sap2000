@@ -1,6 +1,3 @@
-# provides access to the program, model variables
-import commandline
-
 from sap2000 import variables
 from sap2000.constants import EOBJECT_TYPES
 
@@ -16,15 +13,15 @@ class Movable(Automaton):
     self.location = location
     self.on_beam = None
 
-	def __change_location(self,new_location, new_beam_points = None):
-    '''
-    Function that takes care of changing the location of the robot on the
-    SAP2000 program. Removes the current load from the previous location (ie,
-    the previous beam), and shifts it to the new beam (specified by the new location)
-    It also updates the current beam
-    '''
-    self.location = new_location
-    self.on_beam = new_beam_points
+def __change_location(self,new_location, new_beam_points=None):
+  '''
+  Function that takes care of changing the location of the robot on the
+  SAP2000 program. Removes the current load from the previous location (ie,
+  the previous beam), and shifts it to the new beam (specified by the new location)
+  It also updates the current beam
+  '''
+  self.location = new_location
+  self.on_beam = new_beam_points
 
 def __get_walkable(self,beams):
   '''
@@ -33,7 +30,7 @@ def __get_walkable(self,beams):
   crawlable = {}
   for beam, (e1,e2) in beams:
     if helpers.on_line(e1,e2,self.location):
-      crawlable.update(beam: (e1,e2))
+      crawlable.update({beam : (e1,e2)})
 
   return crawlable
 
@@ -41,7 +38,7 @@ def __get_walkable(self,beams):
     '''
     Moves the robot in direction specified by the algorithm.
     '''
-		move_info = self.get_direction()
+    move_info = self.get_direction()
     length = helpers.length(move_info['direction'])
 
     # The direction is smaller than the usual step, so move exactly by direction
@@ -121,7 +118,7 @@ class Worker(Movable):
     Overwrites the move functionality of Movable to provide the chance to build in a timestep
     instead of moving to another space.
     '''
-    if contruct() = None:
+    if contruct() == None:
       super(Worker,self).move()
     else:
       self.build()

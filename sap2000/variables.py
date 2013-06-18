@@ -17,7 +17,7 @@ beam_length = 1
 beam_capacity = 1
 
 # The size of the division of space into blocks. 
-# x,y,z gives the number of blocks at along the x axix, the y axis, and the z axis
+# x,y,z gives the number of blocks along the x axix, the y axis, and the z axis
 # dim_var gives the limit of the structure on the axis indicated by var. 
 # Keep in mind that the origin is the bottom-left part of this structure
 num_x = 10
@@ -25,7 +25,7 @@ num_y = 10
 num_z = 10
 dim_x = 50
 dim_y = 50
-dun_z = 50
+dim_z = 50
 
 # This defines how sensitive the program is to accepting errors within the beam structure
 epsilon = 0.01
