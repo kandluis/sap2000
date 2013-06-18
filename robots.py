@@ -7,7 +7,7 @@ class Automaton:
     self.name = name
 
 class Movable(Automaton):
-  def __init__(self,name,structure)
+  def __init__(self,name,structure):
     super(Movable, self).__init__(name)
     self.structure = structure
 
@@ -39,7 +39,9 @@ class Movable(Automaton):
     helpers.check(return_value, "An error occurred when obtaining the direction. GetSelected returned non-zero")
 
 class Worker(Movable):
-  def __init__(self,name,structure,location)
+  def __init__(self,name,structure,location):
     super(Worker,self).__init__(name,structure)
     self.beams = variables.beam_capacity
     self.location = location
+
+  def build(self):

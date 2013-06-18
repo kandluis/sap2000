@@ -59,7 +59,7 @@ class Structure:
 
       return points
 
-  def neighbors(self,point):
+  def get_box(self,point):
     '''
     Finds the box containing the specified point and returns a dictionary containing the names
     and point coordinates of the objects for which any part is contained within the box
@@ -73,7 +73,7 @@ class Structure:
     except IndexError:
       print "The coordinate, {}, is not in the structure and should never have been. Please check the add function in structure.py".format(point)
 
-  def add(self,p1,p2,name):
+  def add_beam(self,p1,p2,name):
     ''' 
     Function to add the name and endpoint combination of a beam
     to all of the boxes that contain it. Returns the number of boxes (which should be at least 1)
@@ -105,7 +105,7 @@ class Structure:
 
     return total_boxes
 
-    def remove(self,name,point=None):
+    def remove_beam(self,name,point=None):
       '''
       This function removes the beam element referred to by the specified name from all the boxes that
       contained it. If a point contained by the element is given, then it makes the removal faster.
