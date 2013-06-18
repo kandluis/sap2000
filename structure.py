@@ -4,7 +4,7 @@ it. This is done for the sake of efficiency, as we only want to query the SAP pr
 when absolutely necessary. The following functions are all helpful
 '''
 from sap2000 import variables
-import commandline, math
+import math
 
 class Structure:
   def __init__(self):

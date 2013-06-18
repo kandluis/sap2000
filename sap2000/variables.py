@@ -5,6 +5,10 @@ program_units = "kN_m_C"
 # the structure from where it is located. In units specified by program_units
 local_radius = 1
 
+# The size of a step that the robot can take. This is expressed in the specified
+# program units.
+step_length = 0.5
+
 # Length of each beam (in the units specified by program_units)
 beam_length = 1
 
@@ -22,3 +26,6 @@ num_z = 10
 dim_x = 50
 dim_y = 50
 dun_z = 50
+
+# This defines how sensitive the program is to accepting errors within the beam structure
+epsilon = 0.01
