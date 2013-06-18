@@ -32,7 +32,7 @@ def distance(p1,p2):
 
   return dist
 
-def in_line(l1,l2,point):
+def on_line(l1,l2,point):
   '''
   Returns whether or not the point is located on the line specified by l1 and l2
   '''
@@ -108,3 +108,18 @@ def scale(k,v):
   Scales the vector v by k
   '''
   return tuple(k * x for x in v)
+
+def make_vector(p1,p2):
+  '''
+  Returns the vector between two points. P2 is the head, p1 the origin
+  '''
+  return sub_vectors(p2,p1)
+
+def sub_vectors(v1,v2):
+  '''
+  Subtracts the second vector from the first
+  '''
+  return tuple([x - y for x, y in zip(v1,v2)])
+
+def length(v):
+  distace(v,(0,0,0))

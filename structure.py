@@ -71,7 +71,7 @@ class Structure:
     try:
       return (self.model[xi][yi][zi])
     except IndexError:
-      print "The coordinate, {}, is not in the structure and should never have been. Please check the add function in structure.py".format(point)
+      print ("The coordinate, {}, is not in the structure and should never have been. Please check the add function in structure.py".format(point))
 
   def add_beam(self,p1,p2,name):
     ''' 
@@ -93,7 +93,7 @@ class Structure:
           self.model[xi][yi][zi].update({name: (p1,p2)})
           return 1
       except IndexError:
-        print "The coordinate {}, is not in the structure. Something went wront in addpoint()".format(p)
+        print ("The coordinate {}, is not in the structure. Something went wront in addpoint()".format(p))
 
     # Add endpoints
     total_boxes = 0
@@ -105,40 +105,40 @@ class Structure:
 
     return total_boxes
 
-    def remove_beam(self,name,point=None):
-      '''
-      This function removes the beam element referred to by the specified name from all the boxes that
-      contained it. If a point contained by the element is given, then it makes the removal faster.
-      Otherwise, the entire structure is searched for the name, and all references removed. Returns
-      true if the removal is successfull, false otherwise (ie, cannot find the element)
-      '''
-      # no point given, so cycle through entire structure
-      deleted = False
-      if point = None:
-        for wall in self.model:
-          for column in wall:
-            for box in colum:
-              if name in box:
-                del box[name]
-                deleted = True
-
-      # point is given, so no need to cycle. Just find endpoints.
-      else:
-        xi, yi, zi = self.__get_indeces(point)
-        # found the beam, now get endpoints to find rest of it
-        if name in self.model[xi][yi][zi]:
-          p1,p2 = self.model[xi][yi][zi][name]
-          for p in self.__path(p1,p2):
-            x,y,z = self.__get_indeces(p)
-            if name in self.model[xi][yi][zi]:
-              del self.model[xi][yi][zi][name]
+  def remove_beam(self,name,point=None):
+    '''
+    This function removes the beam element referred to by the specified name from all the boxes that
+    contained it. If a point contained by the element is given, then it makes the removal faster.
+    Otherwise, the entire structure is searched for the name, and all references removed. Returns
+    true if the removal is successfull, false otherwise (ie, cannot find the element)
+    '''
+    # no point given, so cycle through entire structure
+    deleted = False
+    if point = None:
+      for wall in self.model:
+        for column in wall:
+          for box in colum:
+            if name in box:
+              del box[name]
               deleted = True
-            else:
-              print "There should be a point, but there is not. Check add in structure.py."
-              assert 0 == 1
 
-        # the beam isn't located in the specified box
-        else: 
-          print "The beam was not found with the specified point"
+    # point is given, so no need to cycle. Just find endpoints.
+    else:
+      xi, yi, zi = self.__get_indeces(point)
+      # found the beam, now get endpoints to find rest of it
+      if name in self.model[xi][yi][zi]:
+        p1,p2 = self.model[xi][yi][zi][name]
+        for p in self.__path(p1,p2):
+          x,y,z = self.__get_indeces(p)
+          if name in self.model[xi][yi][zi]:
+            del self.model[xi][yi][zi][name]
+            deleted = True
+          else:
+            print ("There should be a point, but there is not. Check add in structure.py.")
+            assert 0 == 1
 
-      return deleted
+      # the beam isn't located in the specified box
+      else: 
+        print ("The beam was not found with the specified point")
+
+    return deleted
