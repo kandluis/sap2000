@@ -10,13 +10,16 @@ class Swarm:
 		# create workers
 		self.workers ={}
     	for i in range(size):
-        name = "worker" + i
+        name = "worker_" + i
+
+        # workers line up along the positive x axis
+
         location = (i,0,0)
         self.workers[name] = Worker(location,structure,model)
 
   def act(self):
     for worker in self.workers:
-      worker.move()
+      worker.act()
 
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,model):

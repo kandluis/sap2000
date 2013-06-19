@@ -1,5 +1,6 @@
 import os, errno
 from sap2000 import variables
+from sap2000.constants import LOAD_PATTERN_TYPES
 
 def check(return_value, message):
   '''
@@ -97,6 +98,10 @@ def dot(v1,v2):
 
   return dot
 
+'''
+Helper functions for vector operations when keeping track of the structure in Python
+'''
+
 def sum_vectors(v1,v2):
   '''
   Sums two vectors
@@ -130,3 +135,27 @@ def sub_vectors(v1,v2):
 
 def length(v):
   distace(v,(0,0,0))
+
+'''
+Helper functions pertaining to the sap program
+'''
+
+def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
+  '''
+  Adds the specified load pattern to the defined model,
+  checking to see if it exists first. If added successfully,
+  returns true, otherwise false
+  '''
+  ret, number, names = model.LoadPatterns.GetNameList()
+
+  # load case is already defined
+  if name in names:
+    return False
+
+  # defining for the first time  
+  else:
+    ret = model.LoadPatterns.Add(name,LOAD_PATTERN_TYPES[myType],selfWTMultiplier,AddLoadCase)
+    if ret == 0:
+      return True
+    else:
+      return False

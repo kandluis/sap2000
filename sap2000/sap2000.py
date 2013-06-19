@@ -112,7 +112,7 @@ class Sap2000(object):
     return_value = self.sap_com_object.SapModel.View.RefreshView(window, zoom)
     assert return_value == 0
 
-  def refreshwindown(self,window = 0):
+  def refreshwindow(self,window = 0):
     '''
     This functions updates the Program Windows. Should be used after adding,
     removing, or significantly modifying a new object/element in the model.

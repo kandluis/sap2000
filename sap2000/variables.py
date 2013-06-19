@@ -29,3 +29,15 @@ dim_z = 50
 
 # This defines how sensitive the program is to accepting errors within the beam structure
 epsilon = 0.01
+
+# This defines the mass of each robot in the units specified by program_units
+robot_load = 0.01 # This is around two and a quarter pounds in kN
+
+# This defines the load of each beam carried by the robots
+beam_load = 0.005 # This is around one pound in kN
+
+# Name of the load case for the robots
+robot_load_case = "ROBOTS"
+
+# Name of the material property defined for the beams
+material_name = "PIPE"
