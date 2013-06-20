@@ -37,6 +37,7 @@ def run(runs = 10, debug = True, comment=""):
 
   with open(outputfolder + "locations.txt", 'w+') as loc_text:
     for i in range(runs):
+      worker.do_action()
       loc_text.write(str(worker.get_location()) + "\n")
 
   return (program, structure, worker)
