@@ -145,7 +145,7 @@ class Movable(Automaton):
     '''
     import random
 
-    def random_direction():
+    def random_location():
       ''' 
       Returns direction which will move the robot the right number of steps and keep it
       inside the first octant(and within the bounds of the box)
@@ -155,19 +155,19 @@ class Movable(Automaton):
 
       # The they can't all be zero!
       if helpers.length(direction) == 0:
-        return random_direction()
+        return random_location()
       else:
         direction = helpers.scale(self.__step,helpers.make_unit(direction))
         predicted_location = helpers.sum_vectors(direction, self.__location)
         if helpers.check_location(predicted_location):
-          return direction
+          return predicted_location
         else:
-          return random_direction()
+          return random_location()
 
     # Check to see if robot is on a beam. If so, pick between moving on it or off it.
     result = self.ground()
     if result == None:
-      direction = random_direction()
+      direction = random_location()
       self.__change_location_local(direction)
     else:
       dist, close_beam = result
@@ -175,8 +175,8 @@ class Movable(Automaton):
         rand = random.randint(0,1)
         # Move randomly
         if rand == 0:
-          direction = random_direction()
-          self.__change_location_local(direction)
+          new_location = random_location()
+          self.__change_location_local(new_location)
         # Move onto the beam
         else:
           if dist == 0:
