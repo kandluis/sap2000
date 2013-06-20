@@ -1,4 +1,4 @@
-import os, errno
+import os, errno, math
 from sap2000 import variables
 from sap2000.constants import LOAD_PATTERN_TYPES
 
@@ -29,7 +29,7 @@ def distance(p1,p2):
   '''
   x1,y1,z1 = p1
   x2,y2,z2 = p2
-  dist = sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)*2)
+  dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)*2)
 
   return dist
 
@@ -51,13 +51,13 @@ def distance_to_line(l1,l2,p):
   # cross the two and return the magnitude of result (this is the distance)
   return length(cross(a,v))
 
-def positive(v):
+def check_location(p):
   '''
-  Returns whether or not all elements in v are positive
+  Returns whether or not all elements in p are positive
   '''
   result = True
-  for elt in v:
-    result = result and elt > 0
+  for elt in p:
+    result = (result and elt >= 0 and elt <= variables.dim_x)
 
   return result
 
@@ -156,7 +156,7 @@ def make_unit(v):
   ''' 
   Returns a unit vector in the same direction as v
   '''
-  dist = distance(v)
+  dist = length(v)
   return tuple(x / dist for x in v)
 
 def sub_vectors(v1,v2):
@@ -166,7 +166,7 @@ def sub_vectors(v1,v2):
   return tuple([x - y for x, y in zip(v1,v2)])
 
 def length(v):
-  return distace(v,(0,0,0))
+  return distance(v,(0,0,0))
 
 def cross(v1,v2):
   '''

@@ -18,7 +18,7 @@ class Sap2000(object):
 
     # Each of the following attributes represents an object of the SAP2000 type library.
     # Each attribute is an instance of a subclass of SapBase.
-    self.model_initialized = False
+    self.model = None
     self.groups = SapGroups(sap_com_object)
     self.area_elements = SapAreaElements(sap_com_object)
     self.point_elements = SapPointElements(sap_com_object)
@@ -44,12 +44,14 @@ class Sap2000(object):
     units = UNITS[units]
     self.sap_com_object.ApplicationStart(units, visible, filename)
 
-  def exit(self, save_file=False):
+  def exit(self, save_file=True):
     """ If the model file is saved then it is saved with its current name. """
     self.sap_com_object.ApplicationExit(save_file)
-    if self.model_initialized :
-      self.sap_com_object.SapModel = None
-    self.sap_com_object = None
+    if self.model != None:
+      self.sap_com_object.SapModel = 0
+    self.sap_com_object = 0
+
+    return;
 
   def hide(self):
     """
@@ -100,7 +102,7 @@ class Sap2000(object):
     return_value = model.InitializeNewModel()
     assert return_value == 0        # Ensure everything went as expected
 
-    self.model_initialized = True    # Keep track of model
+    self.model_initialized = model    # Keep track of model
 
     return model
 

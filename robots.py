@@ -67,7 +67,7 @@ class Movable(Automaton):
       # Additionally remove loads not related to our load patters
       indeces = []
       index = 0
-      for ab_dist in data[8]  # this provides acces to the absolute_distance from the i-point of the beam
+      for ab_dist in data[8]:  # this provides acces to the absolute_distance from the i-point of the beam
         if helpers.compare(ab_dist,curr_dist) or variables.robot_load_case != data[3][index]:
           indeces.append(index)
         index += 1
@@ -81,7 +81,7 @@ class Movable(Automaton):
     removeload(self.__location)
 
     # Check to see if we will be moving off a beam and onto the ground
-    if new_location[2] == 0 && random.randint(0,1) == 1:
+    if new_location[2] == 0 and random.randint(0,1) == 1:
       new_beam = {}
 
     # Don't add the load if there is no beam
@@ -124,10 +124,13 @@ class Movable(Automaton):
       else:
         if e1[2] == 0:
           grounded[beam] = helpers.distance(e1, self.__location)
-        else:
+        elif e2[2] == 0:
           grounded[beam] = helpers.distances(e2, self.__location)
 
     # get name of beam at the minimum distance
+    if grounded == {}:
+      return None
+
     name = min(grounded, key=grounded.get)
 
     return grounded[name], {  'beam'  : name,
@@ -142,43 +145,48 @@ class Movable(Automaton):
     '''
     import random
 
-    def random_direction:
+    def random_direction():
       ''' 
       Returns direction which will move the robot the right number of steps and keep it
-      inside the first octant
+      inside the first octant(and within the bounds of the box)
       '''
-      direction = (0,0,0)
-      for i in range(2):
-        direction[i] = random.uniform(-1 * self.__step, self.__step)
+      # obtain a random direction
+      direction = (random.uniform(-1 * self.__step, self.__step), random.uniform(-1 * self.__step, self.__step), 0)
 
+      # The they can't all be zero!
       if helpers.length(direction) == 0:
         return random_direction()
       else:
         direction = helpers.scale(self.__step,helpers.make_unit(direction))
         predicted_location = helpers.sum_vectors(direction, self.__location)
-        if helpers.positive(predicted_location):
+        if helpers.check_location(predicted_location):
           return direction
         else:
           return random_direction()
 
     # Check to see if robot is on a beam. If so, pick between moving on it or off it.
-    dist, close_beam = ground()
-    if dist < self.__step:
-      rand = random.randint(0,1)
-      # Move randomly
-      if rand == 0:
-        direction = random_direction()
-        self.__change_location_local(direction)
-      # Move onto the beam
-      else:
-        if dist == 0:
-          self.beam = close_beam
+    result = self.ground()
+    if result == None:
+      direction = random_direction()
+      self.__change_location_local(direction)
+    else:
+      dist, close_beam = result
+      if dist < self.__step:
+        rand = random.randint(0,1)
+        # Move randomly
+        if rand == 0:
+          direction = random_direction()
+          self.__change_location_local(direction)
+        # Move onto the beam
         else:
-          e1, e2 = close_beam['endpoints']
-          if e1[2] == 0:
-            self.move(helpers.make_vector(self.__location,e1), close_beam)
+          if dist == 0:
+            self.beam = close_beam
           else:
-            self.move(helpers.make_vector(self.__location,e2), close_beam)
+            e1, e2 = close_beam['endpoints']
+            if e1[2] == 0:
+              self.move(helpers.make_vector(self.__location,e1), close_beam)
+            else:
+              self.move(helpers.make_vector(self.__location,e2), close_beam)
 
 
   def do_action(self):
@@ -191,8 +199,8 @@ class Movable(Automaton):
 
     else:
       move_info = self.get_direction()
-      self.move(move_info['direction'], { 'beam'  : move_info['beam']
-                                        'endpoints' : move_info['endpoints']})
+      self.move(move_info['direction'], { 'beam'  : move_info['beam'],
+                                          'endpoints' : move_info['endpoints']})
 
   def move(self, direction, beam):
     '''
@@ -232,11 +240,6 @@ class Movable(Automaton):
     crawlable = self.__get_walkable(box)
 
     directions_info = []
-      # Convert endpoints of beams into direction vectors
-      for beam, (p1,p2) in crawlable:
-        directions_info.append(beam,helpers.make_vector(self.__location,p1))
-        directions_info.append(beam,helpers.make_vector(self.__location,p2))
-
     return {  'box'         : box,
               'directions'  : directions_info }
 

@@ -23,9 +23,9 @@ beam_capacity = 1
 num_x = 10
 num_y = 10
 num_z = 10
-dim_x = 50
-dim_y = 50
-dim_z = 50
+
+# The code assumes that these are all the same value
+dim_x = dim_y = dim_z = 50
 
 # This defines how sensitive the program is to accepting errors within the beam structure
 epsilon = 0.01

@@ -31,7 +31,8 @@ class Structure:
       return math.floor(coord / axis)
 
     x,y,z = point
-    dim_x, dim_y, dim_z = self.size
+
+    dim_x, dim_y, dim_z = self.box_size
     xi, yi, zi = get_index(x,dim_x), get_index(y,dim_y), get_index(z,dim_z)
     return xi, yi, zi
 
