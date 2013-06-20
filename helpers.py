@@ -33,15 +33,47 @@ def distance(p1,p2):
 
   return dist
 
+def distance_to_line(l1,l2,p):
+  '''
+  Calculates the distance from the line (l1 -> l2) to the point (p)
+  '''
+  xl1, yl1, zl1 = l1
+  xl2, yl2, xl2 = l2
+  x, y , z = p
+
+  # vector from one endpoint of line to p
+  a = (x - xl1, y - yl1, z - zl1)
+  # unit line vector
+  length = distance(l1,l2)
+  assert length > 0
+  v = (xl2 - xl1 / length, yl2 - yl1 / length, zl2 - zl1 / length)
+
+  # cross the two and return the magnitude of result (this is the distance)
+  return length(cross(a,v))
+
+def positive(v):
+  '''
+  Returns whether or not all elements in v are positive
+  '''
+  result = True
+  for elt in v:
+    result = result and elt > 0
+
+  return result
+
 def on_line(l1,l2,point):
   '''
-  Returns whether or not the point is located on the line specified by l1 and l2
+  Returns whether the point lies close the line l1 -> l2. The error allowed is epsilon
   '''
 
   lx1,ly1,lz1 = l1
   lx2, ly2, lz2 = l2
   x, y, z = point
   dist1, dist2 = distance(l1,l2), distance(l1,point)
+  
+  # Taking care of the point being an endpoint
+  if dist2 == 0:
+    return True
 
   # creating two vectors
   s1,s2,s3 = (lx2 - lx1) / dist1, (ly2 - ly1) / dist1, (lz2 - lz1) / dist1
@@ -134,7 +166,16 @@ def sub_vectors(v1,v2):
   return tuple([x - y for x, y in zip(v1,v2)])
 
 def length(v):
-  distace(v,(0,0,0))
+  return distace(v,(0,0,0))
+
+def cross(v1,v2):
+  '''
+  Calculates the cross product between two vectors, v1 and v2
+  '''
+  x1, y1, z1 = v1
+  x2, y2, z2 = v2
+
+  return (y1 * z2 - y2 * z1, z1 * x2 - z2 * x1, x1 * y2 - x2* y1)
 
 '''
 Helper functions pertaining to the sap program

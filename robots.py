@@ -29,10 +29,18 @@ class Movable(Automaton):
     Moves the robot about locally (ie, without worrying about the structure, except 
     for when it moves onto the first beam)
     '''
+    # When we move onto our first beam, add the load
     if first_beam != {}:
       self.beam = first_beam
       self.__addload(first_beam,new_location,self.weight)
     self.__location = new_location
+
+    # Check that we are on the first octant
+    assert self.__location[0] >= 0
+    assert self.__location[1] >= 0
+
+    # Verify that we are still on the xy plane
+    assert self.__location[2] == 0
 
   def __change_location(self,new_location, new_beam):
     '''
@@ -72,10 +80,15 @@ class Movable(Automaton):
     # Move the load off the current location and to the new one (if still on beam), then change the locations
     removeload(self.__location)
 
+    # Check to see if we will be moving off a beam and onto the ground
+    if new_location[2] == 0 && random.randint(0,1) == 1:
+      new_beam = {}
+
+    # Don't add the load if there is no beam
     if new_beam != {}:
       self.__addload(new_beam, new_location, self.weight)
 
-    self.__change_location_local(new_location)
+    self.__location = new_location
     self.beam = new_beam
 
   def __get_walkable(self,beams):
@@ -95,14 +108,78 @@ class Movable(Automaton):
     '''
     return self.__location
 
+  def ground(self):
+    '''
+    This function finds the nearest beam to the robot that is connected 
+    to the xy-place (ground). It returns that beam and its distance from the robot.
+    '''
+    box = self.__structure.get_box(self.__location)
+    grounded = {}
+    for beam, (e1,e2) in box:
+      # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
+      if e1[2] == 0 and e2[0] == 0:
+        grounded[beam] = helpers.distance_to_line(e1,e2,self.__location)
+        assert 1 == 2
+      # Only one point is on the ground
+      else:
+        if e1[2] == 0:
+          grounded[beam] = helpers.distance(e1, self.__location)
+        else:
+          grounded[beam] = helpers.distances(e2, self.__location)
+
+    # get name of beam at the minimum distance
+    name = min(grounded, key=grounded.get)
+
+    return grounded[name], {  'beam'  : name,
+                              'endpoints' : box[name]}
+
   def wander(self):
     '''
     When a robot is not on a structure, it wanders around randomly. The wandering is
-    restricted to the 1st octant in global coordinates. This function finds the nearest
-    beam that is connected to the xy-place (ground), if there is one. If the location of
-    the robot matches this beam, then the robot can randomly climb up it.
+    restricted to the 1st octant in global coordinates. If the robot is near enough a beam
+    to be on it in the next time step, it jumps on the beam. The robots have a tendency
+    to scale the structure, per se, but are restricted to their immediate surroundings.
     '''
-    random_direction = 
+    import random
+
+    def random_direction:
+      ''' 
+      Returns direction which will move the robot the right number of steps and keep it
+      inside the first octant
+      '''
+      direction = (0,0,0)
+      for i in range(2):
+        direction[i] = random.uniform(-1 * self.__step, self.__step)
+
+      if helpers.length(direction) == 0:
+        return random_direction()
+      else:
+        direction = helpers.scale(self.__step,helpers.make_unit(direction))
+        predicted_location = helpers.sum_vectors(direction, self.__location)
+        if helpers.positive(predicted_location):
+          return direction
+        else:
+          return random_direction()
+
+    # Check to see if robot is on a beam. If so, pick between moving on it or off it.
+    dist, close_beam = ground()
+    if dist < self.__step:
+      rand = random.randint(0,1)
+      # Move randomly
+      if rand == 0:
+        direction = random_direction()
+        self.__change_location_local(direction)
+      # Move onto the beam
+      else:
+        if dist == 0:
+          self.beam = close_beam
+        else:
+          e1, e2 = close_beam['endpoints']
+          if e1[2] == 0:
+            self.move(helpers.make_vector(self.__location,e1), close_beam)
+          else:
+            self.move(helpers.make_vector(self.__location,e2), close_beam)
+
 
   def do_action(self):
     '''
@@ -110,7 +187,7 @@ class Movable(Automaton):
     '''
     # We are not on a beam, so wander about aimlessly
     if self.beam == {}:
-      self.wander()
+      beam = self.wander()
 
     else:
       move_info = self.get_direction()
@@ -189,10 +266,10 @@ class Worker(Movable):
     Overwrite the move functionality of Movable to provide the chance to build in a timestep
     instead of moving to another space.
     '''
-    if contruct() == None:
-      super(Worker,self).move()
-    else:
+    if contruct():
       self.build()
+    else:
+      super(Worker,self).move()
 
   def build(self):
     pass
@@ -203,4 +280,4 @@ class Worker(Movable):
     It returns the two points that should be connected, or we should continue moving 
     (in which case, it returns None)
     ''' 
-    None
+    return False

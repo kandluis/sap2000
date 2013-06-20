@@ -7,7 +7,7 @@ local_radius = 1
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 0.5
+step_length = 0.1
 
 # Length of each beam (in the units specified by program_units)
 beam_length = 1
