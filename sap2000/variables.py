@@ -20,21 +20,23 @@ beam_capacity = 1
 # x,y,z gives the number of blocks along the x axix, the y axis, and the z axis
 # dim_var gives the limit of the structure on the axis indicated by var. 
 # Keep in mind that the origin is the bottom-left part of this structure
-num_x = 10
-num_y = 10
-num_z = 10
+num_x = 100
+num_y = 100
+num_z = 100
 
 # The code assumes that these are all the same value
-dim_x = dim_y = dim_z = 50
+dim_x = 50
+dim_y = 50
+dim_z = 50
 
 # This defines how sensitive the program is to accepting errors within the beam structure
 epsilon = 0.01
 
 # This defines the mass of each robot in the units specified by program_units
-robot_load = 0.01 # This is around two and a quarter pounds in kN
+robot_load = 0.1 # This is around twentyfive pounds in kN
 
 # This defines the load of each beam carried by the robots
-beam_load = 0.005 # This is around one pound in kN
+beam_load = 0.05 # This is around twelve pounds in kN
 
 # Name of the load case for the robots
 robot_load_case = "ROBOTS"

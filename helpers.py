@@ -197,3 +197,48 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
       return True
     else:
       return False
+
+'''
+Helper functions pertaining to the beams (especially intersections)
+'''
+def intersection(l1, l2):
+  '''
+  Finds as quickly as possible whether two line segments intersect, 
+  returning their point of intersection if they do intersect.
+  Using the suggestion found here: http://mathforum.org/library/drmath/view/62814.html
+  '''
+  def same_direction(v1,v2):
+    ''' 
+    Returns whether or not two known to be parallel vectors point in the same direction
+    '''
+    return dot(v1,v2) > 0
+
+  # Get out coordinates
+  p1, ep1 = l1
+  p2, ep2 = l2
+
+  # Obtain direction vectors
+  v1 = make_vector(p1,ep1)
+  v2 = make_vector(p2,ep2)
+
+  # Cross v1 and v2, and cross (p2 - p1) and v2 and check whether or not they are parallel
+  # Basically checks whether the two lines are coplanar (must be true if they intersect!)
+  norm1 = cross(v1,v2)
+  norm2 = cross(sub_vectors(p2,p1),v2)
+
+  # norm1 and norm2 must be parallel (coplanar) but norm2 must be non-zero (not parallel)
+  if not parallel(norm1,norm2) or length(norm1) == 0:
+    return None
+
+  # Obtain the distance along line1 travelled
+  unsigned_a = length(norm2) / length(norm1)
+  a = unsigned_a if same_direction(norm1, norm2) else -1 * unsigned_a
+
+  return sum_vectors(p1,scale(a,v1))
+
+
+def parallel(v1,v2):
+  '''
+  Returns whether or not two vectors are parallel
+  '''
+  return length(cross(v1,v2)) == 0
