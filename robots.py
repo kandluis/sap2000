@@ -101,26 +101,26 @@ class Movable(Automaton):
     # Get all joints within a time-step
     # Remember that beams DOES NOT include the current beam, only others
     crawlable = {}
-    for joint, beam_names in self.beam.joints:
+    for joint, beams in self.beam.joints:
       dist = helpers.distance(joint,self.__location)
       
       # If we are at the joint, return the possible directions of other beams
       if dist == 0:
-        for name in beam_names:
+        for beam in beams:
       
           # The index error should never happen, but this provides nice error support
           try:
-            e1, e2 = box[name].endpoints
-            crawlable[name] = [helpers.make_vector(self.__location,e1), helpers.make_vector(self.__location,e2)]
-          with IndexError:
-            print "The beam {} seems to have a joint with {}, but it is not in the box?".format(name,self.beam.name)
+            e1, e2 = box[beam.name].endpoints
+            crawlable[beam.name] = [helpers.make_vector(self.__location,e1), helpers.make_vector(self.__location,e2)]
+          except IndexError:
+            print ("The beam {} seems to have a joint with {}, but it is not in the box?".format(name,self.beam.name))
       
       # For all joints within the timestep, return a direction that is exactly the change from current to that point
       elif dist <= self.__step:
         if self.beam.name in crawlable:
           crawlable[self.beam.name].append(helpers.make_vector(self.__location,joint))
         else:
-          crawlable[self.beam.name] = [helpers.make_vector(self.__location,joint])]
+          crawlable[self.beam.name] = [helpers.make_vector(self.__location,joint)]
 
       # If the joints are too far, ignore them
       else:

@@ -70,7 +70,7 @@ class Structure:
         and the absolute change in that coordinate.
         '''
         def distance(i):
-         '''
+          '''
           i is 0,1,2 for x,y,z
           '''
           if signs[coord] == None:
@@ -105,7 +105,7 @@ class Structure:
         if sign[i] != None:
           # Movings positively, so set to True if our new_point has a larger positive coordinate
           # Moving negatively, so set to True if our new_point has a smaller positive coordinate
-          passed = sign[i] and new_point[i] > coord2[i] or sign[i] == False and new_point[i] < coord2[i]:
+          passed = sign[i] and new_point[i] > coord2[i] or sign[i] == False and new_point[i] < coord2[i]
 
       if passed:
         return []
@@ -144,7 +144,7 @@ class Structure:
       # Getting the box and all of the other beams in the box
       try:
         box = self.model[xi][yi][zi]
-      with IndexError:
+      except IndexError:
         print ("Addbeam is incorrect. Accessing box not defined.")
         return False
 
