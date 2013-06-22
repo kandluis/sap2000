@@ -20,9 +20,9 @@ beam_capacity = 1
 # x,y,z gives the number of blocks along the x axix, the y axis, and the z axis
 # dim_var gives the limit of the structure on the axis indicated by var. 
 # Keep in mind that the origin is the bottom-left part of this structure
-num_x = 100
-num_y = 100
-num_z = 100
+num_x = 25
+num_y = 25
+num_z = 25
 
 # The code assumes that these are all the same value
 dim_x = 50

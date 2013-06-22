@@ -45,7 +45,7 @@ class Beam:
       if not beam in self.joints[coord]:
         return False
       else:
-        self.joints[coord].pop(beam)
+        self.joints[coord].remove(beam)
 
         # remove the coordinate if there are no beams there
         if self.joints[coord] == []:

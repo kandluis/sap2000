@@ -6,7 +6,7 @@ when absolutely necessary. The following functions are all helpful
 from sap2000 import variables
 from beams import Beam
 from errors import OutofBox
-import math, sys
+import math, sys,helpers
 
 class Structure:
   def __init__(self):
@@ -43,7 +43,8 @@ class Structure:
     Traverses the line formed between coord1 and coord2. Returns a list of points on the line that
     lie in different boxes. This will NOT miss any points that are in difference boxes. The basic
     method is to find the intersection of the line with one of the faces of the cube formed by the
-    box. There should not be multiple points, but this has not been proven.
+    box. There should not be multiple points, but this has not been proven. It might return two points
+    that are in the same box.
     '''
     def get_sign(n):
       '''
@@ -55,13 +56,13 @@ class Structure:
         return n > 0
 
     # move from coord1 to coord2. Here, we determine the sign of the change (pos = True, neg = False, or None)
-    signs = tuple(get_sign(coord2[0] - coord1[0]), get_sign(coord2[1] - coord1[1]), get_sign(coord2[2] - coord1[2]))
+    signs = get_sign(coord2[0] - coord1[0]), get_sign(coord2[1] - coord1[1]), get_sign(coord2[2] - coord1[2])
     line = helpers.make_vector(coord1,coord2)
 
     def crawl(point):
       # get the current box boundaries (bottom left corner - (0,0,0) is starting) and coordinates
       xi, yi, zi = self.__get_indeces(point)
-      bounds = tuple(xi * self.box_size[0], yi * self.box_size[1], zi * self.box_size[2])
+      bounds = xi * self.box_size[0], yi * self.box_size[1], zi * self.box_size[2]
 
       # This is defined here to have access to the above signs and bounds
       def closest(p):
@@ -73,10 +74,10 @@ class Structure:
           '''
           i is 0,1,2 for x,y,z
           '''
-          if signs[coord] == None:
+          if signs[i] == None:
             # This will never be the minimum. Makes later code easier
             return max(self.box_size) + 1
-          elif signs[coord]:
+          elif signs[i]:
             return abs(p[i] - (bounds[i] + self.box_size[i]))
           else:
             return abs(p[i] - bounds[i])
@@ -86,31 +87,40 @@ class Structure:
         index = coords.index(min(coords))
 
         return index, coords[index]
-      
+
       # In crawl, we obtain the coordinate closests to an edge (index), and its absolute distance from that edge
-      index, distance = closest(coord1)
+      index, distance = closest(point)
 
       # The change is the line scaled so that the right coordinate changes the amount necessary to cross into the next box
-      change = helpers.scale(distance / line[index], line)
+      # This means that we scale it and also add a teeny bit so as to push it into the right box
+      # This is the scaled version, exactly the distance we need to move
+      move = helpers.scale(distance / abs(line[index]), line)
+      # Here we scale the line again by epsilon/2. This is our push
+      push = helpers.scale(variables.epsilon / 2, line)
+      # The total change is the addition of these two
+      change = helpers.sum_vectors(move,push)
 
       # make sure we are changing the right amount
-      assert change[index] == distance
+      assert helpers.compare(abs(move[index]), distance)
 
       # The new initial coordinate in the next box
       new_point = helpers.sum_vectors(point,change)
 
-      # Check the new coordinate to see if we have moved past the endpoint
-      passed = False
+      return new_point
+
+    points, passed,temp = [coord2], False, coord1
+    while not passed:
+      points.append(temp)
+      temp = crawl(temp)
+
+      # Check the next coordinate to see if we have moved past the endpoint
       for i in range(3):
-        if sign[i] != None:
+        if signs[i] != None:
           # Movings positively, so set to True if our new_point has a larger positive coordinate
           # Moving negatively, so set to True if our new_point has a smaller positive coordinate
-          passed = sign[i] and new_point[i] > coord2[i] or sign[i] == False and new_point[i] < coord2[i]
+          passed = temp[i] > coord2[i] + variables.epsilon / 2 if signs[i] else temp[i] < coord2[i] - variables.epsilon / 2
 
-      if passed:
-        return []
-      else:
-        return [(xi,yi,zi)].extend(crawl(new_point))
+    return points
 
   def get_box(self,point):
     '''
@@ -149,23 +159,26 @@ class Structure:
         return False
 
       # Finding intersection points with other beams
-      for key, other_beam in box:
-        point = helpers.intersection(other_beam.endpoints, beam.endpoints)
+      for key in box:
+        point = helpers.intersection(box[key].endpoints, beam.endpoints)
         # If they intersect, add the joint to both beams
         if point != None:
-          assert key == other_beam.name
-          if not beam.addjoint(point, other_beam):
+          assert key == box[key].name
+          if not beam.addjoint(point, box[key]):
             sys.exit("Could not add joint to {} at {}".format(beam.name, str(point)))
-          if not other_beam.addjoint(point, beam):
-            sys.exit("Could not add joint to {} at {}".format(other_beam.name, str(point)))
+          if not box[key].addjoint(point, beam):
+            sys.exit("Could not add joint to {} at {}".format(box[key].name, str(point)))
 
       # update the box
       self.model[xi][yi][zi] = box
 
       # Adding beam to boxes that contain it based on the point p.
       try:
-        self.model[xi][yi][zi][beam.name] = beam
-        return 1
+        if beam.name in self.model[xi][yi][zi]:
+          return 0
+        else:
+          self.model[xi][yi][zi][beam.name] = beam
+          return 1
       except IndexError:
         print ("The coordinate {}, is not in the structure. Something went wront in addpoint()".format(p))
         return 0
@@ -195,8 +208,8 @@ class Structure:
     Furthermore, it removes itself from all of the beams with which it previously intersected.
     '''
     def remove_joints(beam):
-      for coord, beams in beam.joints:
-        for other_beam in beams:
+      for coord in beam.joints:
+        for other_beam in beam.joints[coord]:
           if not other_beam.removejoint(coord,beam):
             return False
       return True
@@ -207,7 +220,7 @@ class Structure:
     if point == None:
       for wall in self.model:
         for column in wall:
-          for box in colum:
+          for box in column:
             if name in box:
               value = remove_joints(box[name])
               del box[name]
@@ -226,12 +239,9 @@ class Structure:
           x,y,z = self.__get_indeces(p)
 
           # check for the beam being in the box, otherwise raise an error
-          if name in self.model[xi][yi][zi]:
-            del self.model[xi][yi][zi][name]
+          if name in self.model[x][y][z]:
+            del self.model[x][y][z][name]
             deleted = True
-          else:
-            print ("There should be a point, but there is not. Check add in structure.py.")
-            return False
         return remove_joints(beam)
 
       # the beam isn't located in the specified box

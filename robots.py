@@ -22,7 +22,8 @@ class Movable(Automaton):
     Adds a load of the specified value to the named beam at the specific location
     '''
     distance = helpers.distance(self.__location,location)
-    self.__model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case, myType=1, dir=10, dist=distance, val=value, relDist=False)
+    ret = self.__model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case, myType=1, dir=10, dist=distance, val=value, relDist=False)
+    assert ret == 0
 
   def __change_location_local(self,new_location, first_beam = None):
     '''
@@ -75,13 +76,14 @@ class Movable(Automaton):
       # add the loads we want back to the frame (automatically deletes all previous loads)
       for i in range(data[1]):
         if i not in indeces:
-          self.__model.FrameObj.SetLoadPoint(self.beam.name, variables.robot_load_case, myType=1, dir=10, dist=data[7][i], val=data[9][i])
+          ret = self.__model.FrameObj.SetLoadPoint(self.beam.name, variables.robot_load_case, myType=1, dir=10, dist=data[7][i], val=data[9][i])
+          assert ret == 0
 
     # Move the load off the current location and to the new one (if still on beam), then change the locations
     removeload(self.__location)
 
-    # Check to see if we will be moving off a beam and onto the ground
-    if new_location[2] == 0:
+    # Check to see if we will be moving off a beam and onto the ground (50% chance)
+    if new_location[2] == 0 and random.randint(0,1) == 0:
       new_beam = None
 
     # Don't add the load if there is no beam
@@ -101,16 +103,16 @@ class Movable(Automaton):
     # Get all joints within a time-step
     # Remember that beams DOES NOT include the current beam, only others
     crawlable = {}
-    for joint, beams in self.beam.joints:
+    for joint in self.beam.joints:
       dist = helpers.distance(joint,self.__location)
       
       # If we are at the joint, return the possible directions of other beams
       if dist == 0:
-        for beam in beams:
+        for beam in self.beam.joints[joint]:
       
           # The index error should never happen, but this provides nice error support
           try:
-            e1, e2 = box[beam.name].endpoints
+            e1, e2 = beam.endpoints
             crawlable[beam.name] = [helpers.make_vector(self.__location,e1), helpers.make_vector(self.__location,e2)]
           except IndexError:
             print ("The beam {} seems to have a joint with {}, but it is not in the box?".format(name,self.beam.name))
@@ -142,21 +144,25 @@ class Movable(Automaton):
   def ground(self):
     '''
     This function finds the nearest beam to the robot that is connected 
-    to the xy-place (ground). It returns that beam and its distance from the robot.
+    to the xy-place (ground). It returns that beam and its direction from the robot.
     '''
     box = self.__structure.get_box(self.__location)
     distances = {}
-    for name, beam in box:
-      e1, e2 = beam.endpoints # So e1 is in the form (x,y,z)
+    vectors = {}
+    for name in box:
+      e1, e2 = box[name].endpoints # So e1 is in the form (x,y,z)
       # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
       if e1[2] == 0 and e2[0] == 0:
-        distances[beam] = helpers.distance_to_line(e1,e2,self.__location)
+        vectors[name] = helpers.vector_to_line(e1,e2,self.__location)
+        distances[name] = helpers.length(vectors[name])
         assert 1 == 2
       # Only one point is on the ground
       elif e1[2] == 0:
-        distances[beam] = helpers.distance(e1, self.__location)
+        vectors[name] = helpers.make_vector(self.__location, e1)
+        distances[name] = helpers.distance(e1, self.__location)
       elif e2[2] == 0:
-        distances[beam] = helpers.distances(e2, self.__location)
+        vectors[name] = helpers.make_vector(self.__location, e2)
+        distances[name] = helpers.distances(e2, self.__location)
 
     # get name of beam at the minimum distance if one exists
     if distances == {}:
@@ -166,7 +172,8 @@ class Movable(Automaton):
     name = min(distances, key=distances.get)
 
     return {  'beam'  : box[name],
-              'distance' : distances[name]}
+              'distance' : distances[name],
+              'direction' : vectors[name]}
 
   def wander(self):
     '''
@@ -202,24 +209,14 @@ class Movable(Automaton):
       new_location = random_location()
       self.__change_location_local(new_location)
     else:
-      dist, close_beam = result['distance'], result['beam']
-      if dist < self.__step:
-        rand = random.randint(0,1)
-        # Move randomly
-        if rand == 0:
-          new_location = random_location()
-          self.__change_location_local(new_location)
-        # Move onto the beam
-        else:
-          if dist == 0:
-            self.beam = close_beam
-          else:
-            e1, e2 = close_beam.endpoints
-            if e1[2] == 0:
-              self.move(helpers.make_vector(self.__location,e1), close_beam)
-            else:
-              self.move(helpers.make_vector(self.__location,e2), close_beam)
-
+      dist, close_beam, direction = result['distance'], result['beam'], result['direction']
+      if dist < self.__step and random.randint(0,1) == 0:
+        # 50% chance of moving towards the beam
+        self.beam = close_beam
+        self.move(direction,close_beam)
+      else:
+        new_location = random_location()
+        self.__change_location_local(new_location)
 
   def do_action(self):
     '''

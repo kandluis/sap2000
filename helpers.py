@@ -29,7 +29,7 @@ def distance(p1,p2):
   '''
   x1,y1,z1 = p1
   x2,y2,z2 = p2
-  dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)*2)
+  dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
 
   return dist
 
@@ -50,6 +50,27 @@ def distance_to_line(l1,l2,p):
 
   # cross the two and return the magnitude of result (this is the distance)
   return length(cross(a,v))
+
+def vector_to_line(l1,l2,p):
+  '''
+  Calculates the vector from the point p to the nearest location on the line
+  formed by l1,l2
+  '''
+  # Unit line vector
+  xl1, yl1, zl1 = l1
+  xl2, yl2, xl2 = l2
+  x, y , z = p
+
+  # vector from one endpoint of line to p
+  a = (x - xl1, y - yl1, z - zl1)
+  # unit line vector
+  length = distance(l1,l2)
+  assert length > 0
+  v = (xl2 - xl1 / length, yl2 - yl1 / length, zl2 - zl1 / length)
+
+  intersection = sum_vectors(l1,scale(dot(a,unit),unit))
+
+  return sub_vectors(intersection,p)
 
 def check_location(p):
   '''
@@ -73,14 +94,19 @@ def on_line(l1,l2,point):
     return True
 
   # creating two vectors
-  s1,s2,s3 = (lx2 - lx1) / dist1, (ly2 - ly1) / dist1, (lz2 - lz1) / dist1
-  s11,s22,s33 = (x - lx1) / dist2, (y - ly1) / dist2, (z - lz1) / dist2
-  
-  ret1, ret2, ret3= compare(s1,s11), compare(s2,s22), compare(s3,s33)
-  if ret1 == ret2 == ret3:
-    return ret1
+  v1 = (lx2 - lx1), (ly2 - ly1), (lz2 - lz1)
+  v2 = (x - lx1), (y - ly1), (z - lz1)
+
+  return compare(length(cross(v1,v2)),0) and between(lx1,lx2,x) and between(ly1,ly2,y) and between(lz1, lz2, z)
+
+def between(c1,c2,c3):
+  '''
+  Returns whether or not c3 is between c1 and c2
+  '''
+  if c1 < c2:
+    return c1 <= c3 and c3 <= c2
   else:
-    return false
+    return c2 <= c3 and c3 <= c1
 
 def correct(l1,l2,point):
   '''
@@ -107,7 +133,7 @@ def compare(x,y):
   '''
   Compares two int/floats by taking into account "epsilon"
   '''
-  return (abs(x - y) < epsilon)
+  return (abs(x - y) < variables.epsilon)
 
 def dot(v1,v2):
   '''
