@@ -74,7 +74,7 @@ def vector_to_line(l1,l2,p):
 
 def check_location(p):
   '''
-  Returns whether or not all elements in p are positive
+  Returns whether or not all elements in p are positive and are inside the restricted coordinates
   '''
   x,y,z = p
   return (x >=0 and y >= 0 and z >= 0 and x < variables.dim_x and y < variables.dim_y and z < variables.dim_z)

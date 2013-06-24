@@ -13,6 +13,7 @@ class Movable(Automaton):
     self.__structure = structure
     self.__step = variables.step_length
     self.__location = location
+    self.__ground_direction = None
     self.beam = None
     self.num_beams = variables.beam_capacity
     self.weight = variables.robot_load
@@ -124,10 +125,6 @@ class Movable(Automaton):
         else:
           crawlable[self.beam.name] = [helpers.make_vector(self.__location,joint)]
 
-      # If the joints are too far, ignore them
-      else:
-        pass
-
     # There are no joints nearby. This means we are either on a joint OR far from one. 
     # Therefore, we add the directions to the endpoint of our current beam to the current set of directions
     if self.beam.name not in crawlable:
@@ -175,6 +172,48 @@ class Movable(Automaton):
               'distance' : distances[name],
               'direction' : vectors[name]}
 
+  def get_ground_direction(self):
+    ''' 
+    In future classes, this function can be altered to return a preferred direction, 
+    but currently it only returns a random feasable direction if no direction is assigned
+    for the robot (self.__ground_direction)
+    '''
+    def random_direction():
+      '''
+      Returns a random, new location (direction)
+      '''
+      import random
+      # obtain a random direction
+      direction = (random.uniform(-1 * self.__step, self.__step), random.uniform(-1 * self.__step, self.__step), 0)
+
+      # The they can't all be zero!
+      if helpers.length(direction) == 0:
+        return random_direction()
+      else:
+        step = helpers.scale(self.__step,helpers.make_unit(direction))
+        predicted_location = helpers.sum_vectors(step, self.__location)
+        if helpers.check_location(predicted_location):
+          return direction
+        else:
+          return random_direction()
+
+    # If we have a currently set direction, check to see if we will go out of bounds.
+    if self.__ground_direction != None:
+      step = helpers.scale(self.__step,helpers.make_unit(self.__ground_direction))
+      predicted_location = helpers.sum_vectors(step, self.__location)
+      # We are going out of bounds, so set the direction to none and call yourself again (to find a new location)
+      if not helpers.check_location(predicted_location):
+        self.__ground_direction = None
+        return self.get_ground_direction()
+      # Here, we return the right direction
+      else:
+        assert self.__ground_direction != None
+        return self.__ground_direction
+    # We don't have a direction, so pick a random one (it is checked when we pick it)
+    else:
+      self.__ground_direction = random_direction()
+      return self.__ground_direction
+
   def wander(self):
     '''
     When a robot is not on a structure, it wanders around randomly. The wandering is
@@ -182,53 +221,21 @@ class Movable(Automaton):
     to be on it in the next time step, it jumps on the beam. The robots have a tendency
     to scale the structure, per se, but are restricted to their immediate surroundings.
     '''
-    import random
-
-    def random_location():
-      ''' 
-      Returns direction which will move the robot the right number of steps and keep it
-      inside the first octant(and within the bounds of the box)
-      '''
-      # obtain a random direction
-      direction = (random.uniform(-1 * self.__step, self.__step), random.uniform(-1 * self.__step, self.__step), 0)
-
-      # The they can't all be zero!
-      if helpers.length(direction) == 0:
-        return random_location()
-      else:
-        direction = helpers.scale(self.__step,helpers.make_unit(direction))
-        predicted_location = helpers.sum_vectors(direction, self.__location)
-        if helpers.check_location(predicted_location):
-          return predicted_location
-        else:
-          return random_location()
-
     # Check to see if robot is on a beam. If so, pick between moving on it or off it.
     result = self.ground()
     if result == None:
-      new_location = random_location()
+      direction = self.get_ground_direction()
+      new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
       self.__change_location_local(new_location)
     else:
       dist, close_beam, direction = result['distance'], result['beam'], result['direction']
-      if dist < self.__step and random.randint(0,1) == 0:
-        # 50% chance of moving towards the beam
+      if dist < self.__step:
         self.beam = close_beam
         self.move(direction,close_beam)
       else:
-        new_location = random_location()
+        direction = self.get_ground_direction()
+        new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
         self.__change_location_local(new_location)
-
-  def do_action(self):
-    '''
-    In movable, simply moves the robot to another location.
-    '''
-    # We are not on a beam, so wander about aimlessly
-    if self.beam == None:
-      beam = self.wander()
-
-    else:
-      move_info = self.get_direction()
-      self.move(move_info['direction'], move_info['beam'])
 
   def move(self, direction, beam):
     '''
@@ -298,28 +305,20 @@ class Movable(Automaton):
     return {  'beam'      : info['box'][beam_name],
               'direction' : direction }
 
-class Worker(Movable):
-  def __init__(self,structure,location,program):
-    super(Worker,self).__init__(structure,location,program)
-    self.beams = variables.beam_capacity
+  def on_structure(self):
+    '''
+    Returns whether or not the robot is on the structure
+    '''
+    return self.beam == None
 
-  def move(self):
+  def do_action(self):
     '''
-    Overwrite the move functionality of Movable to provide the chance to build in a timestep
-    instead of moving to another space.
+    In movable, simply moves the robot to another location.
     '''
-    if contruct():
-      self.build()
+    # We are not on a beam, so wander about aimlessly
+    if self.beam == None:
+      beam = self.wander()
+
     else:
-      super(Worker,self).move()
-
-  def build(self):
-    pass
-
-  def construct(self):
-    '''
-    Decides whether the local conditions dictate we should build (in which case)
-    It returns the two points that should be connected, or we should continue moving 
-    (in which case, it returns None)
-    ''' 
-    return False
+      move_info = self.get_direction()
+      self.move(move_info['direction'], move_info['beam'])

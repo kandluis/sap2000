@@ -9,6 +9,7 @@ class Beam:
     self.endpoints = EndPoints(i=endpoints[0], j=endpoints[1])
     self.joints = {}
     self.name = name
+    self.weight = variables.beam_weight
 
   def addjoint(self, coord, beam):
     '''

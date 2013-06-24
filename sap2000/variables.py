@@ -7,7 +7,7 @@ local_radius = 1
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 0.1
+step_length = .5
 
 # Length of each beam (in the units specified by program_units)
 beam_length = 1
@@ -23,8 +23,6 @@ beam_capacity = 1
 num_x = 25
 num_y = 25
 num_z = 25
-
-# The code assumes that these are all the same value
 dim_x = 50
 dim_y = 50
 dim_z = 50
@@ -43,3 +41,6 @@ robot_load_case = "ROBOTS"
 
 # Name of the material property defined for the beams
 material_name = "PIPE"
+
+# Location where construction is to begin
+contruction_location = (dim_x / 2, dim_y / 2, dim_z / 2)

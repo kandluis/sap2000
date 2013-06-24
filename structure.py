@@ -180,8 +180,7 @@ class Structure:
           self.model[xi][yi][zi][beam.name] = beam
           return 1
       except IndexError:
-        print ("The coordinate {}, is not in the structure. Something went wront in addpoint()".format(p))
-        return 0
+        raise OutofBox ("The coordinate {}, is not in the structure. Something went wront in addpoint()".format(p))
 
     # Create the beam
     new_beam = Beam(name,(p1,p2))
@@ -192,6 +191,7 @@ class Structure:
       for point in self.__path(p1, p2):
         total_boxes += addbeam(new_beam,point)
     except OutofBox as e:
+      print (e)
       return False
 
     # If something went wrong, kill the program
