@@ -1,6 +1,13 @@
 import sys, getopt
 from inout import io
 
+def run(input = "", output = ""):
+  # use default output file if none or empty given
+  if output != "":
+    return io(input, output)
+  else:
+    return io(input)
+
 if __name__ == "__main__":
   argv = sys.argv[1:]
   program = sys.argv[0]
@@ -28,20 +35,9 @@ if __name__ == "__main__":
     elif opt in ("-o", "--ofile"):
       outputfile = arg
 
-  if outputfile != "":
-    program, model = io(inputfile, outputfile)
-  else:
-    program, model = io(inputfile)
+  model, program = run(inputfile,outputfile)
 
-  if not hide:
-    program.show()
-
-  # DO SOME STUFF HERE
-  # analyzes and creates the analysis model
-  results_model = program.analysis.run()._obj
-
-  # exit application
-  program.exit()
-
-else:
-  print ("This utility should be called from the commandline. Opens the specified file, analyzes it for general information, and returns.")
+  # The program is hidden by default. Here it is
+  # shown if the --hidden flag is not passed
+  if hide:
+    program.hide()

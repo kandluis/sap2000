@@ -3,6 +3,8 @@ from sap2000.constants import UNITS
 from sap2000.sap_groups import SapGroups
 from sap2000.sap_areas import SapAreaObjects, SapAreaElements
 from sap2000.sap_points import SapPointObjects, SapPointElements
+from sap2000.sap_lines import SapLineElements
+from sap2000.sap_frames import SapFrameObjects
 from sap2000.sap_analysis import SapAnalysis
 
 
@@ -16,12 +18,14 @@ class Sap2000(object):
 
     # Each of the following attributes represents an object of the SAP2000 type library.
     # Each attribute is an instance of a subclass of SapBase.
-    self.model_initialized = False
+    self.model = None
     self.groups = SapGroups(sap_com_object)
     self.area_elements = SapAreaElements(sap_com_object)
     self.point_elements = SapPointElements(sap_com_object)
+    self.line_elements = SapLineElements(sap_com_object)
     self.area_objects = SapAreaObjects(sap_com_object)
     self.point_objects = SapPointObjects(sap_com_object)
+    self.frame_objects = SapFrameObjects(sap_com_object)
     self.analysis = SapAnalysis(sap_com_object)
 
   def start(self, units="kN_m_C", visible=True, filename=""):
@@ -40,12 +44,14 @@ class Sap2000(object):
     units = UNITS[units]
     self.sap_com_object.ApplicationStart(units, visible, filename)
 
-  def exit(self, save_file=False):
+  def exit(self, save_file=True):
     """ If the model file is saved then it is saved with its current name. """
     self.sap_com_object.ApplicationExit(save_file)
-    self.sap_com_object = None
-    if self.model_initialized :
-      self.sap_com_object.SapModel = None
+    if self.model != None:
+      self.sap_com_object.SapModel = 0
+    self.sap_com_object = 0
+
+    return;
 
   def hide(self):
     """
@@ -96,12 +102,22 @@ class Sap2000(object):
     return_value = model.InitializeNewModel()
     assert return_value == 0        # Ensure everything went as expected
 
-    self.model_initialized = True    # Keep track of model
+    self.model_initialized = model    # Keep track of model
 
     return model
 
+  def refreshview(self, window = 0, zoom = True):
+    '''
+    This functions updates the display so it is much faster
+    than refreshwindows())
+    '''
+    return_value = self.sap_com_object.SapModel.View.RefreshView(window, zoom)
+    assert return_value == 0
 
-if __name__=='__main__':
-  sap = Sap2000()
-  sap.start(filename="""C:/job/Elaiourgeio/SAP/yfistameno.sdb""")
-  sap.hide()
+  def refreshwindow(self,window = 0):
+    '''
+    This functions updates the Program Windows. Should be used after adding,
+    removing, or significantly modifying a new object/element in the model.
+    '''
+    return_value = self.sap_com_object.SapModel.View.RefreshWindow(window)
+    assert return_value == 0
