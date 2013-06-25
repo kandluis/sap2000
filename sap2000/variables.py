@@ -41,6 +41,3 @@ robot_load_case = "ROBOTS"
 
 # Name of the material property defined for the beams
 material_name = "PIPE"
-
-# Location where construction is to begin
-contruction_location = (dim_x / 2, dim_y / 2, dim_z / 2)

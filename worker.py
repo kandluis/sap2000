@@ -1,6 +1,6 @@
 from sap2000 import variables
 from robots import Movable
-import helpers
+import helpers, construction
 
 class Worker(Movable):
   def __init__(self,structure,location,program):
@@ -81,17 +81,22 @@ class Worker(Movable):
     works as follows. The robot moves around randomly with the following restrictions:
       The robot moves towards the home location if it has no beams and 
         the home location is detected nearby.
-      Otherwise, if it has beams for construction, it moves in a random direction until
-      it finds a beam to climb on. Otherwise, after the specified number of steps, it 
-      starts its own structure (tower)
+      Otherwise, if it has beams for construction, it moves toward the base specified construction
+      site. If it finds another beam nearby, it has a tendency to climb that beam instead.
     '''
-    # Check to see if robot is at home location
-    if self.__location[0] <= construction.home_size[0] and self.__location[1] <= construction.home_size[1]:
+    def at_home():
+      return within(construction.home, construction.home_size, self.__location)
+
+    # Check to see if robot is at home location and has no beams
+    if at_home() and self.num_beams == 0 :
       self.__pickup_beams(variables.beam_capacity)
 
     # Check to see if robot should build based on steps taken
+    # This has been removed
+    '''
     if self.steps_to_construct == 0:
       self.build()
+    '''
 
     # Find nearby beams to climb on
     result = self.ground()

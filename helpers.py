@@ -108,6 +108,16 @@ def between(c1,c2,c3):
   else:
     return c2 <= c3 and c3 <= c1
 
+def within(origin,size,point):
+  '''
+  Returns whether or not point is within the area designated by origin and size
+  '''
+  value = True
+  for i in range(3):
+    value = value and origin[i] <= point[i] and origin[i] + size[i] >= point[i] 
+ 
+  return value
+
 def correct(l1,l2,point):
   '''
   Returns the corrected version of 'point' so that it is within the line spanned by l1, l2
