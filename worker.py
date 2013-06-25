@@ -38,11 +38,10 @@ class Worker(Movable):
     it wants to move upwards. If it is not, it wants to move downwards. So basically the direction
     is picked by filtering by the z-component
     '''
-    def upwards(z):
-      return z > 0
-    def downwards(z):
-      return z < 0
     def filter_dict(dirs, new_dirs, comp_f):
+      '''
+      Filters a dictinary, taking out all directions not in the correct z-direction
+      '''
       for beam, vectors in info['directions'].items():
         for vector in vectors:
           # vector[2] = the z-component
@@ -56,10 +55,10 @@ class Worker(Movable):
     # Still have beams, so move upwards
     directions = {}
     if self.num_beams > 0 or self.upwards:
-      directions = filter_dict(info['directions'], directions, upwards)
+      directions = filter_dict(info['directions'], directions, lambda z : z > 0)
     # No more beams, so move downwards
     else:
-      directions = filter_dict(info['directions'], directions, downwards)
+      directions = filter_dict(info['directions'], directions, lambda z : z < 0)
 
     from random import choice
 
@@ -104,23 +103,60 @@ class Worker(Movable):
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
       self.__change_location_local(new_location)
-      self.steps_to_construct -= 1
+      # self.steps_to_construct -= 1
     else:
       dist, close_beam, direction = result['distance'], result['beam'], result['direction']
-      if dist < self.__step and self.num_beams > 0:
+
+      # If the beam is within steping distance, just jump on it
+      if self.num_beams > 0 and dist <= self.__step:
+        # Set the beam as the current one, and set the ground direction to None (so we walk randomly if we do get off the beam again)
         self.beam = close_beam
-        self.move(direction,close_beam)
+        self.__ground_direction = None
+
+        # Then move on the beam
+        self.move(direction, close_beam)
+
+      # If we can "detect" a beam, change the ground direction to approach it
+      elif self.num_beams > 0 and dist <= variables.local_radius:
+        self.__ground_direction = direction
+        new_location = helpers.sum_vectors(self.__location, helpers.scale(self.__step, helpers.make_unit(direction)))
+        self.__change_location_local(new_location)
       else:
         direction = self.get_ground_direction()
         new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
         self.__change_location_local(new_location)
-        self.steps_to_construct -= 1
+        # self.steps_to_construct -= 1
 
 
   def build(self):
     '''
-    This functions
+    This functions sets down a beam. This means it "wiggles" it around in the air until
+    it finds a connection (programatically, it just finds the connection which makes the smallest
+    angle). Returns false if something went wrong, true otherwise.
     '''
+    # This is the i-end of the beam being placed. We pivot about this
+    pivot = self.__location
+
+    # This is the j-end of the beam (if directly vertical)
+    vertical_point = helpers.sum_vectors(self.__location,(0,0,variables.beam_length))
+
+    # get all beams nearby (ie, all the beams in the current box and possible those further above)
+    local_box = self.__structure.get_box(self.__location)
+    top_box = self.__structure.get_box(vertical_point)
+
+    # Ratios contains the ratio dist / delta_z where dist is the shortest distance from the vertical beam
+    # segment to a beam nearby and delta_z is the z-component change from the pivot point to the intersection point
+    ratios = {}
+    for name in local_box:
+      beam = local_box[name]
+      intersection_point = helpers.intersection((beam.endpoints.i,beam.endpoints.j),(pivot, vertical_point))
+      if intersection_point != None:
+        # calculate the distance to the point, the change in z, and use that to calculate the ration
+        vector = helpers.vector_to_line(beam.endpoints.i,beam.endpoints.j,intersection_point)
+        if name in angles:
+        intersection_point = helpers.intersection(())
+        assert compare(ratios[name], helpers.)
+
 
   def construct(self):
     '''

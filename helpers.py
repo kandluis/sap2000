@@ -54,7 +54,7 @@ def distance_to_line(l1,l2,p):
 def vector_to_line(l1,l2,p):
   '''
   Calculates the vector from the point p to the nearest location on the line
-  formed by l1,l2
+  formed by l1,l2. The line is a segment.
   '''
   # Unit line vector
   xl1, yl1, zl1 = l1
@@ -68,8 +68,22 @@ def vector_to_line(l1,l2,p):
   assert length > 0
   v = (xl2 - xl1 / length, yl2 - yl1 / length, zl2 - zl1 / length)
 
+  # Find distance from l1 to intersetion by projecting
+  scalar_projection = dot(a,unit)
+
+  # Checking. If its negative, it means that the point of intersection is before l1. For our
+  # purposes, this means that the vector to the line_segment is the vector p -> l1
+  if scalar_projection < 0:
+    return make_vector(p,l1)
+
   intersection = sum_vectors(l1,scale(dot(a,unit),unit))
 
+  # Checking. If the intersection is not between the endpoints, then p is closer to l2
+  # Since we already checked the closeness to l1.
+  if not between_points(l1,l2,intersection):
+    return make_vector(p,l2)
+
+  # If we get here, the point closes to p is the point of intersection
   return sub_vectors(intersection,p)
 
 def check_location(p):
@@ -99,9 +113,19 @@ def on_line(l1,l2,point):
 
   return compare(length(cross(v1,v2)),0) and between(lx1,lx2,x) and between(ly1,ly2,y) and between(lz1, lz2, z)
 
+def between_points(p1,p2,p3):
+  '''
+  Returns whether or not the point p3 is between the points p1 and p2. inclusive.
+  '''
+  return_value = True
+  for i in range(3):
+    return_value = return_value and between(p1[i],p2[i],p3[i])
+
+  return return_value 
+
 def between(c1,c2,c3):
   '''
-  Returns whether or not c3 is between c1 and c2
+  Returns whether or not c3 is between c1 and c2, inclusive.
   '''
   if c1 < c2:
     return c1 <= c3 and c3 <= c2
@@ -137,14 +161,15 @@ def correct(l1,l2,point):
 
   return point
 
-
-
 def compare(x,y):
   '''
   Compares two int/floats by taking into account "epsilon"
   '''
   return (abs(x - y) < variables.epsilon)
 
+'''
+Helper functions for vector operations when keeping track of the structure in Python
+'''
 def dot(v1,v2):
   '''
   Dots two vectors
@@ -162,10 +187,6 @@ def dot(v1,v2):
   assert (loc1 == loc2)
 
   return dot
-
-'''
-Helper functions for vector operations when keeping track of the structure in Python
-'''
 
 def sum_vectors(v1,v2):
   '''
@@ -210,8 +231,13 @@ def cross(v1,v2):
 
   return (y1 * z2 - y2 * z1, z1 * x2 - z2 * x1, x1 * y2 - x2* y1)
 
+def parallel(v1,v2):
+  '''
+  Returns whether or not two vectors are parallel
+  '''
+  return length(cross(v1,v2)) == 0
 '''
-Helper functions pertaining to the sap program
+Helper functions pertaining to the SAP program
 '''
 
 def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
@@ -242,8 +268,10 @@ def intersection(l1, l2):
   Finds as quickly as possible whether two line segments intersect, 
   returning their point of intersection if they do intersect.
   Using the suggestion found here: http://mathforum.org/library/drmath/view/62814.html
+  Also, even if the two lines would intersect (if stretched infinitely), the function
+  still returns None if the intersection point is not within both line SEGMENTS
   '''
-  def same_direction(v1,v2):
+  def same_direction(v1,v2, segment = True):
     ''' 
     Returns whether or not two known to be parallel vectors point in the same direction
     '''
@@ -270,11 +298,63 @@ def intersection(l1, l2):
   unsigned_a = length(norm2) / length(norm1)
   a = unsigned_a if same_direction(norm1, norm2) else -1 * unsigned_a
 
+  # Get intersetion point
+  intersection_point = sum_vectors(p1,scale(a,v1))
+
+  # Verify that the point is in both line segments (ie, between the endpoints since we already know it is 
+  # on both lines)
+  if segment and (not between_points(p1,ep1,intersection_point) or not between_points(p2,ep2,intersection_point)):
+    return None
+
   return sum_vectors(p1,scale(a,v1))
 
+def closest_points(l1,l2):
+  '''
+  Calculates the closests points between the line l1 and l2
+  '''
+  def endpoints(line1, line2):
+    '''
+    Returns one endpoint of line1 or line2 (which ever has a feasable projection onto the other line)
+    '''
+    for endpoint in line1:
+      point = correct(line1[0],line1[1],endpoint)
+      if between(line2[0],line2[1],point):
+        return point
+    return None
 
-def parallel(v1,v2):
-  '''
-  Returns whether or not two vectors are parallel
-  '''
-  return length(cross(v1,v2)) == 0
+  # Get coordinates
+  i1,j1 =  l1
+  i2,j2 = l2
+
+  # get direction vectors
+  v1 = make_vector(i1,j1)
+  v2 = make_vector(i2,j2)
+
+  # Find normal
+  normal = cross(v1,v2)
+
+  # Our plane will contain l1 by default, so here we calculate another perpendicular vector in the plane
+  unit1 = make_unit(v1)
+  unit2 = make_unit(cross(normal,v1))
+
+  # Now we project v2 onto the plane to find the new direction vector, and project i2 to find the new initial point
+  new_v2 = sum_vectors(scale(dot(unit1,v2),unit1),scale(dot(unit2,v2),unit2))
+  new_i2 = sum_vectors(scale(dot(unit1,i2),unit1),scale(dot(unit2,i2),unit2))
+  new_j2 = sum_vectors(new_i2,new_v2)
+
+  # Next, find the intersection point of the two lines (now that they have been projected onto the same planme)
+  intersection_point = intersection((i1,j2),(new_i2,new_j2))
+  if intersection_point == None:
+    # This means that the two lines are parallel, so return one of the endpoints, and the point on the other line
+    # closest to it. 
+    point = endpoints(l1,l2)
+    if point == None:
+      assert 1 == 2
+    return point
+
+  # Now, find the intersection point between the original lines by moving the intersection point up until it meets the 
+  # projected line
+  true_intersect_point = intersection((i2,j2),(intersection_point,sum_vectors(intersection_point,normal)))
+
+  # Now we verify the intersection point to make sure it is within the original line, otherwise 
+    
