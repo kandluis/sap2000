@@ -347,14 +347,11 @@ def closest_points(l1,l2):
   if intersection_point == None:
     # This means that the two lines are parallel, so return one of the endpoints, and the point on the other line
     # closest to it. 
-    point = endpoints(l1,l2)
-    if point == None:
-      assert 1 == 2
-    return point
+    return endpoints(l1,l2)
 
   # Now, find the intersection point between the original lines by moving the intersection point up until it meets the 
   # projected line
   true_intersect_point = intersection((i2,j2),(intersection_point,sum_vectors(intersection_point,normal)))
 
-  # Now we verify the intersection point to make sure it is within the original line, otherwise 
+  # Now we verify the intersection point to make sure it is within the original l2.
     
