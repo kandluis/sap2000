@@ -1,14 +1,11 @@
-from sap2000 import variables
 from robots import Movable
-import helpers, construction
+import helpers, construction, variables
 
 class Worker(Movable):
   def __init__(self,structure,location,program):
     super(Worker,self).__init__(structure,location,program)
     self.num_beams = variables.beam_capacity
-    self.at_top = False
     self.upwards = False
-    self.steps_to_construct = construction.steps_to_start
 
   def __pickup_beams(num = variables.beam_capacity):
     self.num_beam = self.num_beams + num
@@ -30,7 +27,7 @@ class Worker(Movable):
 
     # Otherwise crawl somewhere else
     else:
-      super(Worker,self).do_action()
+      self.build()
 
   def get_direction(directions):
     ''' 
@@ -55,17 +52,19 @@ class Worker(Movable):
     # Still have beams, so move upwards
     directions = {}
     if self.num_beams > 0 or self.upwards:
-      directions = filter_dict(info['directions'], directions, lambda z : z > 0)
+      directions = filter_dict(info['directions'], directions, (lambda z : z > 0))
     # No more beams, so move downwards
     else:
-      directions = filter_dict(info['directions'], directions, lambda z : z < 0)
+      directions = filter_dict(info['directions'], directions, (lambda z : z < 0))
 
     from random import choice
 
     # This will only occur if no direction changes our vertical height. If this is the case, get directions as before
-    if directions == {}:
+    if directions == {} and not self.at_top:
       beam_name = choice(list(info['directions'].keys()))
       direction = choice(info['directions'][beam_name])
+      self.at_top = True
+
     # Otherwise we do have a set of directions taking us in the right place, so randomly pick any of them
     else:
       beam_name = choice(list(diretions.keys()))
@@ -128,6 +127,17 @@ class Worker(Movable):
         # self.steps_to_construct -= 1
 
 
+  def addbeam(self,p1,p2):
+    '''
+    Adds the beam to the SAP program and to the Python Structure. Might have to add joints 
+    for the intersections here in the future too.
+    '''
+    # Add to sap program
+    name = self.__program.frame_objects.addbycoord(p1,p2)
+
+    # Add to python structure
+    return self.__structure.add_beam(p1,p2,name)
+
   def build(self):
     '''
     This functions sets down a beam. This means it "wiggles" it around in the air until
@@ -170,13 +180,13 @@ class Worker(Movable):
               dictionary[e2] = ratio
 
         # Get the points at which the beam intersects the sphere created by the vertical beam      
-        sphere_points = helpers.sphere_intersection(beam.endpoints,(pivot,variables.beam_length))
+        sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,variables.beam_length)
         if sphere_points != None:
           # Cycle through intersection points (really, should be two, though it is possible for it to be one, in
           # which case, we would have already taken care of this). Either way, we just cycle
           for point in sphere_points:
             # The point is higher above. This way the robot only ever builds up
-            if point[2] >= vertical_point[2]:
+            if point[2] >= pivot[2]:
               projection = helpers.correct(pivot,vertical_point,point)
               # Sanity check
               assert(projection[2] == point[2])
@@ -201,20 +211,24 @@ class Worker(Movable):
     # The dictionary is indexed by the point, and each point is associated with one ratio
     ratios = add_ratios(local_box,add_ratios(top_box,ratios))
 
+    # No ratios found, so just build vertically
+    default_endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,helpers.make_unit(construction.beam['vertical_dir_set'])))
+    if ratios == {}:
+      return self.addbeam(pivot,default_endpoint)
+
+    import math
     point = min(ratios, key=ratios.get)
+
+    # If the smallest ratio is larger than what we've specified as the limit, then build vertically
+    if ratios[point] > math.tan(math.radians(construction.beam['angle_constraint'])):
+      return self.addbeam(pivot,default_endpoint)
 
     # Calculate the actual endpoint of the beam (now that we now direction vector)
     unit_direction = helpers.make_unit(helpers.make_vector(pivot,point))
     endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,unit_direction))
 
     # Construct the beammm! :))))
-    # Add to sap program
-    name = self.__program.frame_objects.addbycoord(pivot,endpoint)
-
-    # Add to python structure
-    return self.__structure.add_beam(pivot,endpoint,name)
-
-    # Might do some extra stuff around here. 
+    return self.addbeam(pivot,endpoint)
 
   def construct(self):
     '''
@@ -222,4 +236,8 @@ class Worker(Movable):
     It returns the two points that should be connected, or we should continue moving 
     (in which case, it returns None)
     ''' 
-    return False
+    if self.at_top or helpers.distances(self.__location,construction.construction_location) <= construction.construction_radius:
+      self.at_top = False
+      return True
+    else:
+      return False

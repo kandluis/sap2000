@@ -1,5 +1,4 @@
-import os, errno, math
-from sap2000 import variables
+import os, errno, math, variables
 from sap2000.constants import LOAD_PATTERN_TYPES
 
 def check(return_value, message):
@@ -93,7 +92,7 @@ def check_location(p):
   x,y,z = p
   return (x >=0 and y >= 0 and z >= 0 and x < variables.dim_x and y < variables.dim_y and z < variables.dim_z)
 
-def on_line(l1,l2,point):
+def on_line(l1,l2,point,segment = True):
   '''
   Returns whether the point lies close the line l1 -> l2. The error allowed is epsilon
   '''
@@ -111,7 +110,7 @@ def on_line(l1,l2,point):
   v1 = (lx2 - lx1), (ly2 - ly1), (lz2 - lz1)
   v2 = (x - lx1), (y - ly1), (z - lz1)
 
-  return compare(length(cross(v1,v2)),0) and between(lx1,lx2,x) and between(ly1,ly2,y) and between(lz1, lz2, z)
+  return compare(length(cross(v1,v2)),0) and (between(lx1,lx2,x) and between(ly1,ly2,y) and between(lz1, lz2, z) or not segment)
 
 def between_points(p1,p2,p3):
   '''
@@ -370,4 +369,49 @@ def closest_points(l1,l2, segment = True):
 
   # Now return the two points.
   return (intersection_point, true_intersect_point)
-  
+
+def sphere_intersection(line, center, radius, segment = True):
+  '''
+  Calculates the intersection points a line/line segment (as defined by two points)
+  and a sphere as defined by a center point and a radius. 
+
+  Possible return values -> None, One Point, Two Points
+  Uses the algorithm described here: http://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+  '''
+  line_origin = line[0]
+  unit_line_direction = make_unit(make_vector(line[0],line[1]))
+
+  dif = sub_vectors(line_origin,center)
+  discriminant = dot(unit_line_direction,dif)**2 - dot(dif,dif) + radius**2
+  # Value under the square root is negative, so this line does not intersect the sphere
+  if discriminant < 0:
+    return None
+  else:
+    neg_b = -1 * dot(unit_line_direction,dif)
+    # There is only one interesection point
+    if discriminant == 0:
+      p = sum_vectors(line_origin,scale(neg_b,unit_line_direction))
+      # verify it is on the line segment
+      if segment:
+        if on_line(line[0],line[1],p):
+          return p
+        else:
+          return None
+      else:
+        return p
+    # Two solutions. We need to return only the ones in the segment
+    else:
+      p1 = sum_vectors(line_origin,scale(neg_b + discriminant, unit_line_direction))
+      p2 = sum_vectors(line_origin,scale(neg_b - discriminant, unit_line_direction))
+      if not segment:
+        return p1,p2
+      else:
+        p1_bool, p2_bool = on_line(line[0],line[1],p1),on_line(line[0],line[1],p2)
+        if p1_bool and p2_bool:
+          return p1,p2
+        elif p1_bool:
+          return p1
+        elif p2_bool:
+          return p2
+        else:
+          return None

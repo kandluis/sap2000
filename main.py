@@ -1,8 +1,7 @@
 def run(timesteps = 10, robots = 10, debug = True, comment=""):
   from time import strftime
   from sap2000.constants import MATERIAL_TYPES, UNITS
-  from sap2000 import variables
-  import helpers, commandline
+  import helpers, commandline, variables
 
   outputfolder = 'C:\SAP 2000\\' +strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\"
   outputfilename = "output.sdb"
@@ -39,7 +38,7 @@ def run(timesteps = 10, robots = 10, debug = True, comment=""):
   if debug:
     loc_text = open(outputfolder + "locations.txt", 'w+')
     loc_text.write("This file contains the locations of the robots at each timestep.\n\n")
-    sap_failures = open(outputfolder + "sap_failures.txt" 'w+')
+    sap_failures = open(outputfolder + "sap_failures.txt", 'w+')
     sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully.\n\n")
 
   # Run the program the specified number of timesteps

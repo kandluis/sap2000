@@ -1,6 +1,5 @@
-from sap2000 import variables
 from sap2000.constants import EOBJECT_TYPES
-import helpers, construction
+import helpers, construction, variables
 
 class Automaton:
   def __init__(self,program):
@@ -13,10 +12,11 @@ class Movable(Automaton):
     self.__structure = structure
     self.__step = variables.step_length
     self.__location = location
+    self.at_top = False
 
     # The robots all initially move towards the centertower
     self.__ground_direction = helpers.make_vector(location,construction.construction_location)
-    
+
     self.beam = None
     self.num_beams = variables.beam_capacity
     self.weight = variables.robot_load

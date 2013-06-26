@@ -3,10 +3,9 @@ This file establishes the structure and keeps track of all beam elements added t
 it. This is done for the sake of efficiency, as we only want to query the SAP program
 when absolutely necessary. The following functions are all helpful
 '''
-from sap2000 import variables
 from beams import Beam
 from errors import OutofBox
-import math, sys,helpers
+import math, sys,helpers, variables
 
 class Structure:
   def __init__(self):
