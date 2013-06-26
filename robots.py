@@ -16,6 +16,7 @@ class Movable(Automaton):
 
     # The robots all initially move towards the centertower
     self.__ground_direction = helpers.make_vector(location,construction.construction_location)
+    
     self.beam = None
     self.num_beams = variables.beam_capacity
     self.weight = variables.robot_load
