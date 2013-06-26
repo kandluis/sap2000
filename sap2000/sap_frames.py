@@ -29,7 +29,7 @@ class SapFrameObjects(SapFramesBase):
     assert return_value == 0        # Ensure that everything went as expected
     return elements
 
-  def add(self, p1, p2, name, propName = "Default"):
+  def add(self, p1, p2, name="", propName = "Default"):
     '''
     This function adds a new frame object whose end points are specified by name.
     The function returns zero if the frame object is successfully added, otherwise 

@@ -263,7 +263,7 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
 '''
 Helper functions pertaining to the beams (especially intersections)
 '''
-def intersection(l1, l2):
+def intersection(l1, l2, segment = True):
   '''
   Finds as quickly as possible whether two line segments intersect, 
   returning their point of intersection if they do intersect.
@@ -271,7 +271,7 @@ def intersection(l1, l2):
   Also, even if the two lines would intersect (if stretched infinitely), the function
   still returns None if the intersection point is not within both line SEGMENTS
   '''
-  def same_direction(v1,v2, segment = True):
+  def same_direction(v1,v2):
     ''' 
     Returns whether or not two known to be parallel vectors point in the same direction
     '''
@@ -308,7 +308,7 @@ def intersection(l1, l2):
 
   return sum_vectors(p1,scale(a,v1))
 
-def closest_points(l1,l2):
+def closest_points(l1,l2, segment = True):
   '''
   Calculates the closests points between the line l1 and l2
   '''
@@ -316,11 +316,15 @@ def closest_points(l1,l2):
     '''
     Returns one endpoint of line1 or line2 (which ever has a feasable projection onto the other line)
     '''
+    point = None
     for endpoint in line1:
       point = correct(line1[0],line1[1],endpoint)
       if between(line2[0],line2[1],point):
         return point
-    return None
+    if segment:
+      return None
+    else:
+      return point
 
   # Get coordinates
   i1,j1 =  l1
@@ -346,12 +350,24 @@ def closest_points(l1,l2):
   intersection_point = intersection((i1,j2),(new_i2,new_j2))
   if intersection_point == None:
     # This means that the two lines are parallel, so return one of the endpoints, and the point on the other line
-    # closest to it. 
+    # closest to it. Or, they might not intersect at all, so this could also be an issue which should be taken care of
+    # by the endpoints function.
     return endpoints(l1,l2)
 
   # Now, find the intersection point between the original lines by moving the intersection point up until it meets the 
-  # projected line
-  true_intersect_point = intersection((i2,j2),(intersection_point,sum_vectors(intersection_point,normal)))
+  # projected line. We pass in false because this new line needs to extend infinitely
+  true_intersect_point = intersection((i2,j2),(intersection_point,sum_vectors(intersection_point,normal)),False)
+  # This means that they are parallel, which should never happen.
+  if true_intersect_point == None:
+    assert 1 == 3
+
+  # Do a sanity check to make sure that the point is on the line we want
+  assert on_line(l2[0],l2[1],true_intersect_point)
 
   # Now we verify the intersection point to make sure it is within the original l2.
-    
+  if not between_points(l2[0],l2[1],true_intersect_point) and segment:
+    return None
+
+  # Now return the two points.
+  return (intersection_point, true_intersect_point)
+  

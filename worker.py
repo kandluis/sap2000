@@ -140,23 +140,81 @@ class Worker(Movable):
     # This is the j-end of the beam (if directly vertical)
     vertical_point = helpers.sum_vectors(self.__location,(0,0,variables.beam_length))
 
+    # We place it here in order to have access to the pivot and to the vertical point
+    def add_ratios(box,dictionary):
+      '''
+      Returns the 'verticality' that the beams in the box allow according to distance.
+      It also calculates the ratio according to the intersection points of the beam
+      with the sphere. 
+      '''
+      for name in box:
+        beam = box[name]
+        # Get the closest points between the vertical and the beam
+        points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
+        if points != None:
+          # Endpoints
+          e1,e2 = points
+          # Let's do a sanity check. The shortest distance should have no change in z
+          assert e1[2] == e2[2]
+          # If we can actually reach the second point from vertical
+          if helpers.distance(pivot,e2) <= variables.beam_length:
+            # Distance between the two endpoints
+            dist = helpers.distance(e1,e2)
+            # Change in z from vertical to one of the two poitns (we already asserted their z value to be equal)
+            delta_z = abs(e1[2] - vertical_point[2])
+            ratio = dist / delta_z
+            # Check to see if in the dictionary. If it is, associate point with ration
+            if e2 in dictionary:
+              assert(dictionary[e2] == ratio)
+            else:
+              dictionary[e2] = ratio
+
+        # Get the points at which the beam intersects the sphere created by the vertical beam      
+        sphere_points = helpers.sphere_intersection(beam.endpoints,(pivot,variables.beam_length))
+        if sphere_points != None:
+          # Cycle through intersection points (really, should be two, though it is possible for it to be one, in
+          # which case, we would have already taken care of this). Either way, we just cycle
+          for point in sphere_points:
+            # The point is higher above. This way the robot only ever builds up
+            if point[2] >= vertical_point[2]:
+              projection = helpers.correct(pivot,vertical_point,point)
+              # Sanity check
+              assert(projection[2] == point[2])
+
+              dist = helpers.distance(projection,point)
+              delta_z = abs(point[2] - vertical_point[2])
+              ratio = dist / delta_z
+              if point in dictionary:
+                assert(dictionary[point] == ratio)
+              else:
+                dictionary[point] = ratio
+
+      return dictionary
+
     # get all beams nearby (ie, all the beams in the current box and possible those further above)
     local_box = self.__structure.get_box(self.__location)
     top_box = self.__structure.get_box(vertical_point)
 
     # Ratios contains the ratio dist / delta_z where dist is the shortest distance from the vertical beam
     # segment to a beam nearby and delta_z is the z-component change from the pivot point to the intersection point
-    ratios = {}
-    for name in local_box:
-      beam = local_box[name]
-      intersection_point = helpers.intersection((beam.endpoints.i,beam.endpoints.j),(pivot, vertical_point))
-      if intersection_point != None:
-        # calculate the distance to the point, the change in z, and use that to calculate the ration
-        vector = helpers.vector_to_line(beam.endpoints.i,beam.endpoints.j,intersection_point)
-        if name in angles:
-        intersection_point = helpers.intersection(())
-        assert compare(ratios[name], helpers.)
+    # Here, we add to ratios those that arise from the intersection points of the beams with the sphere.
+    # The dictionary is indexed by the point, and each point is associated with one ratio
+    ratios = add_ratios(local_box,add_ratios(top_box,ratios))
 
+    point = min(ratios, key=ratios.get)
+
+    # Calculate the actual endpoint of the beam (now that we now direction vector)
+    unit_direction = helpers.make_unit(helpers.make_vector(pivot,point))
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,unit_direction))
+
+    # Construct the beammm! :))))
+    # Add to sap program
+    name = self.__program.frame_objects.addbycoord(pivot,endpoint)
+
+    # Add to python structure
+    return self.__structure.add_beam(pivot,endpoint,name)
+
+    # Might do some extra stuff around here. 
 
   def construct(self):
     '''
