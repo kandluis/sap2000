@@ -54,9 +54,8 @@ def run(timesteps = 10, robots = 10, debug = True, comment=""):
 
     # Run the analysis
     ret = SapModel.Analyze.RunAnalysis()
-    if not ret:
-      if debug:
-        sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
+    if ret and debug:
+      sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
 
     # Make sure that the model has been unlocked, and if not, unlock it
     if SapModel.GetModelIsLocked():

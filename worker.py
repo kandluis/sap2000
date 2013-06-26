@@ -83,11 +83,11 @@ class Worker(Movable):
       site. If it finds another beam nearby, it has a tendency to climb that beam instead.
     '''
     def at_home():
-      return within(construction.home, construction.home_size, self.__location)
+      return helpers.within(construction.home, construction.home_size, self.location)
 
     # Check to see if robot is at home location and has no beams
     if at_home() and self.num_beams == 0 :
-      self.__pickup_beams(variables.beam_capacity)
+      self.pickup_beams(variables.beam_capacity)
 
     # Check to see if robot should build based on steps taken
     # This has been removed
@@ -100,30 +100,30 @@ class Worker(Movable):
     result = self.ground()
     if result == None:
       direction = self.get_ground_direction()
-      new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
-      self.__change_location_local(new_location)
+      new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
+      self.change_location_local(new_location)
       # self.steps_to_construct -= 1
     else:
       dist, close_beam, direction = result['distance'], result['beam'], result['direction']
 
       # If the beam is within steping distance, just jump on it
-      if self.num_beams > 0 and dist <= self.__step:
+      if self.num_beams > 0 and dist <= self.step:
         # Set the beam as the current one, and set the ground direction to None (so we walk randomly if we do get off the beam again)
         self.beam = close_beam
-        self.__ground_direction = None
+        self.ground_direction = None
 
         # Then move on the beam
         self.move(direction, close_beam)
 
       # If we can "detect" a beam, change the ground direction to approach it
       elif self.num_beams > 0 and dist <= variables.local_radius:
-        self.__ground_direction = direction
-        new_location = helpers.sum_vectors(self.__location, helpers.scale(self.__step, helpers.make_unit(direction)))
-        self.__change_location_local(new_location)
+        self.ground_direction = direction
+        new_location = helpers.sum_vectors(self.location, helpers.scale(self.step, helpers.make_unit(direction)))
+        self.change_location_local(new_location)
       else:
         direction = self.get_ground_direction()
-        new_location = helpers.sum_vectors(self.__location,helpers.scale(self.__step, helpers.make_unit(direction)))
-        self.__change_location_local(new_location)
+        new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
+        self.change_location_local(new_location)
         # self.steps_to_construct -= 1
 
 
@@ -133,10 +133,10 @@ class Worker(Movable):
     for the intersections here in the future too.
     '''
     # Add to sap program
-    name = self.__program.frame_objects.addbycoord(p1,p2)
+    name = self.program.frame_objects.addbycoord(p1,p2)
 
     # Add to python structure
-    return self.__structure.add_beam(p1,p2,name)
+    return self.structure.add_beam(p1,p2,name)
 
   def build(self):
     '''
@@ -145,10 +145,10 @@ class Worker(Movable):
     angle). Returns false if something went wrong, true otherwise.
     '''
     # This is the i-end of the beam being placed. We pivot about this
-    pivot = self.__location
+    pivot = self.location
 
     # This is the j-end of the beam (if directly vertical)
-    vertical_point = helpers.sum_vectors(self.__location,(0,0,variables.beam_length))
+    vertical_point = helpers.sum_vectors(self.location,(0,0,variables.beam_length))
 
     # We place it here in order to have access to the pivot and to the vertical point
     def add_ratios(box,dictionary):
@@ -202,8 +202,8 @@ class Worker(Movable):
       return dictionary
 
     # get all beams nearby (ie, all the beams in the current box and possible those further above)
-    local_box = self.__structure.get_box(self.__location)
-    top_box = self.__structure.get_box(vertical_point)
+    local_box = self.structure.get_box(self.location)
+    top_box = self.structure.get_box(vertical_point)
 
     # Ratios contains the ratio dist / delta_z where dist is the shortest distance from the vertical beam
     # segment to a beam nearby and delta_z is the z-component change from the pivot point to the intersection point
@@ -236,7 +236,8 @@ class Worker(Movable):
     It returns the two points that should be connected, or we should continue moving 
     (in which case, it returns None)
     ''' 
-    if self.at_top or helpers.distances(self.__location,construction.construction_location) <= construction.construction_radius:
+    location = self.get_location()
+    if self.at_top or helpers.distance(location,construction.construction_location) <= construction.construction_radius:
       self.at_top = False
       return True
     else:
