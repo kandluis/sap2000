@@ -2,13 +2,16 @@ import sys, getopt
 from inout import io
 
 def run(input = "", output = ""):
+
   # use default output file if none or empty given
   if output != "":
     return io(input, output)
   else:
     return io(input)
 
+# When running it from a commandline, do this.
 if __name__ == "__main__":
+  # Set variables
   argv = sys.argv[1:]
   program = sys.argv[0]
   hide = False

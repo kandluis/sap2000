@@ -4,8 +4,17 @@ import helpers, construction, variables
 class Worker(Movable):
   def __init__(self,structure,location,program):
     super(Worker,self).__init__(structure,location,program)
+    # The number of beams the robot is carrying
     self.num_beams = variables.beam_capacity
+
+    # Whether we should move or upwards
     self.upwards = False
+
+    # Whether or not we should start construction
+    self.start_construction = False
+
+    # The direction in which we should move
+    self.next_direction_info = None
 
   def __pickup_beams(num = variables.beam_capacity):
     self.num_beam = self.num_beams + num
@@ -15,19 +24,49 @@ class Worker(Movable):
     self.num_beam = self.num_beam - num
     self.weight = self.weight - variables.beam_load * num
 
+  # Model needs to have been analyzed before calling THIS function
+  def decide(self):
+    '''
+    This functions decides what is going to be done next based on the analysis results of the program.
+    Therefore, this function should be the one that decides whether to construct or move, based on the local conditions
+    and then stores that information in the robot. The robot will then act based on that information
+    once the model has been unlocked. 
+    '''
+    # If we decide to construct, then we store that fact in a bool so action knows to wiggle the beam
+    if self.construct():
+      self.start_construction = True
+
+    # Otherwise, if we're not on a beam, then we will wander on the ground
+    elif self.beam == None:
+      self.next_direction_info = None
+
+    # Otherwise, we are not on the ground and we decided not to build, so pick a direction and store that
+    else:
+      self.next_direction_info = self.get_direction()
+
+  # Model needs to be unlocked before running this function! 
   def do_action(self):
     '''
     Overwriting the do_action functionality in order to have the robot move up or downward
     (depending on whether he is carrying a beam or not), and making sure that he gets a chance
-    to build part of the structure if the situation is suitable.
+    to build part of the structure if the situation is suitable. This is also to store the decion 
+    made based on the analysis results, so that THEN the model can be unlocked and changed.
     '''
-    # If we can't construct here, then move
-    if not self.construct():
-      super(Worker,self).do_action()
-
-    # Otherwise crawl somewhere else
-    else:
+    # Check to see if the robot decided to construct based on analysys results
+    if self.start_construction:
       self.build()
+      self.start_construction = False
+
+    # We're still on the ground, so wander
+    elif self.beam == None:
+      self.wander()
+
+    # Otherwise, we're on a beam but decided not to build, so get direction we decided to move in,
+    # and move.
+    else:
+      assert self.next_direction_info != None
+      self.move(self.next_direction_info['direction'], self.next_direction_info['beam'])
+      self.next_direction_info = None
 
   def get_direction(directions):
     ''' 
@@ -66,6 +105,7 @@ class Worker(Movable):
       self.at_top = True
 
     # Otherwise we do have a set of directions taking us in the right place, so randomly pick any of them
+    # We will change this later based on the analysis results from the program.
     else:
       beam_name = choice(list(diretions.keys()))
       direction = directions[beam_name]
@@ -87,7 +127,7 @@ class Worker(Movable):
 
     # Check to see if robot is at home location and has no beams
     if at_home() and self.num_beams == 0 :
-      self.pickup_beams(variables.beam_capacity)
+      self.__pickup_beams()
 
     # Check to see if robot should build based on steps taken
     # This has been removed
@@ -130,10 +170,11 @@ class Worker(Movable):
   def addbeam(self,p1,p2):
     '''
     Adds the beam to the SAP program and to the Python Structure. Might have to add joints 
-    for the intersections here in the future too.
+    for the intersections here in the future too. Removes the beam from the robot.
     '''
     # Add to sap program
     name = self.program.frame_objects.addbycoord(p1,p2)
+    self.__discard_beams()
 
     # Add to python structure
     return self.structure.add_beam(p1,p2,name)
@@ -158,46 +199,48 @@ class Worker(Movable):
       with the sphere. 
       '''
       for name in box:
-        beam = box[name]
-        # Get the closest points between the vertical and the beam
-        points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
-        if points != None:
-          # Endpoints
-          e1,e2 = points
-          # Let's do a sanity check. The shortest distance should have no change in z
-          assert e1[2] == e2[2]
-          # If we can actually reach the second point from vertical
-          if helpers.distance(pivot,e2) <= variables.beam_length:
-            # Distance between the two endpoints
-            dist = helpers.distance(e1,e2)
-            # Change in z from vertical to one of the two poitns (we already asserted their z value to be equal)
-            delta_z = abs(e1[2] - vertical_point[2])
-            ratio = dist / delta_z
-            # Check to see if in the dictionary. If it is, associate point with ration
-            if e2 in dictionary:
-              assert(dictionary[e2] == ratio)
-            else:
-              dictionary[e2] = ratio
-
-        # Get the points at which the beam intersects the sphere created by the vertical beam      
-        sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,variables.beam_length)
-        if sphere_points != None:
-          # Cycle through intersection points (really, should be two, though it is possible for it to be one, in
-          # which case, we would have already taken care of this). Either way, we just cycle
-          for point in sphere_points:
-            # The point is higher above. This way the robot only ever builds up
-            if point[2] >= pivot[2]:
-              projection = helpers.correct(pivot,vertical_point,point)
-              # Sanity check
-              assert(projection[2] == point[2])
-
-              dist = helpers.distance(projection,point)
-              delta_z = abs(point[2] - vertical_point[2])
+        # Ignore the beam you're on.
+        if name != self.beam.name:
+          beam = box[name]
+          # Get the closest points between the vertical and the beam
+          points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
+          if points != None:
+            # Endpoints
+            e1,e2 = points
+            # Let's do a sanity check. The shortest distance should have no change in z
+            assert e1[2] == e2[2]
+            # If we can actually reach the second point from vertical
+            if helpers.distance(pivot,e2) <= variables.beam_length:
+              # Distance between the two endpoints
+              dist = helpers.distance(e1,e2)
+              # Change in z from vertical to one of the two poitns (we already asserted their z value to be equal)
+              delta_z = abs(e1[2] - vertical_point[2])
               ratio = dist / delta_z
-              if point in dictionary:
-                assert(dictionary[point] == ratio)
+              # Check to see if in the dictionary. If it is, associate point with ration
+              if e2 in dictionary:
+                assert(dictionary[e2] == ratio)
               else:
-                dictionary[point] = ratio
+                dictionary[e2] = ratio
+
+          # Get the points at which the beam intersects the sphere created by the vertical beam      
+          sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,variables.beam_length)
+          if sphere_points != None:
+            # Cycle through intersection points (really, should be two, though it is possible for it to be one, in
+            # which case, we would have already taken care of this). Either way, we just cycle
+            for point in sphere_points:
+              # The point is higher above. This way the robot only ever builds up
+              if point[2] >= pivot[2]:
+                projection = helpers.correct(pivot,vertical_point,point)
+                # Sanity check
+                assert(projection[2] == point[2])
+
+                dist = helpers.distance(projection,point)
+                delta_z = abs(point[2] - vertical_point[2])
+                ratio = dist / delta_z
+                if point in dictionary:
+                  assert(dictionary[point] == ratio)
+                else:
+                  dictionary[point] = ratio
 
       return dictionary
 

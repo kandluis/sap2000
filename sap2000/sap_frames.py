@@ -50,4 +50,3 @@ class SapFrameObjects(SapFramesBase):
     return_value, name = self._obj.AddByCoord(x1,y1,z1,x2,y2,z2,name, propName,name)
     assert return_value == 0
     return name
-

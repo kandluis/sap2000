@@ -6,15 +6,23 @@ EndPoints = namedtuple("Endpoints", ["i","j"])
 
 class Beam:
   def __init__(self, name, endpoints):
+    # Each beam has two endpoints (i and j)
     self.endpoints = EndPoints(i=endpoints[0], j=endpoints[1])
+
+    # Each beam keeps track of all its joints. This is a dictionary as follows:
+    # {coord : beam}
     self.joints = {}
+
+    # This is the name of the beam
     self.name = name
+
+    # This is how much each beam weighs
     self.weight = variables.beam_weight
 
   def addjoint(self, coord, beam):
     '''
     Adds a joint (at the specified coordinate), to the beam itself. The beam variable
-    defines the name of the beam which crosses this one at the joint
+    defines the which crosses this one at the joint
     '''
     # Verify that the coordinate is on the beam based on endpoints
     if not helpers.on_line(self.endpoints.i, self.endpoints.j, coord):

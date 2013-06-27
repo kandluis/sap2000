@@ -3,22 +3,34 @@ import helpers, construction, variables
 
 class Automaton:
   def __init__(self,program):
+    # Accesss to the SapModel from SAP 2000
     self.model = program.sap_com_object.SapModel
+
+    # Access to the SAP 2000 Program
     self.program = program
 
 class Movable(Automaton):
   def __init__(self,structure,location,program):
     super(Movable, self).__init__(program)
+    # Access to my Python structure
     self.structure = structure
+
+    # Number of steps left in movement
     self.step = variables.step_length
+
+    # The current location of the robot
     self.location = location
+
+    # Whether or not the robot has reached the top
     self.at_top = False
 
     # The robots all initially move towards the centertower
     self.ground_direction = helpers.make_vector(location,construction.construction_location)
 
+    # The beam on which the robot currently is
     self.beam = None
-    self.num_beams = variables.beam_capacity
+
+    # The weight of the robot
     self.weight = variables.robot_load
 
   def __addload(beam,location,value):
@@ -288,7 +300,7 @@ class Movable(Automaton):
     return {  'box'         : box,
               'directions'  : directions_info }
 
-  def get_direction(directions):
+  def get_direction(self):
     ''' 
     Figures out which direction to move in. In this class, it simply picks a random
     direction (eventually, it will have a tendency to move upwards when carrying a beam

@@ -1,4 +1,4 @@
-def run(timesteps = 10, robots = 10, debug = True, comment=""):
+def run(timesteps = 10, robots = 5, debug = True, comment=""):
   from time import strftime
   from sap2000.constants import MATERIAL_TYPES, UNITS
   import helpers, commandline, variables
@@ -8,8 +8,12 @@ def run(timesteps = 10, robots = 10, debug = True, comment=""):
   program, SapModel = commandline.run("",outputfolder + outputfilename)
   program.hide()
 
-  # Make sure that the model is not locked so that we can change properties
-  assert not SapModel.GetModelIsLocked()
+  # Make sure that the model is not locked so that we can change properties. Unlock it if it is
+  if SapModel.GetModelIsLocked():
+    SapModel.SetModelIsLocked(False)
+
+  # Defining the Frame Section. THis is the Scaffold Tube
+  ret = SapModel.PropFrame.SetPipe(variables.material_name)
 
   # define material property HERE
   ret = SapModel.PropMaterial.SetMaterial('PIPE',MATERIAL_TYPES[
@@ -52,15 +56,21 @@ def run(timesteps = 10, robots = 10, debug = True, comment=""):
         loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
       loc_text.write("\n")
 
-    # Run the analysis
-    ret = SapModel.Analyze.RunAnalysis()
-    if ret and debug:
-      sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
+    # Run the analysis if there is a structure to analyze
+    if structure.tubes > 0:
+      ret = SapModel.Analyze.RunAnalysis()
+      # When ret is not 0 debug is on, write out that it failed.
+      if ret and debug:
+        sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
+
+    # Make the decision based on analysis results
+    swarm.decide()
 
     # Make sure that the model has been unlocked, and if not, unlock it
     if SapModel.GetModelIsLocked():
       SapModel.SetModelIsLocked(False)
       
+    # Change the model based on decisions made
     swarm.act()
 
   if debug:

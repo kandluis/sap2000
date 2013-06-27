@@ -14,14 +14,17 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """
   # start program
   program = sap2000.Sap2000()
+
+  # This opens the model if it is passedin
   program.start(filename=inputfile)
 
-  # open model if specified
+  # If there was no model specified, open an empty one
   if inputfile == "":
     model = program.initializeModel()
     return_value = model.File.NewBlank()
     assert return_value == 0
 
+  # Just point model to the right object
   else:
     model = program.sap_com_object.SapModel
 

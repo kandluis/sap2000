@@ -21,6 +21,9 @@ class Structure:
     # Storage of information
     self.model =  [[[{} for k in range(variables.num_x)] for j in range(variables.num_y)] for i in range(variables.num_z)]
 
+    # Keeps track of how many tubes we have in the structure
+    self.tubes = 0
+
   def __get_indeces(self,point):
     '''
     Returns the indeces of the box containing the specified point 
@@ -196,6 +199,9 @@ class Structure:
     # If something went wrong, kill the program
     assert total_boxes > 0
 
+    # Add a beam to the structure
+    self.tubes += 1
+
     return total_boxes
 
   def remove_beam(self,name,point=None):
@@ -224,6 +230,8 @@ class Structure:
               value = remove_joints(box[name])
               del box[name]
               deleted = value
+      self.tubes -= 1
+      return value
 
     # point is given, so no need to cycle. Just find endpoints.
     else:
@@ -241,6 +249,7 @@ class Structure:
           if name in self.model[x][y][z]:
             del self.model[x][y][z][name]
             deleted = True
+        self.tubes -= 1
         return remove_joints(beam)
 
       # the beam isn't located in the specified box
