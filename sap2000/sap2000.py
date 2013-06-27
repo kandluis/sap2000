@@ -102,7 +102,7 @@ class Sap2000(object):
     return_value = model.InitializeNewModel()
     assert return_value == 0        # Ensure everything went as expected
 
-    self.model_initialized = model    # Keep track of model
+    self.model = model    # Keep track of model
 
     return model
 
@@ -112,7 +112,6 @@ class Sap2000(object):
     than refreshwindows())
     '''
     return_value = self.sap_com_object.SapModel.View.RefreshView(window, zoom)
-    assert return_value == 0
 
   def refreshwindow(self,window = 0):
     '''
@@ -120,4 +119,3 @@ class Sap2000(object):
     removing, or significantly modifying a new object/element in the model.
     '''
     return_value = self.sap_com_object.SapModel.View.RefreshWindow(window)
-    assert return_value == 0

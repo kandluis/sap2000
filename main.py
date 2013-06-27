@@ -1,6 +1,6 @@
 def run(timesteps = 10, robots = 5, debug = True, comment=""):
   from time import strftime
-  from sap2000.constants import MATERIAL_TYPES, UNITS
+  from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
   import helpers, commandline, variables
 
   outputfolder = 'C:\SAP 2000\\' +strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\"
@@ -12,19 +12,19 @@ def run(timesteps = 10, robots = 5, debug = True, comment=""):
   if SapModel.GetModelIsLocked():
     SapModel.SetModelIsLocked(False)
 
-  # Defining the Frame Section. THis is the Scaffold Tube
-  ret = SapModel.PropFrame.SetPipe(variables.material_name)
-
-  # define material property HERE
-  ret = SapModel.PropMaterial.SetMaterial('PIPE',MATERIAL_TYPES[
-  	'MATERIAL_STEEL'])
-  assert ret == 0
-
   # switch to default units HERE
   ret = SapModel.SetPresentUnits(UNITS[variables.program_units])
   assert ret == 0
 
-  # assign isotropic mechanical properties to material HERE
+
+  # Defining our Scaffold Tube Material Property
+  ret, name = SapModel.PropMaterial.AddQuick(variables.material_property,MATERIAL_TYPES[variables.material_type],STEEL_SUBTYPES[variables.material_subtype],PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,variables.material_property)
+  assert ret == 0
+  assert name == variables.material_property
+
+  # Defining the Frame Section. This is the Scaffold Tube
+  ret = SapModel.PropFrame.SetPipe(variables.frame_property_name,variables.material_property,variables.outside_diameter,variables.wall_thickness)
+  assert ret == 0
 
   # add load patterns HERE, which by default also defines a Load Case
   if not helpers.addloadpattern(SapModel, variables.robot_load_case, 'LTYPE_DEAD'):

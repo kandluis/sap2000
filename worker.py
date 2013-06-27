@@ -16,6 +16,9 @@ class Worker(Movable):
     # The direction in which we should move
     self.next_direction_info = None
 
+    # Set the right weight
+    self.weight = variables.robot_load + variables.beam_load * variables.beam_capacity
+
   def __pickup_beams(num = variables.beam_capacity):
     self.num_beam = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
@@ -173,7 +176,7 @@ class Worker(Movable):
     for the intersections here in the future too. Removes the beam from the robot.
     '''
     # Add to sap program
-    name = self.program.frame_objects.addbycoord(p1,p2)
+    name = self.program.frame_objects.addbycoord(p1,p2,propName=variables.frame_property_name)
     self.__discard_beams()
 
     # Add to python structure

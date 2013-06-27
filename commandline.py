@@ -38,7 +38,7 @@ if __name__ == "__main__":
     elif opt in ("-o", "--ofile"):
       outputfile = arg
 
-  model, program = run(inputfile,outputfile)
+  program, model = run(inputfile,outputfile)
 
   # The program is hidden by default. Here it is
   # shown if the --hidden flag is not passed

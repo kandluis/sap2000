@@ -39,7 +39,7 @@ class SapFrameObjects(SapFramesBase):
     assert return_value == 0
     return name
 
-  def addbycoord(self,p1,p2,name, propName = "Default"):
+  def addbycoord(self,p1,p2,name="", propName = "Default"):
     '''
     This function adds a new frame object whose end points are specified by coordinate.
     The function returns zero if the frame object is successfully added, otherwise 

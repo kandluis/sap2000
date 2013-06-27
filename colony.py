@@ -25,7 +25,8 @@ class Swarm:
 
   def decide(self):
     # Assert that the model has been analyzed
-    assert program.model.GetModelIsLocked()
+    if not self.__model.model.GetModelIsLocked():
+      self.__model.model.SetModelIsLocked(True)
 
     # Tell each robot to make the decion
     for worker in self.workers:
@@ -33,7 +34,8 @@ class Swarm:
 
   def act(self):
     # Asser that the model is not locked!
-    assert not program.model.GetModelIsLocked()
+    if self.__model.model.GetModelIsLocked():
+      self.__model.model.SetModelIsLocked(False)
 
     # Tell each robot to act
     for worker in self.workers:
