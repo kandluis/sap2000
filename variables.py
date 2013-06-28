@@ -47,3 +47,6 @@ wall_thickness = 0.145 # inches
 
 material_type = "MATERIAL_STEEL"
 material_subtype = "MATERIAL_STEEL_SUBTYPE_ASTM_A500GrB_Fy42"
+
+# The number of timesteps before an analysis model is saved.
+analysis_timesteps = 20

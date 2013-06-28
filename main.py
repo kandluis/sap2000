@@ -1,10 +1,80 @@
+from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
+import helpers, commandline, variables, sys
+
+def setup_general(Model):
+  '''
+  Function to setup the general settigns for the SAP2000 program
+  '''
+  # switch to default units HERE
+  ret = Model.SetPresentUnits(UNITS[variables.program_units])
+  if ret:
+    return False
+
+  # add load patterns HERE, which by default also defines a Load Case
+  if not helpers.addloadpattern(Model, variables.robot_load_case, 'LTYPE_DEAD'):
+    print ("Failure when adding the loadpattern {}".format(variables.robot_load_case))
+    return False
+
+  if not setup_case(Model.LoadCases,variables.robot_load_case):
+    print ("Failure when setting-up load case {}.".format(variables.robot_load_case))
+    return False
+  if not setup_case(Model.LoadCases,"DEAD"):
+    print("Failure setting up DEAD case.")
+    return False
+
+  return True
+
+def setup_case(LoadCases, name):
+  # Set options (P-delta)
+  ret = LoadCases.StaticNonlinear.SetGeometricNonlinearity(name,1)
+  if ret:
+    return False
+
+  return True
+
+def setup_analysis(Analysis):
+  '''
+  Funtion to set up the analysis model to the correct values
+  '''
+  # Set the degrees of Freedom
+  DOF = (True,True,True,True,True,True)
+  ret = Analysis.SetActiveDOF(DOF)
+  if ret:
+    return False
+
+  # Set the cases to be analyzed (all cases)
+  ret = Analysis.SetRunCaseFlag("",True,True)
+  if ret:
+    return False
+
+  # Set Solver Options (Multithreaded, Auto, 64bit, robot_load_case)
+  ret = Analysis.SetSolverOption_1(2,0,False,variables.robot_load_case)
+  if ret:
+    return False
+
+  return True
+
+def setup_material(Model):
+  '''
+  Setups our beam materials
+  '''
+  # Defining our Scaffold Tube Material Property
+  ret, name = Model.PropMaterial.AddQuick(variables.material_property,MATERIAL_TYPES[variables.material_type],STEEL_SUBTYPES[variables.material_subtype],PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,variables.material_property)
+  if ret or name != variables.material_property:
+    return False
+
+  # Defining the Frame Section. This is the Scaffold Tube
+  ret = Model.PropFrame.SetPipe(variables.frame_property_name,variables.material_property,variables.outside_diameter,variables.wall_thickness)
+  if ret:
+    return False
+
+  return True
+
 def run(timesteps = 10, robots = 5, debug = True, comment=""):
   from time import strftime
-  from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
-  import helpers, commandline, variables
 
   outputfolder = 'C:\SAP 2000\\' +strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\"
-  outputfilename = "output.sdb"
+  outputfilename = "tower.sdb"
   program, SapModel = commandline.run("",outputfolder + outputfilename)
   program.hide()
 
@@ -12,24 +82,13 @@ def run(timesteps = 10, robots = 5, debug = True, comment=""):
   if SapModel.GetModelIsLocked():
     SapModel.SetModelIsLocked(False)
 
-  # switch to default units HERE
-  ret = SapModel.SetPresentUnits(UNITS[variables.program_units])
-  assert ret == 0
-
-
-  # Defining our Scaffold Tube Material Property
-  ret, name = SapModel.PropMaterial.AddQuick(variables.material_property,MATERIAL_TYPES[variables.material_type],STEEL_SUBTYPES[variables.material_subtype],PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,variables.material_property)
-  assert ret == 0
-  assert name == variables.material_property
-
-  # Defining the Frame Section. This is the Scaffold Tube
-  ret = SapModel.PropFrame.SetPipe(variables.frame_property_name,variables.material_property,variables.outside_diameter,variables.wall_thickness)
-  assert ret == 0
-
-  # add load patterns HERE, which by default also defines a Load Case
-  if not helpers.addloadpattern(SapModel, variables.robot_load_case, 'LTYPE_DEAD'):
-    print ("Failure when adding the loadpattern {}".format(variables.robot_load_case))
-    assert 1 == 2
+  # Setup
+  if not setup_general(SapModel):
+    sys.exit("General Setup Failed.")
+  if not setup_material(SapModel):
+    sys.exit("Material Setup Failed.")
+  if not setup_analysis(SapModel.Analyze):
+    sys.exit("Analysis Setup Failed.")
 
   # Make python structure and start up the colony
   from colony import ReactiveSwarm
@@ -38,7 +97,7 @@ def run(timesteps = 10, robots = 5, debug = True, comment=""):
   structure = Structure()
   swarm = ReactiveSwarm(robots, structure, program)
 
-  # Open files for writing
+  # Open files for writing if debugging
   if debug:
     loc_text = open(outputfolder + "locations.txt", 'w+')
     loc_text.write("This file contains the locations of the robots at each timestep.\n\n")
@@ -58,10 +117,23 @@ def run(timesteps = 10, robots = 5, debug = True, comment=""):
 
     # Run the analysis if there is a structure to analyze
     if structure.tubes > 0:
+      # Save to a different filename every now and again
+      if i % variables.analysis_timesteps == 0:
+        filename = "tower-" + str(timesteps) + ".sdb"
+        SapModel.File.Save(outputfolder + filename)
+
       ret = SapModel.Analyze.RunAnalysis()
       # When ret is not 0 debug is on, write out that it failed.
       if ret and debug:
         sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
+
+      # Deselect all outputs
+      ret = SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
+      if ret and debug:
+        sap_failures.write("Deselecting Cases failed! Value returned was {}".format(str(ret)))
+
+      # Select just the Robot Load Case for Output
+      ret = SapModel.Results.Setup.SetCaseSelectedForOutput(variables.robot_load_case)
 
     # Make the decision based on analysis results
     swarm.decide()
@@ -72,6 +144,10 @@ def run(timesteps = 10, robots = 5, debug = True, comment=""):
       
     # Change the model based on decisions made
     swarm.act()
+
+    # Give a status update if necessary
+    if i % 25 == 0 or i % 25 == 5 or (i * 5) % 7 == 3:
+      print("Currently on timestep {}".format(str(i)))
 
   if debug:
     loc_text.close()

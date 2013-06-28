@@ -90,6 +90,10 @@ class SapPointObjects(SapPointsBase):
     assert return_value == 0
     return name
 
+  def restraint(self,name,DOF):
+    return_value = self._obj.SetRestraint(name,DOF)
+    return return_value == 0
+
 
 class SapPointElements(SapPointsBase):
   def __init__(self, sap_com_object):

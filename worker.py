@@ -175,12 +175,43 @@ class Worker(Movable):
     Adds the beam to the SAP program and to the Python Structure. Might have to add joints 
     for the intersections here in the future too. Removes the beam from the robot.
     '''
-    # Add to sap program
-    name = self.program.frame_objects.addbycoord(p1,p2,propName=variables.frame_property_name)
+    def addpoint(p): 
+      '''
+      Adds a point object to our model. The object is retrained in all to rotational
+      motion only. Returns the name of the added point.
+      '''
+      # Add to SAP Program
+      name = self.program.point_objects.addcartesian(p)
+      # Check Coordinates
+      if p[2] == 0:
+        DOF = (True,True,True,False,False,False)
+        if self.program.point_objects.restraint(name,DOF):
+          return name
+      else:
+        return name
+
+    # Add points to SAP Program
+    p1_name, p2_name = addpoint(p1), addpoint(p2)
+    name = self.program.frame_objects.add(p1_name,p2_name,propName=variables.frame_property_name)
+
+    # Get rid of one beam
     self.__discard_beams()
 
-    # Add to python structure
-    return self.structure.add_beam(p1,p2,name)
+    # Successfully added to at least one box
+    if self.structure.add_beam(p1,p2,name) > 0:
+      box = self.structure.get_box[self.location]
+      try:
+        beam = box[name]
+      except IndexError:
+        print("Failed in addbeam. Adding beam {} at points {} and {} didn't work.".format(name,str(p1),str(p2)))
+        return False
+      # Cycle through the joints and add the necessary points
+      for coord in beam.joints:
+        if coord != p1 and coord != p2:
+          added = addpoint(coord)
+      return True
+    else:
+      return False
 
   def build(self):
     '''
