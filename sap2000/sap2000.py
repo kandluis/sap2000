@@ -28,7 +28,15 @@ class Sap2000(object):
     self.frame_objects = SapFrameObjects(sap_com_object)
     self.analysis = SapAnalysis(sap_com_object)
 
-  def start(self, units="kN_m_C", visible=True, filename=""):
+  def reset(self, units="kip_in_F"):
+    units = UNITS[units]
+    if self.model != None:
+      self.model.File.Save()
+
+    units = UNITS[units]
+    self.model = self.InitializeModel(units)
+
+  def start(self, units="kip_in_F", visible=True, filename=""):
     """
     Starts the Sap2000 application.
 
@@ -94,12 +102,13 @@ class Sap2000(object):
     return_value = self.sap_com_object.SapModel.File.Save(filename)
     assert return_value == 0        # Ensure that everything went as expected
 
-  def initializeModel(self):
+  def initializeModel(self, units = "kip_in_F"):
     """
     This functions initializes a new SapModel and returns a way to directly access it
     """
     model = self.sap_com_object.SapModel
-    return_value = model.InitializeNewModel()
+    units = UNITS[units]
+    return_value = model.InitializeNewModel(units)
     assert return_value == 0        # Ensure everything went as expected
 
     self.model = model    # Keep track of model
