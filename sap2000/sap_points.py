@@ -91,7 +91,7 @@ class SapPointObjects(SapPointsBase):
     return name
 
   def restraint(self,name,DOF):
-    return_value = self._obj.SetRestraint(name,DOF)
+    return_value, DOF = self._obj.SetRestraint(name,DOF)
     return return_value == 0
 
 

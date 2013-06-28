@@ -1,8 +1,8 @@
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
-from time import strftime
 from colony import ReactiveSwarm
 from structure import Structure
-import helpers, commandline, variables, sys
+from time import strftime
+import commandline, helpers, os, sys, variables
 
 class Simulation:
   def __init__(self):

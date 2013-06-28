@@ -5,7 +5,7 @@ home = (0,0,0)
 home_size = (variables.dim_x / 10, variables.dim_y / 10, 0)
 
 # Location where construction is to begin
-construction_location = (variables.dim_x / 2, variables.dim_y / 2, 0)
+construction_location = (variables.dim_x / 10, variables.dim_y / 10, 0)
 construction_radius = 2
 
 # Angle Contraint : When wiggling, if no beam is found within this

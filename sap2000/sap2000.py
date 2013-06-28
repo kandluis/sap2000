@@ -31,8 +31,6 @@ class Sap2000(object):
   def reset(self, units="kip_in_F"):
     if self.model != None:
       self.model.File.Save()
-
-    units = UNITS[units]
     self.model = self.initializeModel(units)
 
   def start(self, units="kip_in_F", visible=True, filename=""):

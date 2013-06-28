@@ -19,12 +19,12 @@ class Worker(Movable):
     # Set the right weight
     self.weight = variables.robot_load + variables.beam_load * variables.beam_capacity
 
-  def __pickup_beams(num = variables.beam_capacity):
+  def __pickup_beams(self,num = variables.beam_capacity):
     self.num_beam = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
 
-  def __discard_beams(num = 1):
-    self.num_beam = self.num_beam - num
+  def __discard_beams(self,num = 1):
+    self.num_beam = self.num_beams - num
     self.weight = self.weight - variables.beam_load * num
 
   # Model needs to have been analyzed before calling THIS function
@@ -187,6 +187,8 @@ class Worker(Movable):
         DOF = (True,True,True,False,False,False)
         if self.program.point_objects.restraint(name,DOF):
           return name
+        else:
+          print("Something went wrong adding ground point {}.".format(str(p)))
       else:
         return name
 
@@ -281,6 +283,7 @@ class Worker(Movable):
     # get all beams nearby (ie, all the beams in the current box and possible those further above)
     local_box = self.structure.get_box(self.location)
     top_box = self.structure.get_box(vertical_point)
+    ratios = {}
 
     # Ratios contains the ratio dist / delta_z where dist is the shortest distance from the vertical beam
     # segment to a beam nearby and delta_z is the z-component change from the pivot point to the intersection point
