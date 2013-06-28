@@ -25,8 +25,17 @@ def setup_general(Model):
   return True
 
 def setup_case(LoadCases, name):
+  # Initialize Non-linear
+  ret = LoadCases.StaticNonlinear.SetCase(name)
+  if ret:
+    return False
   # Set options (P-delta)
   ret = LoadCases.StaticNonlinear.SetGeometricNonlinearity(name,1)
+  if ret:
+    return False
+
+  # Set loads
+  ret = LoadCases.StaticNonlinear.SetLoads(name,1,["Load"],[name],[1])
   if ret:
     return False
 
