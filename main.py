@@ -35,7 +35,11 @@ def setup_case(LoadCases, name):
     return False
 
   # Set loads
-  ret = LoadCases.StaticNonlinear.SetLoads(name,1,["Load"],[name],[1])
+  if name == "DEAD":
+    ret, load_types, loads, scales = LoadCases.StaticNonlinear.SetLoads(name,1,["Load"],[name],[1])
+  else:
+    ret, load_types, loads, scales = LoadCases.StaticNonlinear.SetLoads(name,2,["Load","Load"],[name,"DEAD"],[1,1])
+
   if ret:
     return False
 
@@ -47,18 +51,21 @@ def setup_analysis(Analysis):
   '''
   # Set the degrees of Freedom
   DOF = (True,True,True,True,True,True)
-  ret = Analysis.SetActiveDOF(DOF)
+  ret, DOF = Analysis.SetActiveDOF(DOF)
   if ret:
+    print("Failure with DOF.")
     return False
 
   # Set the cases to be analyzed (all cases)
   ret = Analysis.SetRunCaseFlag("",True,True)
   if ret:
+    print("Failure with run flag.")
     return False
 
   # Set Solver Options (Multithreaded, Auto, 64bit, robot_load_case)
   ret = Analysis.SetSolverOption_1(2,0,False,variables.robot_load_case)
   if ret:
+    print("Failure with sovler options")
     return False
 
   return True
