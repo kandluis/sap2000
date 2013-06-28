@@ -29,12 +29,11 @@ class Sap2000(object):
     self.analysis = SapAnalysis(sap_com_object)
 
   def reset(self, units="kip_in_F"):
-    units = UNITS[units]
     if self.model != None:
       self.model.File.Save()
 
     units = UNITS[units]
-    self.model = self.InitializeModel(units)
+    self.model = self.initializeModel(units)
 
   def start(self, units="kip_in_F", visible=True, filename=""):
     """
@@ -54,12 +53,11 @@ class Sap2000(object):
 
   def exit(self, save_file=True):
     """ If the model file is saved then it is saved with its current name. """
-    self.sap_com_object.ApplicationExit(save_file)
-    if self.model != None:
-      self.sap_com_object.SapModel = 0
+    ret = self.sap_com_object.ApplicationExit(save_file)
+    assert ret == 0
     self.sap_com_object = 0
 
-    return;
+    return 0
 
   def hide(self):
     """

@@ -256,3 +256,10 @@ class Structure:
       else: 
         print ("The beam was not found with the specified point. Attempting to remove it anyway.")
         return remove_beam(name)
+
+  def reset(self):
+    # Reset the storage
+    self.model =  [[[{} for k in range(self.num[0])] for j in range(self.num[1])] for i in range(self.num[2])]
+
+    # Reset the tubes
+    self.tubes = 0

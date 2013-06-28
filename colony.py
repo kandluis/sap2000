@@ -19,8 +19,8 @@ class Swarm:
     for i in range(size):
       name = "worker_" + str(i)
 
-      # workers line up along the positive x axis
-      location = (i,0,0)
+      # workers start at home
+      location = (i,0,0) 
       self.workers[name] = Worker(structure,location,program)
 
   def decide(self):
@@ -51,3 +51,13 @@ class Swarm:
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,program):
     super(ReactiveSwarm, self).__init__(size,structure,program)
+
+  def reset(self):
+    '''
+    Create a spanking new army of workers
+    '''
+    self.workers = {}
+    for i in range(self.size):
+      name = "worker_" + str(i)
+      location = (i,0,0)
+      self.workers[name] = Worker(structure,location,program)

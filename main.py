@@ -26,10 +26,10 @@ class Simulation:
       print ("Failure when adding the loadpattern {}".format(variables.robot_load_case))
       return False
 
-    if not self.__setup_case(self.SapModel.LoadCases,variables.robot_load_case):
+    if not self.__setup_case(variables.robot_load_case):
       print ("Failure when setting-up load case {}.".format(variables.robot_load_case))
       return False
-    if not self.__setup_case(self.SapModel.LoadCases,"DEAD"):
+    if not self.__setup_case("DEAD"):
       print("Failure setting up DEAD case.")
       return False
 
@@ -62,19 +62,19 @@ class Simulation:
     '''
     # Set the degrees of Freedom
     DOF = (True,True,True,True,True,True)
-    ret, DOF = self.SapModel.Analysis.SetActiveDOF(DOF)
+    ret, DOF = self.SapModel.Analyze.SetActiveDOF(DOF)
     if ret:
       print("Failure with DOF.")
       return False
 
     # Set the cases to be analyzed (all cases)
-    ret = self.SapModel.Analysis.SetRunCaseFlag("",True,True)
+    ret = self.SapModel.Analyze.SetRunCaseFlag("",True,True)
     if ret:
       print("Failure with run flag.")
       return False
 
     # Set Solver Options (Multithreaded, Auto, 64bit, robot_load_case)
-    ret = self.SapModel.Analysis.SetSolverOption_1(2,0,False,variables.robot_load_case)
+    ret = self.SapModel.Analyze.SetSolverOption_1(2,0,False,variables.robot_load_case)
     if ret:
       print("Failure with sovler options")
       return False
@@ -122,38 +122,61 @@ class Simulation:
       ret = self.SapModel.File.Save(outputfolder + outputfilename)
       assert ret == 0
 
+      # Reset the structure and the swarm
+      self.Structure.reset()
+      self.Swarm.reset()
+
     else:
       print("The simulation is not started. Cannot reset.")
 
-  def start(self,comment = ""):
+  def start(self, robots = 10, comment = ""):
     '''
     This starts up the SAP 2000 Program and hides it.
     '''
-    outputfolder = 'C:\SAP 2000\\' +strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\"
-    outputfilename = "tower.sdb"
-    self.SapProgram, self.SapModel = commandline.run("",outputfolder + outputfilename)
-    self.SapProgram.hide()
-    self.started = True
+    if self.started:
+      print("Simulation has already been started")
+    else:
+      outputfolder = 'C:\SAP 2000\\' +strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\"
+      outputfilename = "tower.sdb"
+      self.SapProgram, self.SapModel = commandline.run("",outputfolder + outputfilename)
+      self.SapProgram.hide()
+      self.started = True
+
+    # Make python structure and start up the colony
+    self.Structure = Structure()
+    self.Swarm = ReactiveSwarm(robots, self.Structure, self.SapProgram)
+
+    return outputfolder
 
   def stop(self):
     '''
     This stops the simulation gracefully
     '''
-    if not self.started:
-      self.SapProgram.exit()
+    if self.started:
+      ret = self.SapProgram.exit()
+      assert ret == 0
       self.started = False
     else:
       print("No simulation started. Use Simulation.Start() to begin.")
 
-  def run(timesteps = 10, robots = 5, debug = True, comment=""):
+  def go(self,robots = 10, timesteps = 10, debug = True, comment = ""):
+    '''
+    Direct accesss
+    '''
+    outputfolder = ""
+    if not self.started:
+      outputfolder = self.start(robots=robots, comment=comment)
+    self.run_simulation(timesteps,debug,comment,outputfolder)
+    self.stop()
+
+  def run_simulation(self,timesteps = 10, debug = True,comment = "",outputfolder=""):
     '''
     Runs the simulation according to the variables passed in.
     '''
-    # Make sure the simulation has been started. If not, start it. Otherwise, reset everything.
-    if self.started:
-      self.reset(comment=comment)
-    else:
-      self.start(comment=comment)
+    # Make sure the simulation has been started. If not, exit.
+    if not self.started:
+      print("The simulation has not been started. Start it, then run it, or simply Simulation.go()")
+      sys.exit(1)
 
     # Make sure that the model is not locked so that we can change properties. Unlock it if it is
     if self.SapModel.GetModelIsLocked():
@@ -166,10 +189,6 @@ class Simulation:
       sys.exit("Material Setup Failed.")
     if not self.__setup_analysis():
       sys.exit("Analysis Setup Failed.")
-
-    # Make python structure and start up the colony
-    self.Structure = Structure()
-    self.Swarm = ReactiveSwarm(robots, self.Structure, self.SapProgram)
 
     # Open files for writing if debugging
     if debug:
@@ -184,7 +203,7 @@ class Simulation:
       # This section is to assert that all functions work as expected, from a surface level
       if debug:
         loc_text.write("Timestep: " + str(i) + "\n\n")
-        locations = swarm.get_locations()
+        locations = self.Swarm.get_locations()
         for worker in locations:
           loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
         loc_text.write("\n")
@@ -210,14 +229,14 @@ class Simulation:
         ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(variables.robot_load_case)
 
       # Make the decision based on analysis results
-      swarm.decide()
+      self.Swarm.decide()
 
       # Make sure that the model has been unlocked, and if not, unlock it
       if self.SapModel.GetModelIsLocked():
         self.SapModel.SetModelIsLocked(False)
         
       # Change the model based on decisions made
-      swarm.act()
+      self.Swarm.act()
 
       # Give a status update if necessary
       if i % 25 == 0 or i % 25 == 5 or (i * 5) % 7 == 3:
