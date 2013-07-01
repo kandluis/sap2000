@@ -26,12 +26,29 @@ class Worker(Movable):
     self.memory['built'] = False
 
   def __pickup_beams(self,num = variables.beam_capacity):
+    '''
+    Pickup beams by adding weight to the robot and by adding num to number carried
+    '''
     self.num_beams = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
 
   def __discard_beams(self,num = 1):
+    '''
+    Get rid of the specified number of beams by decresing the weight and the number carried
+    '''
     self.num_beams = self.num_beams - num
     self.weight = self.weight - variables.beam_load * num
+
+  def at_home(self):
+    '''
+    True if the robot is in the area designated as home (on the ground)
+    '''
+    return helpers.within(construction.home, construction.home_size, self.location)
+  def at_site(self):
+    '''
+    True if the robot is in the area designated as the construction site (on the ground)
+    '''
+    return helpers.within(construction.construction_location, construction.construction_size, self.location)
 
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
@@ -131,11 +148,8 @@ class Worker(Movable):
       Otherwise, if it has beams for construction, it moves toward the base specified construction
       site. If it finds another beam nearby, it has a tendency to climb that beam instead.
     '''
-    def at_home():
-      return helpers.within(construction.home, construction.home_size, self.location)
-
     # Check to see if robot is at home location and has no beams
-    if at_home() and self.num_beams == 0 :
+    if self.at_home() and self.num_beams == 0 :
       self.__pickup_beams()
 
     # Check to see if robot should build based on steps taken
@@ -185,14 +199,14 @@ class Worker(Movable):
       # Add to SAP Program
       name = self.program.point_objects.addcartesian(p)
       # Check Coordinates
-      if p[2] == 0:
-        DOF = (True,True,True,False,False,False)
-        if self.program.point_objects.restraint(name,DOF):
-          return name
-        else:
-          print("Something went wrong adding ground point {}.".format(str(p)))
-      else:
+      #if p[2] == 0:
+      DOF = (True,True,True,True,True,True)
+      if self.program.point_objects.restraint(name,DOF):
         return name
+      else:
+        print("Something went wrong adding ground point {}.".format(str(p)))
+      #else:
+      #  return name
 
     # Add points to SAP Program
     p1_name, p2_name = addpoint(p1), addpoint(p2)
@@ -223,11 +237,32 @@ class Worker(Movable):
     it finds a connection (programatically, it just finds the connection which makes the smallest
     angle). Returns false if something went wrong, true otherwise.
     '''
+    import math, operator
+
     # This is the i-end of the beam being placed. We pivot about this
     pivot = self.location
 
     # This is the j-end of the beam (if directly vertical)
     vertical_point = helpers.sum_vectors(self.location,(0,0,variables.beam_length))
+
+    def check(i,j):
+      '''
+      Checks the endpoints and returns two that don't already exist in the structure. If they do already
+      exist, then it returns two endpoints that don't. It does this by changing the j-endpoint. This function
+      also takes into account making sure that the returned value is still within the robot's tendency to build
+      up. (ie, it does not return a beam which would build below the limit angle_constraint)
+      '''
+      # There is already a beam here, so let's move our current beam slightly to some side
+      import random, math
+      if self.structure.exists(i,j):
+        limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length']
+        check(i,(random.uniform(-1* limit, limit),random.uniform(-1 * limit, limit), j[2]))
+      else:
+        # Calculate the actual endpoint of the beam (now that we now direction vector)
+        unit_direction = helpers.make_unit(helpers.make_vector(i,j))
+        j = helpers.sum_vectors(i,helpers.scale(variables.beam_length,unit_direction))
+        return i,j
+
 
     # We place it here in order to have access to the pivot and to the vertical point
     def add_ratios(box,dictionary):
@@ -285,6 +320,7 @@ class Worker(Movable):
     # get all beams nearby (ie, all the beams in the current box and possible those further above)
     local_box = self.structure.get_box(self.location)
     top_box = self.structure.get_box(vertical_point)
+    constraining_ratio = math.tan(math.radians(construction.beam['angle_constraint']))
     ratios = {}
 
     # Ratios contains the ratio dist / delta_z where dist is the shortest distance from the vertical beam
@@ -292,25 +328,32 @@ class Worker(Movable):
     # Here, we add to ratios those that arise from the intersection points of the beams with the sphere.
     # The dictionary is indexed by the point, and each point is associated with one ratio
     ratios = add_ratios(local_box,add_ratios(top_box,ratios))
-
-    # No ratios found, so just build vertically
     default_endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,helpers.make_unit(construction.beam['vertical_dir_set'])))
-    if ratios == {}:
-      return self.addbeam(pivot,default_endpoint)
 
-    import math
-    point = min(ratios, key=ratios.get)
+    # Sort the ratios we have so we can cycle through them
+    sorted_ratios = sorted(ratios.items(), key = operator.itemgetter(1))
 
-    # If the smallest ratio is larger than what we've specified as the limit, then build vertically
-    if ratios[point] > math.tan(math.radians(construction.beam['angle_constraint'])):
-      return self.addbeam(pivot,default_endpoint)
+    # Cycle through the sorted ratios until we find one which we haven't constructed or we run out of suitable ones.
+    for coord, ratio in sorted_ratios:
 
-    # Calculate the actual endpoint of the beam (now that we now direction vector)
-    unit_direction = helpers.make_unit(helpers.make_vector(pivot,point))
-    endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,unit_direction))
+      # If the smallest ratio is larger than what we've specified as the limit, then build as the default endpoint
+      if ratio > constraining_ratio:
+        i,j = check(pivot, coord)
+        return self.addbeam(i,j)
 
-    # Construct the beammm! :))))
-    return self.addbeam(pivot,endpoint)
+      # The beam doesn't exist, so build it
+      elif not self.structure.exists(pivot,coord):
+        unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
+        endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,unit_direction))
+        return self.addbeam(pivot,endpoint)
+
+      # Beam exist, so pass it
+      else:
+        pass
+
+    # If we get to this point, we have already built all possible ratios, so just stick something up
+    i, j = check(pivot, default_endpoint)
+    return self.addbeam(i,j)
 
   def construct(self):
     '''
@@ -318,10 +361,8 @@ class Worker(Movable):
     It returns the two points that should be connected, or we should continue moving 
     (in which case, it returns None)
     ''' 
-    location = self.get_location()
-    if (self.at_top or helpers.distance(location,construction.construction_location) <= construction.construction_radius) and not self.memory['built'] and self.num_beams > 0:
+    if (self.at_top or self.at_site()) and not self.memory['built'] and self.num_beams > 0:
       self.at_top = False
-       
       return True
     else:
       return False

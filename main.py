@@ -2,7 +2,7 @@ from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from colony import ReactiveSwarm
 from structure import Structure
 from time import strftime
-import commandline, helpers, os, sys, variables
+import construction, commandline, helpers, os, sys, variables
 
 class Simulation:
   def __init__(self):
@@ -96,6 +96,22 @@ class Simulation:
       return False
 
     return True
+
+  def __push_information(self,file_obj):
+    '''
+    Writes out the data from variables and construction
+    '''
+    variables_text = 'variables', [(constant, getattr(variables, constant)) for constant in dir(variables) if '__' not in constant and '.' not in constant]
+    construction_text = 'construction', [(constant, getattr(construction, constant)) for constant in dir(construction) if '__' not in constant and '.' not in constant]
+    data = ''
+    for name, file_data in variables_text, construction_text:
+      data += 'Data from the file {}.\n\n'.format(name)
+      for var_name, value in file_data:
+        data += var_name + ' : ' + str(value) + '\n'
+      data += '\n\n'
+
+    file_obj.write(data)
+
 
   def reset(self, comment = ""):
     '''
@@ -191,60 +207,59 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    if debug:
-      loc_text = open(outputfolder + "locations.txt", 'w+')
-      loc_text.write("This file contains the locations of the robots at each timestep.\n\n")
-      sap_failures = open(outputfolder + "sap_failures.txt", 'w+')
-      sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully.\n\n")
+    with open(outputfolder + "locations.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run.txt", 'w+') as run_text:
+      loc_text.write("This file contains the locations of the robots at each timestep if debuggin.\n\n")
+      sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully if debuggin.\n\n")
+      run_text.write("This file contains the variables used in the run of the simulation.\n\n")
+      run_text.write("Total timesteps: " + str(timesteps) + "\n\n")
 
-    # Run the simulation!
-    for i in range(timesteps):
+      # Write variables
+      self.__push_information(run_text)
 
-      # This section is to assert that all functions work as expected, from a surface level
-      if debug:
-        loc_text.write("Timestep: " + str(i) + "\n\n")
-        locations = self.Swarm.get_locations()
-        for worker in locations:
-          loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
-        loc_text.write("\n")
+      # Run the simulation!
+      for i in range(timesteps):
 
-      # Run the analysis if there is a structure to analyze
-      if self.Structure.tubes > 0:
-        # Save to a different filename every now and again
-        if i % variables.analysis_timesteps == 0:
-          filename = "tower-" + str(timesteps) + ".sdb"
-          self.SapModel.File.Save(outputfolder + filename)
+        # This section is to assert that all functions work as expected, from a surface level
+        if debug:
+          loc_text.write("Timestep: " + str(i) + "\n\n")
+          locations = self.Swarm.get_locations()
+          for worker in locations:
+            loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
+          loc_text.write("\n")
 
-        ret = self.SapModel.Analyze.RunAnalysis()
-        # When ret is not 0 debug is on, write out that it failed.
-        if ret and debug:
-          sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
+        # Run the analysis if there is a structure to analyze
+        if self.Structure.tubes > 0:
+          # Save to a different filename every now and again
+          if i % variables.analysis_timesteps == 0:
+            filename = "tower-" + str(timesteps) + ".sdb"
+            self.SapModel.File.Save(outputfolder + filename)
 
-        # Deselect all outputs
-        ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
-        if ret and debug:
-          sap_failures.write("Deselecting Cases failed! Value returned was {}".format(str(ret)))
+          ret = self.SapModel.Analyze.RunAnalysis()
+          # When ret is not 0 debug is on, write out that it failed.
+          if ret and debug:
+            sap_failures.write("RunAnalysis failed! Value returned was {}".format(str(ret)))
 
-        # Select just the Robot Load Case for Output
-        ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(variables.robot_load_case)
+          # Deselect all outputs
+          ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
+          if ret and debug:
+            sap_failures.write("Deselecting Cases failed! Value returned was {}".format(str(ret)))
 
-      # Make the decision based on analysis results
-      self.Swarm.decide()
+          # Select just the Robot Load Case for Output
+          ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(variables.robot_load_case)
 
-      # Make sure that the model has been unlocked, and if not, unlock it
-      if self.SapModel.GetModelIsLocked():
-        self.SapModel.SetModelIsLocked(False)
-        
-      # Change the model based on decisions made
-      self.Swarm.act()
+        # Make the decision based on analysis results
+        self.Swarm.decide()
 
-      # Give a status update if necessary
-      if i % 25 == 0 or i % 25 == 5 or (i * 5) % 7 == 3:
-        print("Currently on timestep {}".format(str(i)))
+        # Make sure that the model has been unlocked, and if not, unlock it
+        if self.SapModel.GetModelIsLocked():
+          self.SapModel.SetModelIsLocked(False)
+          
+        # Change the model based on decisions made
+        self.Swarm.act()
 
-    if debug:
-      loc_text.close()
-      sap_failures.close()
+        # Give a status update if necessary
+        if i % 25 == 0 or i % 25 == 5 or (i * 5) % 7 == 3:
+          print("Currently on timestep {}".format(str(i)))
 
 '''
 if __name__ == "__main__":

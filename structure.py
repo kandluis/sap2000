@@ -257,6 +257,20 @@ class Structure:
         print ("The beam was not found with the specified point. Attempting to remove it anyway.")
         return remove_beam(name)
 
+  def exists(self,e1,e2):
+    '''
+    Returns whether or not the beam defined by the endpoints e1 -> e2 exists
+    '''
+    # Let's get the box
+    xi, yi, zi = self.__get_indeces(e1)
+
+    # Cycle through the box and compare endpoints
+    for name in self.model[xi][yi][zi]:
+      beam = self.model[xi][yi][zi][name]
+      if (beam.endpoints.i == e1 and beam.endpoints == e2) or (beam.endpoints.i == e2 and beam.endpoints.j == e1):
+        return True
+    return False
+
   def reset(self):
     # Reset the storage
     self.model =  [[[{} for k in range(self.num[0])] for j in range(self.num[1])] for i in range(self.num[2])]
