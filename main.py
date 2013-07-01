@@ -142,6 +142,8 @@ class Simulation:
       self.Structure.reset()
       self.Swarm.reset()
 
+      return outputfolder
+
     else:
       print("The simulation is not started. Cannot reset.")
 

@@ -270,7 +270,7 @@ class Structure:
     # Cycle through the box and compare endpoints
     for name in self.model[xi][yi][zi]:
       beam = self.model[xi][yi][zi][name]
-      if (beam.endpoints.i == e1 and beam.endpoints == e2) or (beam.endpoints.i == e2 and beam.endpoints.j == e1):
+      if (beam.endpoints.i == e1 and beam.endpoints.j == e2) or (beam.endpoints.i == e2 and beam.endpoints.j == e1):
         return True
     return False
 

@@ -1,5 +1,5 @@
 from robots import Movable
-import helpers, construction, variables
+import helpers, construction, variables, pdb, math, random, operator
 
 class Worker(Movable):
   def __init__(self,structure,location,program):
@@ -24,6 +24,7 @@ class Worker(Movable):
 
     # Starting defaults
     self.memory['built'] = False
+    self.memory['construct'] = 0
 
   def __pickup_beams(self,num = variables.beam_capacity):
     '''
@@ -122,12 +123,10 @@ class Worker(Movable):
     else:
       directions = filter_dict(info['directions'], directions, (lambda z : z < 0))
 
-    from random import choice
-
     # This will only occur if no direction changes our vertical height. If this is the case, get directions as before
     if directions == {} and not self.at_top:
-      beam_name = choice(list(info['directions'].keys()))
-      direction = choice(info['directions'][beam_name])
+      beam_name = random.choice(list(info['directions'].keys()))
+      direction = random.choice(info['directions'][beam_name])
       self.at_top = True
 
     # Otherwise we do have a set of directions taking us in the right place, so randomly pick any of them
@@ -230,7 +229,7 @@ class Worker(Movable):
     it finds a connection (programatically, it just finds the connection which makes the smallest
     angle). Returns false if something went wrong, true otherwise.
     '''
-    import math, operator
+    pdb.set_trace()
 
     # This is the i-end of the beam being placed. We pivot about this
     pivot = self.location
@@ -246,7 +245,6 @@ class Worker(Movable):
       up. (ie, it does not return a beam which would build below the limit angle_constraint)
       '''
       # There is already a beam here, so let's move our current beam slightly to some side
-      import random, math
       if self.structure.exists(i,j):
         limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length']
         check(i,(random.uniform(-1* limit, limit),random.uniform(-1 * limit, limit), j[2]))
@@ -356,6 +354,8 @@ class Worker(Movable):
     ''' 
     if (self.at_top or self.at_site()) and not self.memory['built'] and self.num_beams > 0:
       self.at_top = False
+      self.memory['built'] = True
+      self.memory['construct'] += 1
       return True
     else:
       self.memory['built'] = False

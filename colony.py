@@ -9,10 +9,10 @@ class Swarm:
     self.home = (0,0,0)
 
     # Access to the structure, so we can create workers
-    self.__structure = structure
+    self.structure = structure
 
     # Access to the program
-    self.__model = program
+    self.model = program
 
     # create workers
     self.workers = {}
@@ -25,8 +25,8 @@ class Swarm:
 
   def decide(self):
     # Assert that the model has been analyzed
-    if not self.__model.model.GetModelIsLocked():
-      self.__model.model.SetModelIsLocked(True)
+    if not self.model.model.GetModelIsLocked():
+      self.model.model.SetModelIsLocked(True)
 
     # Tell each robot to make the decion
     for worker in self.workers:
@@ -34,8 +34,8 @@ class Swarm:
 
   def act(self):
     # Asser that the model is not locked!
-    if self.__model.model.GetModelIsLocked():
-      self.__model.model.SetModelIsLocked(False)
+    if self.model.model.GetModelIsLocked():
+      self.model.model.SetModelIsLocked(False)
 
     # Tell each robot to act
     for worker in self.workers:
@@ -60,7 +60,7 @@ class ReactiveSwarm(Swarm):
     for i in range(self.size):
       name = "worker_" + str(i)
       location = (i,0,0)
-      self.workers[name] = Worker(self.__structure,location,self.__model)
+      self.workers[name] = Worker(self.structure,location,self.model)
 
   def on_ground(self):
     '''
