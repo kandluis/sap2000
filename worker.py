@@ -19,12 +19,18 @@ class Worker(Movable):
     # Set the right weight
     self.weight = variables.robot_load + variables.beam_load * variables.beam_capacity
 
+    # Stores variables for construction algorithm (this is the robots memory)
+    self.memory = {}
+
+    # Starting defaults
+    self.memory['built'] = False
+
   def __pickup_beams(self,num = variables.beam_capacity):
-    self.num_beam = self.num_beams + num
+    self.num_beams = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
 
   def __discard_beams(self,num = 1):
-    self.num_beam = self.num_beams - num
+    self.num_beams = self.num_beams - num
     self.weight = self.weight - variables.beam_load * num
 
   # Model needs to have been analyzed before calling THIS function
@@ -60,16 +66,16 @@ class Worker(Movable):
       self.build()
       self.start_construction = False
 
-    # We're still on the ground, so wander
-    elif self.beam == None:
-      self.wander()
-
     # Otherwise, we're on a beam but decided not to build, so get direction we decided to move in,
     # and move.
-    else:
+    elif self.beam != None:
       assert self.next_direction_info != None
       self.move(self.next_direction_info['direction'], self.next_direction_info['beam'])
       self.next_direction_info = None
+
+    # We're still on the ground, so wander
+    else:
+      self.wander()
 
   def get_direction(directions):
     ''' 
@@ -145,14 +151,12 @@ class Worker(Movable):
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
       self.change_location_local(new_location)
-      # self.steps_to_construct -= 1
     else:
       dist, close_beam, direction = result['distance'], result['beam'], result['direction']
 
       # If the beam is within steping distance, just jump on it
       if self.num_beams > 0 and dist <= self.step:
-        # Set the beam as the current one, and set the ground direction to None (so we walk randomly if we do get off the beam again)
-        self.beam = close_beam
+        # Set the ground direction to None (so we walk randomly if we do get off the beam again)
         self.ground_direction = None
 
         # Then move on the beam
@@ -167,8 +171,6 @@ class Worker(Movable):
         direction = self.get_ground_direction()
         new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
         self.change_location_local(new_location)
-        # self.steps_to_construct -= 1
-
 
   def addbeam(self,p1,p2):
     '''
@@ -201,7 +203,7 @@ class Worker(Movable):
 
     # Successfully added to at least one box
     if self.structure.add_beam(p1,p2,name) > 0:
-      box = self.structure.get_box[self.location]
+      box = self.structure.get_box(self.location)
       try:
         beam = box[name]
       except IndexError:
@@ -236,7 +238,7 @@ class Worker(Movable):
       '''
       for name in box:
         # Ignore the beam you're on.
-        if name != self.beam.name:
+        if self.beam.name != name:
           beam = box[name]
           # Get the closest points between the vertical and the beam
           points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
@@ -317,8 +319,9 @@ class Worker(Movable):
     (in which case, it returns None)
     ''' 
     location = self.get_location()
-    if self.at_top or helpers.distance(location,construction.construction_location) <= construction.construction_radius:
+    if (self.at_top or helpers.distance(location,construction.construction_location) <= construction.construction_radius) and not self.memory['built'] and self.num_beams > 0:
       self.at_top = False
+       
       return True
     else:
       return False

@@ -17,7 +17,7 @@ class Beam:
     self.name = name
 
     # This is how much each beam weighs
-    self.weight = variables.beam_weight
+    self.weight = variables.beam_load
 
   def addjoint(self, coord, beam):
     '''

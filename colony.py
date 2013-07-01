@@ -60,4 +60,4 @@ class ReactiveSwarm(Swarm):
     for i in range(self.size):
       name = "worker_" + str(i)
       location = (i,0,0)
-      self.workers[name] = Worker(structure,location,program)
+      self.workers[name] = Worker(self.__structure,location,self.__model)

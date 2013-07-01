@@ -114,7 +114,7 @@ class Simulation:
       ret = self.SapModel.File.NewBlank()
       assert ret == 0
 
-      # Create directory of necessary
+      # Create directory if necessary
       path = os.path.dirname(outputfile)
       helpers.path_exists(path)
 

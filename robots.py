@@ -33,12 +33,13 @@ class Movable(Automaton):
     # The weight of the robot
     self.weight = variables.robot_load
 
-  def __addload(beam,location,value):
+  def __addload(self,beam,location,value):
     '''
     Adds a load of the specified value to the named beam at the specific location
     '''
+    self.beam = beam
     distance = helpers.distance(self.location,location)
-    ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case, myType=1, dir=10, dist=distance, val=value, relDist=False)
+    ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,1,10,distance,value,"Global", False, True,0)
     assert ret == 0
 
   def change_location_local(self,new_location, first_beam = None):
@@ -48,7 +49,6 @@ class Movable(Automaton):
     '''
     # When we move onto our first beam, add the load
     if first_beam != None:
-      self.beam = first_beam
       self.__addload(first_beam,new_location,self.weight)
     self.location = new_location
 
@@ -67,6 +67,7 @@ class Movable(Automaton):
     It also updates the current beam. If the robot moves off the structure, this also
     takes care of it.
     '''
+    import random
     def removeload(location):
       '''
       Removes the load assigned to a specific location based on where the robot existed (assumes the robot is on a beam)
@@ -92,11 +93,12 @@ class Movable(Automaton):
       # add the loads we want back to the frame (automatically deletes all previous loads)
       for i in range(data[1]):
         if i not in indeces:
-          ret = self.model.FrameObj.SetLoadPoint(self.beam.name, variables.robot_load_case, myType=1, dir=10, dist=data[7][i], val=data[9][i])
+          ret = self.model.FrameObj.SetLoadPoint(self.beam.name, variables.robot_load_case, 1, 10, data[7][i], data[9][i])
           assert ret == 0
 
     # Move the load off the current location and to the new one (if still on beam), then change the locations
-    removeload(self.location)
+    if self.beam != None:
+      removeload(self.location)
 
     # Check to see if we will be moving off a beam and onto the ground (50% chance)
     if new_location[2] == 0 and random.randint(0,1) == 0:
@@ -105,9 +107,10 @@ class Movable(Automaton):
     # Don't add the load if there is no beam
     if new_beam != None:
       self.__addload(new_beam, new_location, self.weight)
+    else:
+      self.beam = new_beam
 
     self.location = new_location
-    self.beam = new_beam
 
   def __get_walkable_directions(self,box):
     '''
@@ -193,11 +196,11 @@ class Movable(Automaton):
     but currently it only returns a random feasable direction if no direction is assigned
     for the robot (self.ground_direction)
     '''
+    import random
     def random_direction():
       '''
       Returns a random, new location (direction)
       '''
-      import random
       # obtain a random direction
       direction = (random.uniform(-1 * self.step, self.step), random.uniform(-1 * self.step, self.step), 0)
 
@@ -245,7 +248,6 @@ class Movable(Automaton):
     else:
       dist, close_beam, direction = result['distance'], result['beam'], result['direction']
       if dist < self.step:
-        self.beam = close_beam
         self.move(direction,close_beam)
       else:
         direction = self.get_ground_direction()
@@ -266,7 +268,8 @@ class Movable(Automaton):
       # call do_action again since we still have some distance left, and update step to reflect how much 
       # distance is left to cover
       self.step = self.step - length
-      self.do_action()
+      if self.step == 0:
+        self.step == variables.step_length
 
     # The direction is larger than the usual step, so move only the step in the specified direction
     else:
