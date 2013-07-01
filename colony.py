@@ -61,3 +61,14 @@ class ReactiveSwarm(Swarm):
       name = "worker_" + str(i)
       location = (i,0,0)
       self.workers[name] = Worker(self.__structure,location,self.__model)
+
+  def on_ground(self):
+    '''
+    Returns whether or not all of the swarm is on the ground. If it is,
+    no need to analyze the structure this time
+    '''
+    for worker in self.workers:
+      if self.workers[worker].beam != None:
+        return False
+
+    return True

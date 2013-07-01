@@ -210,6 +210,7 @@ def make_unit(v):
   Returns a unit vector in the same direction as v
   '''
   dist = length(v)
+  assert dist != 0
   return tuple(x / dist for x in v)
 
 def sub_vectors(v1,v2):
@@ -335,6 +336,10 @@ def closest_points(l1,l2, segment = True):
 
   # Find normal
   normal = cross(v1,v2)
+
+  # If the two are parallel, infinite points, so return None
+  if length(normal) == 0:
+    return None
 
   # Our plane will contain l1 by default, so here we calculate another perpendicular vector in the plane
   unit1 = make_unit(v1)

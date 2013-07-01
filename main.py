@@ -229,8 +229,8 @@ class Simulation:
             loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
           loc_text.write("\n")
 
-        # Run the analysis if there is a structure to analyze
-        if self.Structure.tubes > 0:
+        # Run the analysis if there is a structure to analyze and there are robots on it (ie, we actually need the information)
+        if self.Structure.tubes > 0 and not self.Swarm.on_ground():
           # Save to a different filename every now and again
           if i % variables.analysis_timesteps == 0:
             filename = "tower-" + str(timesteps) + ".sdb"
@@ -260,14 +260,9 @@ class Simulation:
         self.Swarm.act()
 
         # Give a status update if necessary
-        print("Currently on timestep {}".format(str(i)))
+        print("Currently on timestep {}".format(str(i + 1)))
 
       run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams on structure: " + str(self.Structure.tubes)
       run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height)
 
       run_text.write(run_data)
-
-if __name__ == "__main__":
-  sim = Simulation()
-  path = sim.start(1)
-  sim.run_simulation(40,outputfolder=path)

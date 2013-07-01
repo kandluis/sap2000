@@ -152,13 +152,6 @@ class Worker(Movable):
     if self.at_home() and self.num_beams == 0 :
       self.__pickup_beams()
 
-    # Check to see if robot should build based on steps taken
-    # This has been removed
-    '''
-    if self.steps_to_construct == 0:
-      self.build()
-    '''
-
     # Find nearby beams to climb on
     result = self.ground()
     if result == None:
@@ -273,7 +266,7 @@ class Worker(Movable):
       '''
       for name in box:
         # Ignore the beam you're on.
-        if self.beam.name != name:
+        if self.beam == None or self.beam.name != name:
           beam = box[name]
           # Get the closest points between the vertical and the beam
           points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
@@ -365,4 +358,5 @@ class Worker(Movable):
       self.at_top = False
       return True
     else:
+      self.memory['built'] = False
       return False
