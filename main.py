@@ -189,6 +189,7 @@ class Simulation:
     '''
     Runs the simulation according to the variables passed in.
     '''
+    start_time = strftime("%H:%M:%S")
     # Make sure the simulation has been started. If not, exit.
     if not self.started:
       print("The simulation has not been started. Start it, then run it, or simply Simulation.go()")
@@ -209,9 +210,10 @@ class Simulation:
     # Open files for writing if debugging
     with open(outputfolder + "locations.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run.txt", 'w+') as run_text:
       loc_text.write("This file contains the locations of the robots at each timestep if debuggin.\n\n")
-      sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully if debuggin.\n\n")
+      sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully if debugging.\n\n")
       run_text.write("This file contains the variables used in the run of the simulation.\n\n")
-      run_text.write("Total timesteps: " + str(timesteps) + "\n\n")
+      run_text.write("Total timesteps: " + str(timesteps) + "\n")
+      run_text.write("Start time of simumation: " + start_time + "\n\n")
 
       # Write variables
       self.__push_information(run_text)
@@ -258,11 +260,14 @@ class Simulation:
         self.Swarm.act()
 
         # Give a status update if necessary
-        if i % 25 == 0 or i % 25 == 5 or (i * 5) % 7 == 3:
-          print("Currently on timestep {}".format(str(i)))
+        print("Currently on timestep {}".format(str(i)))
 
-'''
+      run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams on structure: " + str(self.Structure.tubes)
+      run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height)
+
+      run_text.write(run_data)
+
 if __name__ == "__main__":
-  simulation = Simulation()
-  simulation.start()
-'''
+  sim = Simulation()
+  path = sim.start(1)
+  sim.run_simulation(40,outputfolder=path)

@@ -24,6 +24,8 @@ class Structure:
     # Keeps track of how many tubes we have in the structure
     self.tubes = 0
 
+    self.height = 0
+
   def __get_indeces(self,point):
     '''
     Returns the indeces of the box containing the specified point 
@@ -199,8 +201,9 @@ class Structure:
     # If something went wrong, kill the program
     assert total_boxes > 0
 
-    # Add a beam to the structure
+    # Add a beam to the structure count and increase height if necessary
     self.tubes += 1
+    self.height = max(p1[2],p2[2],self.height)
 
     return total_boxes
 
