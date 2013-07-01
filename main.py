@@ -210,8 +210,8 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + "locations.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run.txt", 'w+') as run_text:
-      loc_text.write("This file contains the locations of the robots at each timestep if debuggin.\n\n")
+    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text:
+      loc_text.write("This file contains information on the robots at each timestep if debugging.\n\n")
       sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully if debugging.\n\n")
       run_text.write("This file contains the variables used in the run of the simulation.\n\n")
       run_text.write("Total timesteps: " + str(timesteps) + "\n")
@@ -226,10 +226,13 @@ class Simulation:
         # This section is to assert that all functions work as expected, from a surface level
         if debug:
           loc_text.write("Timestep: " + str(i) + "\n\n")
-          locations = self.Swarm.get_locations()
-          for worker in locations:
-            loc_text.write(str(worker) + " : " + str(locations[worker]) + "\n")
-          loc_text.write("\n")
+          information = self.Swarm.get_information()
+          data = ''
+          for worker_data in information:
+            for key, data in worker_data.items():
+              data += key + " : " + str(data) + "\n"
+            data += "\n"
+          loc_text.write(data + "\n")
 
         # Run the analysis if there is a structure to analyze and there are robots on it (ie, we actually need the information)
         if self.Structure.tubes > 0 and not self.Swarm.on_ground():
@@ -262,9 +265,9 @@ class Simulation:
         self.Swarm.act()
 
         # Give a status update if necessary
-        print("Currently on timestep {}".format(str(i + 1)))
+        print("Finished timestep {}".format(str(i + 1)))
 
-      run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams on structure: " + str(self.Structure.tubes)
-      run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height)
+      run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams on structure: " + str(self.Structure.tubes) + "."
+      run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height) + "."
 
       run_text.write(run_data)

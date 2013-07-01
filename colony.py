@@ -41,10 +41,10 @@ class Swarm:
     for worker in self.workers:
       self.workers[worker].do_action()
 
-  def get_locations(self):
-    locations = {}
-    for name in self.workers:
-      locations[name] = self.workers[name].get_location()
+  def get_information(self):
+    information = {}
+    for name, worker in self.workers.items():
+      locations[name] = worker.current_state()
 
     return locations
 

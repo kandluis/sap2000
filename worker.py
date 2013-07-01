@@ -26,6 +26,16 @@ class Worker(Movable):
     self.memory['built'] = False
     self.memory['construct'] = 0
 
+  def current_state(self):
+    state = super(Worker, self).current_state()
+    state.update({  'num_beams'           : self.num_beams,
+                    'upwards'             : self.upwards,
+                    'start_construction'  : self.start_construction,
+                    'next_direction_info' : self.next_direction_info,
+                    'memory'              : self.memory})
+    
+    return state
+
   def __pickup_beams(self,num = variables.beam_capacity):
     '''
     Pickup beams by adding weight to the robot and by adding num to number carried
@@ -95,7 +105,7 @@ class Worker(Movable):
     else:
       self.wander()
 
-  def get_direction(directions):
+  def get_direction(self):
     ''' 
     Figures out which direction to move in. This means that if the robot is carrying a beam,
     it wants to move upwards. If it is not, it wants to move downwards. So basically the direction
@@ -108,7 +118,7 @@ class Worker(Movable):
       for beam, vectors in info['directions'].items():
         for vector in vectors:
           # vector[2] = the z-component
-          if comt_f(vector[2]):
+          if comp_f(vector[2]):
             new_dirs[beam] = vector
       return new_dirs
 
@@ -132,7 +142,7 @@ class Worker(Movable):
     # Otherwise we do have a set of directions taking us in the right place, so randomly pick any of them
     # We will change this later based on the analysis results from the program.
     else:
-      beam_name = choice(list(diretions.keys()))
+      beam_name = random.choice(list(directions.keys()))
       direction = directions[beam_name]
 
     return {  'beam'      : info['box'][beam_name],
@@ -229,8 +239,6 @@ class Worker(Movable):
     it finds a connection (programatically, it just finds the connection which makes the smallest
     angle). Returns false if something went wrong, true otherwise.
     '''
-    pdb.set_trace()
-
     # This is the i-end of the beam being placed. We pivot about this
     pivot = self.location
 
@@ -246,8 +254,8 @@ class Worker(Movable):
       '''
       # There is already a beam here, so let's move our current beam slightly to some side
       if self.structure.exists(i,j):
-        limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length']
-        check(i,(random.uniform(-1* limit, limit),random.uniform(-1 * limit, limit), j[2]))
+        limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length'] / 2
+        return check(i,(random.uniform(-1* limit, limit),random.uniform(-1 * limit, limit), j[2]))
       else:
         # Calculate the actual endpoint of the beam (now that we now direction vector)
         unit_direction = helpers.make_unit(helpers.make_vector(i,j))
@@ -277,14 +285,15 @@ class Worker(Movable):
             if helpers.distance(pivot,e2) <= variables.beam_length:
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
-              # Change in z from vertical to one of the two poitns (we already asserted their z value to be equal)
-              delta_z = abs(e1[2] - vertical_point[2])
-              ratio = dist / delta_z
-              # Check to see if in the dictionary. If it is, associate point with ration
-              if e2 in dictionary:
-                assert(dictionary[e2] == ratio)
-              else:
-                dictionary[e2] = ratio
+              if dist != 0:
+                # Change in z from vertical to one of the two poitns (we already asserted their z value to be equal)
+                delta_z = abs(e1[2] - vertical_point[2])
+                ratio = dist / delta_z
+                # Check to see if in the dictionary. If it is, associate point with ration
+                if e2 in dictionary:
+                  assert(dictionary[e2] == ratio)
+                else:
+                  dictionary[e2] = ratio
 
           # Get the points at which the beam intersects the sphere created by the vertical beam      
           sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,variables.beam_length)

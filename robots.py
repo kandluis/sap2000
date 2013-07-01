@@ -1,5 +1,5 @@
 from sap2000.constants import EOBJECT_TYPES
-import helpers, construction, variables
+import helpers, construction, variables, pdb
 
 class Automaton:
   def __init__(self,program):
@@ -8,6 +8,9 @@ class Automaton:
 
     # Access to the SAP 2000 Program
     self.program = program
+
+  def current_state(self):
+    return {}
 
 class Movable(Automaton):
   def __init__(self,structure,location,program):
@@ -32,6 +35,20 @@ class Movable(Automaton):
 
     # The weight of the robot
     self.weight = variables.robot_load
+
+  def current_state(self):
+    '''
+    Returns the current state of the robot. This is used when we write the information to the logs
+    '''
+    state = super(Movable,self).current_state()
+    state.update({  'step'              : self.step,
+                    'location'          : self.location,
+                    'at_top'            : self.at_top,
+                    'ground_direction'  : self.ground_direction,
+                    'beam'              : self.beam,
+                    'weight'            : self.weight})
+
+    return state
 
   def __addload(self,beam,location,value):
     '''
@@ -274,7 +291,7 @@ class Movable(Automaton):
     # The direction is larger than the usual step, so move only the step in the specified direction
     else:
       movement = helpers.scale(self.step, helpers.make_unit(direction))
-      new_location = helper.sum_vectors(self.location, movement)
+      new_location = helpers.sum_vectors(self.location, movement)
       self.change_location(new_location, beam)
 
       # update the step back to the default
@@ -295,6 +312,7 @@ class Movable(Automaton):
       self.change_location(helpers.correct(e1,e2,self.location), self.beam)
 
     # Obtain all local objects
+    pdb.set_trace()
     box = self.structure.get_box(self.location)
 
     # Find the beams and directions (ie, where can he walk?)

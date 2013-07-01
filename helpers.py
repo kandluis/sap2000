@@ -1,4 +1,4 @@
-import os, errno, math, variables
+import os, errno, math, variables, pdb
 from sap2000.constants import LOAD_PATTERN_TYPES
 
 def check(return_value, message):
@@ -318,11 +318,13 @@ def closest_points(l1,l2, segment = True):
     '''
     point = None
     for endpoint in line1:
-      point = correct(line1[0],line1[1],endpoint)
+      point = correct(line2[0],line2[1],endpoint)
       if between(line2[0],line2[1],point):
-        return point
+        return point, endpoint
     if segment:
       return None
+
+    ## TODO
     else:
       return point
 
@@ -371,7 +373,7 @@ def closest_points(l1,l2, segment = True):
   # Now we verify the intersection point to make sure it is within the original l2.
   if not between_points(l2[0],l2[1],true_intersect_point) and segment:
     return None
-
+  pdb.set_trace()
   # Now return the two points.
   return (intersection_point, true_intersect_point)
 
