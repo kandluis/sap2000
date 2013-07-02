@@ -28,7 +28,7 @@ dim_y = 1200
 dim_z = 1200
 
 # This defines how sensitive the program is to accepting errors within the beam structure
-epsilon = 0.01
+epsilon = 0.0001
 
 # This defines the mass of each robot in the units specified by program_units
 robot_load = 0.025 # This is around 35 pounds in kip.

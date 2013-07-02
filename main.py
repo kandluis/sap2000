@@ -101,8 +101,11 @@ class Simulation:
     '''
     Writes out the data from variables and construction
     '''
+    # Pull the names of all the variables and use that to get their attributes and store them in a list of names, values
     variables_text = 'variables', [(constant, getattr(variables, constant)) for constant in dir(variables) if '__' not in constant and '.' not in constant]
     construction_text = 'construction', [(constant, getattr(construction, constant)) for constant in dir(construction) if '__' not in constant and '.' not in constant]
+    
+    # Cycle through both modules and store information the data
     data = ''
     for name, file_data in variables_text, construction_text:
       data += 'Data from the file {}.\n\n'.format(name)
@@ -110,6 +113,16 @@ class Simulation:
         data += var_name + ' : ' + str(value) + '\n'
       data += '\n\n'
 
+    # Write out the data and you are now done
+    file_obj.write(data)
+
+  def __push_structure(self,file_obj):
+    '''
+    Writes out the data pertaining to the python structure stored in memory
+    '''
+    data = ''
+    for name, endpoints in self.Structure.information().items():
+      data += "Beam {} has endpoints: {}\n".format(name,str(endpoints))
     file_obj.write(data)
 
 
@@ -210,12 +223,11 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text:
+    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
       loc_text.write("This file contains information on the robots at each timestep if debugging.\n\n")
       sap_failures.write("This file contains messages created when SAP 2000 does not complete a function successfully if debugging.\n\n")
-      run_text.write("This file contains the variables used in the run of the simulation.\n\n")
-      run_text.write("Total timesteps: " + str(timesteps) + "\n")
-      run_text.write("Start time of simumation: " + start_time + "\n\n")
+      struct_data.write("This file contains the data about the Pythonic structure.\n\n")
+      run_text.write("This file contains the variables used in the run of the simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of simumation: " + start_time + "\n\n")
 
       # Write variables
       self.__push_information(run_text)
@@ -228,9 +240,9 @@ class Simulation:
           loc_text.write("Timestep: " + str(i) + "\n\n")
           information = self.Swarm.get_information()
           data = ''
-          for worker_data in information:
-            for key, data in worker_data.items():
-              data += key + " : " + str(data) + "\n"
+          for name, worker_data in information.items():
+            for key, temp_data in worker_data.items():
+              data += (str(key) + " : " + str(temp_data) + "\n")
             data += "\n"
           loc_text.write(data + "\n")
 
@@ -267,7 +279,11 @@ class Simulation:
         # Give a status update if necessary
         print("Finished timestep {}".format(str(i + 1)))
 
+      # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
+
       run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams on structure: " + str(self.Structure.tubes) + "."
       run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height) + "."
 
       run_text.write(run_data)
+
+      self.__push_structure(struct_data)

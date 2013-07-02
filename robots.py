@@ -1,5 +1,5 @@
 from sap2000.constants import EOBJECT_TYPES
-import helpers, construction, variables, pdb
+import helpers, construction, variables, random, pdb
 
 class Automaton:
   def __init__(self,program):
@@ -76,6 +76,12 @@ class Movable(Automaton):
     # Verify that we are still on the xy plane
     assert self.location[2] == 0
 
+  def climb_off(self, loc):
+    '''
+    Decides whether or not the robot should climb off the structure
+    '''
+    return helpers.compare(loc[2],0) and random.int(0,1) == 1
+
   def change_location(self,new_location, new_beam):
     '''
     Function that takes care of changing the location of the robot on the
@@ -84,7 +90,6 @@ class Movable(Automaton):
     It also updates the current beam. If the robot moves off the structure, this also
     takes care of it.
     '''
-    import random
     def removeload(location):
       '''
       Removes the load assigned to a specific location based on where the robot existed (assumes the robot is on a beam)
@@ -117,8 +122,8 @@ class Movable(Automaton):
     if self.beam != None:
       removeload(self.location)
 
-    # Check to see if we will be moving off a beam and onto the ground (50% chance)
-    if new_location[2] == 0 and random.randint(0,1) == 0:
+    # Check to see if we will be moving off a beam and onto the ground
+    if self.climb_off(new_location):
       new_beam = None
 
     # Don't add the load if there is no beam
@@ -143,7 +148,7 @@ class Movable(Automaton):
       dist = helpers.distance(joint,self.location)
       
       # If we are at the joint, return the possible directions of other beams
-      if dist == 0:
+      if helpers.compare(dist,0):
         for beam in self.beam.joints[joint]:
       
           # The index error should never happen, but this provides nice error support
@@ -184,15 +189,15 @@ class Movable(Automaton):
     for name in box:
       e1, e2 = box[name].endpoints # So e1 is in the form (x,y,z)
       # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
-      if e1[2] == 0 and e2[0] == 0:
+      if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
         vectors[name] = helpers.vector_to_line(e1,e2,self.location)
         distances[name] = helpers.length(vectors[name])
         assert 1 == 2
       # Only one point is on the ground
-      elif e1[2] == 0:
+      elif helpers.compare(e1[2],0):
         vectors[name] = helpers.make_vector(self.location, e1)
         distances[name] = helpers.distance(e1, self.location)
-      elif e2[2] == 0:
+      elif helpers.compare(e2[2],0):
         vectors[name] = helpers.make_vector(self.location, e2)
         distances[name] = helpers.distances(e2, self.location)
 
@@ -213,7 +218,6 @@ class Movable(Automaton):
     but currently it only returns a random feasable direction if no direction is assigned
     for the robot (self.ground_direction)
     '''
-    import random
     def random_direction():
       '''
       Returns a random, new location (direction)
@@ -285,7 +289,7 @@ class Movable(Automaton):
       # call do_action again since we still have some distance left, and update step to reflect how much 
       # distance is left to cover
       self.step = self.step - length
-      if self.step == 0:
+      if helpers.compare(self.step,0):
         self.step == variables.step_length
 
     # The direction is larger than the usual step, so move only the step in the specified direction
@@ -312,8 +316,9 @@ class Movable(Automaton):
       self.change_location(helpers.correct(e1,e2,self.location), self.beam)
 
     # Obtain all local objects
-    pdb.set_trace()
     box = self.structure.get_box(self.location)
+    if box == {}:
+      pdb.set_trace()
 
     # Find the beams and directions (ie, where can he walk?)
     directions_info = self.__get_walkable_directions(box)
@@ -328,15 +333,13 @@ class Movable(Automaton):
     and downwards when needing material for the structure). The direction 
     is also returned with it's corresponding beam in the following format (direction, beam).
     '''
-    from random import choice
-
     info = self.get_directions_info()
 
     # Pick a random beam to walk on
-    beam_name = choice(list(info['directions'].keys()))
+    beam_name = random.choice(list(info['directions'].keys()))
 
     # From the beam, pick a random direction (really, 50/50)
-    direction = choice(info['directions'][beam_name])
+    direction = random.choice(info['directions'][beam_name])
 
     return {  'beam'      : info['box'][beam_name],
               'direction' : direction }

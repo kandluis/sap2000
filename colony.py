@@ -44,9 +44,9 @@ class Swarm:
   def get_information(self):
     information = {}
     for name, worker in self.workers.items():
-      locations[name] = worker.current_state()
+      information[name] = worker.current_state()
 
-    return locations
+    return information
 
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,program):

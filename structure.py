@@ -274,6 +274,22 @@ class Structure:
         return True
     return False
 
+  def information(self):
+    '''
+    Returns the name of each beam along with it's endpoints
+    '''
+    beams = {}
+    for wall in self.model:
+      for column in wall:
+        for box in column:
+          for name, beam in box.items():
+            if name in beams:
+              assert beams[name] == (beam.endpoints.i, beam.endpoints.j)
+            else:
+              beams[name] = (beam.endpoints.i, beam.endpoints.j)
+
+    return beams
+
   def reset(self):
     # Reset the storage
     self.model =  [[[{} for k in range(self.num[0])] for j in range(self.num[1])] for i in range(self.num[2])]
