@@ -125,6 +125,14 @@ class Simulation:
       data += "Beam {} has endpoints: {}\n".format(name,str(endpoints))
     file_obj.write(data)
 
+  def __push_timestep(self,file_obj,i):
+    information = self.Swarm.get_information()
+    data = "Timesteps: {}\n\n".format(str(i))
+    for name, worker_data in information.items():
+      for key, temp_data in worker_data.items():
+        data += "{} : {}\n".format(str(key),str(temp_data))
+      data += "\n"
+    file_obj.write(data + "\n")
 
   def reset(self, comment = ""):
     '''
@@ -235,17 +243,6 @@ class Simulation:
       # Run the simulation!
       for i in range(timesteps):
 
-        # This section is to assert that all functions work as expected, from a surface level
-        if debug:
-          loc_text.write("Timestep: " + str(i) + "\n\n")
-          information = self.Swarm.get_information()
-          data = ''
-          for name, worker_data in information.items():
-            for key, temp_data in worker_data.items():
-              data += (str(key) + " : " + str(temp_data) + "\n")
-            data += "\n"
-          loc_text.write(data + "\n")
-
         # Run the analysis if there is a structure to analyze and there are robots on it (ie, we actually need the information)
         if self.Structure.tubes > 0 and not self.Swarm.on_ground():
           # Save to a different filename every now and again
@@ -272,8 +269,12 @@ class Simulation:
         # Make sure that the model has been unlocked, and if not, unlock it
         if self.SapModel.GetModelIsLocked():
           self.SapModel.SetModelIsLocked(False)
+
+        # This section writes the robots decisions out to a file
+        if debug:
+          self.__push_timestep(loc_text,i)
           
-        # Change the model based on decisions made
+        # Change the model based on decisions made (act on your decisions)
         self.Swarm.act()
 
         # Give a status update if necessary

@@ -112,24 +112,25 @@ def on_line(l1,l2,point,segment = True):
 
   return compare(length(cross(v1,v2)),0) and (between(lx1,lx2,x) and between(ly1,ly2,y) and between(lz1, lz2, z) or not segment)
 
-def between_points(p1,p2,p3):
+def between_points(p1,p2,p3, inclusive = True):
   '''
   Returns whether or not the point p3 is between the points p1 and p2. inclusive.
   '''
   return_value = True
   for i in range(3):
-    return_value = return_value and between(p1[i],p2[i],p3[i])
+    return_value = return_value and between(p1[i],p2[i],p3[i], inclusive)
 
   return return_value 
 
-def between(c1,c2,c3):
+def between(c1,c2,c3, inclusive = True):
   '''
   Returns whether or not c3 is between c1 and c2, inclusive.
   '''
+  compare = lambda x,y: x <= y if inclusive else lambda x,y : x < y
   if c1 < c2:
-    return c1 <= c3 and c3 <= c2
+    return compare(c1,c3) and compare(c3,c2)
   else:
-    return c2 <= c3 and c3 <= c1
+    return compare(c2,c3) and compare(c3,c1)
 
 def within(origin,size,point):
   '''
@@ -140,6 +141,15 @@ def within(origin,size,point):
     value = value and origin[i] <= point[i] and origin[i] + size[i] >= point[i] 
  
   return value
+
+def collinear(p1,p2,p3):
+  '''
+  Returns whether or not the three points are collinear.
+  '''
+  v1 = make_vector(p1,p2)
+  v2 = make_vector(p1,p3)
+  normal = cross(v1,v2)
+  return compare(length(normal),0)
 
 def correct(l1,l2,point):
   '''

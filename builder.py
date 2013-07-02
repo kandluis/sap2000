@@ -257,8 +257,8 @@ class Builder(Movable):
       up. (ie, it does not return a beam which would build below the limit angle_constraint)
       '''
       # There is already a beam here, so let's move our current beam slightly to some side
-      if self.structure.exists(i,j):
-        limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length'] / 2
+      if not self.structure.available(i,j):
+        limit = math.tan(math.radians(construction.beam['angle_constraint'])) * construction.beam['length'] / math.sqrt(2)
         return check(i,(random.uniform(-1* limit, limit),random.uniform(-1 * limit, limit), j[2]))
       else:
         # Calculate the actual endpoint of the beam (now that we now direction vector)
@@ -346,7 +346,7 @@ class Builder(Movable):
         return self.addbeam(i,j)
 
       # The beam doesn't exist, so build it
-      elif not self.structure.exists(pivot,coord):
+      elif self.structure.available(pivot,coord):
         unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
         endpoint = helpers.sum_vectors(pivot,helpers.scale(variables.beam_length,unit_direction))
         return self.addbeam(pivot,endpoint)

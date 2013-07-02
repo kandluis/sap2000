@@ -71,8 +71,8 @@ class Structure:
       # This is defined here to have access to the above signs and bounds
       def closest(p):
         '''
-        Returns which coordinate in p is closest to the boundary of a box (x = 0, y = 1, z = 2), 
-        and the absolute change in that coordinate.
+        Returns which coordinate in p is closest to the boundary of a box (x = 0, y = 1, z = 2)
+        if moving along the line, and the absolute change in that coordinate.
         '''
         def distance(i):
           '''
@@ -80,17 +80,24 @@ class Structure:
           '''
           if signs[i] == None:
             # This will never be the minimum. Makes later code easier
-            return max(self.box_size) + 1
+            return None
           elif signs[i]:
             return abs(p[i] - (bounds[i] + self.box_size[i]))
           else:
             return abs(p[i] - bounds[i])
 
-        # Find the shortest distances
-        coords = [distance(i) for i in range(3)]
-        index = coords.index(min(coords))
+        # Find the shortest time distance (ie, distance/velocity)
+        index = None
+        for i in range(3):
+          dist, vel = distance(i), abs(line[i])
+          if dist is not None and vel != 0:
+            if index is None:
+              index = i
+            else:
+              min_time = distance(index) / abs(line[index])
+              index = i if dist / vel < min_time else index
 
-        return index, coords[index]
+        return index, distance(index)
 
       # In crawl, we obtain the coordinate closests to an edge (index), and its absolute distance from that edge
       index, distance = closest(point)
@@ -259,6 +266,42 @@ class Structure:
       else: 
         print ("The beam was not found with the specified point. Attempting to remove it anyway.")
         return remove_beam(name)
+
+  def available(self,e1,e2):
+    '''
+    Returns whether or not the location between e1 and e2 is available for positioning a beam. 
+    To be available, two requirements exist:
+      1. No beam exists in that location.
+      2. No beam exists for part of that location (ie, no overlap)
+    '''
+    def box_available(box):
+      for name in box:
+        beam = box[name]
+        e3,e4 = beam.endpoints
+        # If all four points lie on the same line and one of the two points we are checking lies within the beam's endpoints
+        # then the location for our points is not available
+        if (helpers.collinear(e1,e2,e3) and helpers.collinear(e1,e2,e4) and (helpers.between_points(e3,e4,e1,False) or helpers.between_points(e3,e4,e2,False))):
+          return False
+      return True
+
+    # Requirement 1
+    if self.exists(e1,e2):
+      return False
+    # Check requirement 2
+    else:
+      # Get the box for e1 and check it
+      xi1, yi1, zi1 = self.__get_indeces(e1)
+      if not box_available(self.model[xi1][yi1][zi1]):
+        return False
+
+      xi2, yi2, zi2 = self.__get_indeces(e2)
+
+      # If the next box is not the same box, check it
+      if xi1 != xi2 or yi1 != yi2 or zi1 != zi2:
+        if not box_available(self.model[xi2][yi2][zi2]):
+          return False
+
+      return True
 
   def exists(self,e1,e2):
     '''
