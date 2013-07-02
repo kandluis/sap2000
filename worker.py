@@ -195,20 +195,21 @@ class Worker(Movable):
     '''
     def addpoint(p): 
       '''
-      Adds a point object to our model. The object is retrained in all to rotational
-      motion only. Returns the name of the added point.
+      Adds a point object to our model. The object is retrained in all directions
+      if on the ground (including rotational and translational motion. 
+      Returns the name of the added point.
       '''
       # Add to SAP Program
       name = self.program.point_objects.addcartesian(p)
       # Check Coordinates
-      #if p[2] == 0:
-      DOF = (True,True,True,True,True,True)
-      if self.program.point_objects.restraint(name,DOF):
-        return name
+      if p[2] == 0:
+        DOF = (True,True,True,True,True,True)
+        if self.program.point_objects.restraint(name,DOF):
+          return name
+        else:
+          print("Something went wrong adding ground point {}.".format(str(p)))
       else:
-        print("Something went wrong adding ground point {}.".format(str(p)))
-      #else:
-      #  return name
+        return name
 
     # Add points to SAP Program
     p1_name, p2_name = addpoint(p1), addpoint(p2)
