@@ -1,6 +1,5 @@
-from . import helpers, construction, variables
 from robots import Movable
-import pdb, math, random, operator
+import construction, helpers, math, operator, pdb, random, variables
 
 class Builder(Movable):
   def __init__(self,structure,location,program):

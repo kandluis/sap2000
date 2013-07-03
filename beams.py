@@ -1,5 +1,5 @@
-from . import helpers, variables
 from collections import namedtuple
+import helpers, variables
 
 Coord = namedtuple("Coordinates", ["x", "y", "z"])
 EndPoints = namedtuple("Endpoints", ["i","j"])

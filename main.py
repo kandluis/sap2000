@@ -1,9 +1,9 @@
-from . import construction, commandline, helpers, variables
-from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from colony import ReactiveSwarm
 from structure import Structure
+from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
-import os, sys
+from xlsxwriter.workbook import Workbook
+import commandline, construction, helpers, os, sys, variables
 
 class Simulation:
   def __init__(self):
@@ -12,6 +12,11 @@ class Simulation:
     self.Structure = None
     self.Swarm = None
     self.started = False
+
+    # Keeps track of the excel data since we can only write it in one go
+    self.excel = {}
+    self.excel['headers'] = []
+    self.excel['data'] = [[]]
 
   def __setup_general(self):
     '''
@@ -75,7 +80,20 @@ class Simulation:
       return False
 
     # Set the cases to be analyzed (all cases)
-    ret = self.SapModel.Analyze.SetRunCaseFlag("",True,True)
+    ret = self.SapModel.Analyze.SetRunCaseFlag("",False,True)
+    if ret:
+      print("Failure with run flag.")
+      return False
+
+    # Set the cases to be analyzed (all cases)
+    ret = self.SapModel.Analyze.SetRunCaseFlag(variables.robot_load_case,True,
+      False)
+    if ret:
+      print("Failure with run flag.")
+      return False
+
+    # Set the cases to be analyzed (all cases)
+    ret = self.SapModel.Analyze.SetRunCaseFlag("DEAD",True,False)
     if ret:
       print("Failure with run flag.")
       return False
@@ -145,11 +163,49 @@ class Simulation:
       to_write += "\n"
     file_obj.write(to_write + "\n")
 
-  def __push_excel(self,data,file_obj,i):
+  def __add_excel(self,data):
+    '''
+    Stores timestep data in the simulation
+    '''
+    timestep = []
+    for name, state in data.items():
+
+      # Add names to headers if not already there
+      if name not in self.excel['headers']:
+        self.excel['headers'].append(name)
+
+      # Add the location to a list
+      timestep.append(state['location'])
+
+    # Add the location list to a list of rows
+    self.excel['data'].append(timestep)
+
+
+  def __push_excel(self,file_name):
     '''
     Writes a set of data to an excel file
     '''
-    pass 
+    # Open work book
+    workbook = Workbook(file_name)
+    worksheet = workbook.add_worksheet()
+
+    # start at top left corner and write headers
+    row, col = 0, 0
+    for header in self.excel['headers']:
+      worksheet.write(row,col, header)
+      col += 1
+
+    # start in second row and write data
+    row, col = 1, 0
+    for row_data in self.excel['data']:
+      for cell_data in row_data:
+        worksheet.write(row, col, cell_data)
+        col += 1
+      row += 1
+      col = 0
+
+    workbook.close()
+
 
   def reset(self, comment = ""):
     '''
@@ -236,8 +292,8 @@ class Simulation:
     start_time = strftime("%H:%M:%S")
     # Make sure the simulation has been started. If not, exit.
     if not self.started:
-      print("The simulation has not been started. Start it, then run it, or \
-        simply Simulation.go()")
+      print("The simulation has not been started. Start it, then run it, or " +
+        "simply Simulation.go()")
       sys.exit(1)
 
     # Make sure that the model is not locked so that we can change properties. 
@@ -254,16 +310,16 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + 'structure_excel.xls', 'w+') as struct_excel, open(outputfolder + 'robots.xls', 'w+') as robot_excel, open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
-      loc_text.write("This file contains information on the robots at each \
-        timestep if debugging.\n\n")
-      sap_failures.write("This file contains messages created when SAP 2000 does\
-       not complete a function successfully if debugging.\n\n")
-      struct_data.write("This file contains the data about the Pythonic \
-        structure.\n\n")
-      run_text.write("This file contains the variables used in the run of the \
-        simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of \
-        simumation: " + start_time + "\n\n")
+    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
+      loc_text.write("This file contains information on the robots at each" +
+        " timestep if debugging.\n\n")
+      sap_failures.write("This file contains messages created when SAP 2000 does"
+       + " not complete a function successfully if debugging.\n\n")
+      struct_data.write("This file contains the data about the Pythonic" +
+        " structure.\n\n")
+      run_text.write("This file contains the variables used in the run of the" +
+        " simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of"
+        + " simumation: " + start_time + "\n\n")
 
       # Write variables
       self.__push_information(run_text)
@@ -282,14 +338,14 @@ class Simulation:
           ret = self.SapModel.Analyze.RunAnalysis()
           # When ret is not 0 debug is on, write out that it failed.
           if ret and debug:
-            sap_failures.write("RunAnalysis failed! Value returned was \
-              {}".format(str(ret)))
+            sap_failures.write("RunAnalysis failed! Value returned was" + 
+              " {}".format(str(ret)))
 
           # Deselect all outputs
           ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
           if ret and debug:
-            sap_failures.write("Deselecting Cases failed! Value returned was \
-              {}".format(str(ret)))
+            sap_failures.write("Deselecting Cases failed! Value returned was " +
+              "{}".format(str(ret)))
 
           # Select just the Robot Load Case for Output
           ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(
@@ -306,8 +362,7 @@ class Simulation:
         if debug:
           swarm_data = self.Swarm.get_information()
           beam_data = self.Structure.get_information()
-          self.__push_excel(swarm_data,robot_excel,i+1)
-          self.__push_excel(beam_data,struct_excel,i+1)
+          self.__add_excel(swarm_data)
           self.__push_data(swarm_data,loc_text,i+1)
           self.__push_data(beam_data,struct_data,i+1)
           
@@ -319,9 +374,13 @@ class Simulation:
 
       # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
 
-      run_data = "\n\nStop time : " + strftime("%H:%M:%S") + "\n\n. Total beams\
-       on structure: " + str(self.Structure.tubes) + "."
+      run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + ".\n\n Total beams"
+       + " on structure: " + str(self.Structure.tubes) + ".")
       run_data += "\n\n Maximum height of structure : " +  str(
         self.Structure.height) + "."
 
+      # Write out simulation data
       run_text.write(run_data)
+
+      # Write out locations
+      self.__push_excel(outputfolder + "locations.xlsx")

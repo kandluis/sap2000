@@ -27,7 +27,8 @@ dim_x = 1200 # 100 ft
 dim_y = 1200
 dim_z = 1200
 
-# This defines how sensitive the program is to accepting errors within the beam structure
+# This defines how sensitive the program is to accepting errors within the beam 
+# structure
 epsilon = 0.0001
 
 # This defines the mass of each robot in the units specified by program_units

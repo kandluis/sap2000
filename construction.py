@@ -1,4 +1,4 @@
-from . import variables
+import variables
 
 # Home location
 home = (0,0,0)

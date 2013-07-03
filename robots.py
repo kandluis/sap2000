@@ -1,5 +1,5 @@
 from sap2000.constants import EOBJECT_TYPES
-import helpers, construction, variables, random, pdb
+import construction, helpers, pdb, random, variables
 
 # Basic class for any automatic object that needs access to the SAP program
 class Automaton:
@@ -44,12 +44,13 @@ class Movable(Automaton):
     Returns the current state of the robot. This is used when we write the 
     information to the logs
     '''
+    beam = self.beam.name if self.beam is not None else self.beam
     state = super(Movable,self).current_state()
     state.update({  'step'              : self.step,
                     'location'          : self.location,
                     'at_top'            : self.at_top,
                     'ground_direction'  : self.ground_direction,
-                    'beam'              : self.beam,
+                    'beam'              : beam,
                     'weight'            : self.weight})
 
     return state
