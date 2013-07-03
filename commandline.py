@@ -1,5 +1,5 @@
-import sys, getopt
 from inout import io
+import sys, getopt
 
 def run(input = "", output = ""):
 

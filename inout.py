@@ -1,7 +1,7 @@
-import os, variables
 from sap2000 import sap2000
 from sap2000.constants import UNITS
 from helpers import path_exists
+import os, variables
 
 # temp
 # from sap2000.constants import FRAME_TYPES

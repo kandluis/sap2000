@@ -1,5 +1,6 @@
-import os, errno, math, variables, pdb
+from . import variables
 from sap2000.constants import LOAD_PATTERN_TYPES
+import os, errno, math, pdb
 
 def check(return_value, message):
   '''

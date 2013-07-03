@@ -1,8 +1,9 @@
+from . import construction, commandline, helpers, tablib, variables
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from colony import ReactiveSwarm
 from structure import Structure
 from time import strftime
-import construction, commandline, helpers, os, sys, tablib, variables
+import os, sys
 
 class Simulation:
   def __init__(self):
@@ -145,6 +146,9 @@ class Simulation:
     file_obj.write(to_write + "\n")
 
   def __push_excel(self,data,file_obj,i):
+    '''
+    Writes a set of data to an excel file
+    '''
     pass 
 
   def reset(self, comment = ""):
