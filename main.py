@@ -192,14 +192,14 @@ class Simulation:
     # start at top left corner and write headers
     row, col = 0, 0
     for header in self.excel['headers']:
-      worksheet.write(row,col, header)
+      worksheet.write(row,col, str(header))
       col += 1
 
     # start in second row and write data
     row, col = 1, 0
     for row_data in self.excel['data']:
       for cell_data in row_data:
-        worksheet.write(row, col, cell_data)
+        worksheet.write(row, col, str(cell_data))
         col += 1
       row += 1
       col = 0
