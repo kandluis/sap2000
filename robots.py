@@ -30,7 +30,8 @@ class Movable(Automaton):
     self.at_top = False
 
     # The robots all initially move towards the centertower
-    self.ground_direction = helpers.make_vector(location,construction.construction_location)
+    self.ground_direction = helpers.make_vector(location,
+      construction.construction_location)
 
     # The beam on which the robot currently is
     self.beam = None
@@ -40,7 +41,8 @@ class Movable(Automaton):
 
   def current_state(self):
     '''
-    Returns the current state of the robot. This is used when we write the information to the logs
+    Returns the current state of the robot. This is used when we write the 
+    information to the logs
     '''
     state = super(Movable,self).current_state()
     state.update({  'step'              : self.step,
@@ -54,17 +56,19 @@ class Movable(Automaton):
 
   def __addload(self,beam,location,value):
     '''
-    Adds a load of the specified value to the named beam at the specific location
+    Adds a load of the specified value to the named beam at the specific 
+    location
     '''
     self.beam = beam
     distance = helpers.distance(self.location,location)
-    ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,1,10,distance,value,"Global", False, True,0)
+    ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
+      1,10,distance,value,"Global", False, True,0)
     assert ret == 0
 
   def change_location_local(self,new_location, first_beam = None):
     '''
-    Moves the robot about locally (ie, without worrying about the structure, except 
-    for when it moves onto the first beam)
+    Moves the robot about locally (ie, without worrying about the structure, 
+    except for when it moves onto the first beam)
     '''
     # When we move onto our first beam, add the load
     if first_beam != None:
@@ -88,16 +92,19 @@ class Movable(Automaton):
     '''
     Function that takes care of changing the location of the robot on the
     SAP2000 program. Removes the current load from the previous location (ie,
-    the previous beam), and shifts it to the new beam (specified by the new location)
-    It also updates the current beam. If the robot moves off the structure, this also
-    takes care of it.
+    the previous beam), and shifts it to the new beam (specified by the new 
+    location). It also updates the current beam. If the robot moves off the 
+    structure, this also takes care of it.
     '''
     def removeload(location):
       '''
-      Removes the load assigned to a specific location based on where the robot existed (assumes the robot is on a beam)
+      Removes the load assigned to a specific location based on where the robot 
+      existed (assumes the robot is on a beam)
       '''
       # obtain current values.
-      # values are encapsulated in a list as follows: ret, number_items, frame_names, loadpat_names, types, coordinates, directions, rel_dists, dists, loads
+      # values are encapsulated in a list as follows: ret, number_items, 
+      # frame_names, loadpat_names, types, coordinates, directions, rel_dists, 
+      # dists, loads
       data = self.model.FrameObj.GetLoadPoint(self.beam.name)
       assert data[0] == 0 # Making sure everything went okay
 
@@ -105,22 +112,33 @@ class Movable(Automaton):
       i, j = self.beam.endpoints
       curr_dist = helpers.distance(i,self.location)
 
-      # Loop through distances to find our load (the one in self.location) and remove all reference to it
-      # Additionally remove loads not related to our load patters
+      # Loop through distances to find our load (the one in self.location) and 
+      # remove all reference to it. Additionally remove loads not related to our
+      # load pattern
       indeces = []
       index = 0
-      for ab_dist in data[8]:  # this provides acces to the absolute_distance from the i-point of the beam
-        if helpers.compare(ab_dist,curr_dist) or variables.robot_load_case != data[3][index]:
+      for ab_dist in data[8]:  # this provides acces to the absolute_distance 
+        if (helpers.compare(ab_dist,curr_dist) or variables.robot_load_case != 
+          data[3][index]):
           indeces.append(index)
         index += 1
 
-      # add the loads we want back to the frame (automatically deletes all previous loads)
+      # Delete the previous loads
+      ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
+        variables.robot_load_case,1,10,.5,0)
+      assert ret == 0
+
+      # add the loads we want back to the frame (automatically deletes all 
+      # previous loads)
       for i in range(data[1]):
         if i not in indeces:
-          ret = self.model.FrameObj.SetLoadPoint(self.beam.name, variables.robot_load_case, 1, 10, data[7][i], data[9][i])
+          ret = self.model.FrameObj.SetLoadPoint(self.beam.name, 
+            data[3][i], data[4][i], data[6][i], data[7][i], data[9][i],"Global",
+            True,False)
           assert ret == 0
 
-    # Move the load off the current location and to the new one (if still on beam), then change the locations
+    # Move the load off the current location and to the new one (if still on 
+    # beam), then change the locations
     if self.beam != None:
       removeload(self.location)
 
@@ -153,24 +171,32 @@ class Movable(Automaton):
       if helpers.compare(dist,0):
         for beam in self.beam.joints[joint]:
       
-          # The index error should never happen, but this provides nice error support
+          # The index error should never happen, but this provides nice error 
+          # support
           try:
             e1, e2 = beam.endpoints
-            crawlable[beam.name] = [helpers.make_vector(self.location,e1), helpers.make_vector(self.location,e2)]
+            crawlable[beam.name] = ([helpers.make_vector(self.location,e1), 
+              helpers.make_vector(self.location,e2)])
           except IndexError:
-            print ("The beam {} seems to have a joint with {}, but it is not in the box?".format(name,self.beam.name))
+            print ("The beam {} seems to have a joint with {}, but it is not in\
+              the box?".format(name,self.beam.name))
       
-      # For all joints within the timestep, return a direction that is exactly the change from current to that point
+      # For all joints within the timestep, return a direction that is exactly 
+      # the change from current to that point
       elif dist <= self.step:
         if self.beam.name in crawlable:
-          crawlable[self.beam.name].append(helpers.make_vector(self.location,joint))
+          crawlable[self.beam.name].append(helpers.make_vector(self.location,
+            joint))
         else:
           crawlable[self.beam.name] = [helpers.make_vector(self.location,joint)]
 
-    # There are no joints nearby. This means we are either on a joint OR far from one. 
-    # Therefore, we add the directions to the endpoint of our current beam to the current set of directions
+    # There are no joints nearby. This means we are either on a joint OR far 
+    # from one. Therefore, we add the directions to the endpoint of our current 
+    # beam to the current set of directions
     if self.beam.name not in crawlable:
-      crawlable[self.beam.name] = [helpers.make_vector(self.location,self.beam.endpoints.i), helpers.make_vector(self.location,self.beam.endpoints.j)]
+      crawlable[self.beam.name] = [helpers.make_vector(self.location,
+        self.beam.endpoints.i), helpers.make_vector(self.location,
+        self.beam.endpoints.j)]
 
     return crawlable
 
@@ -183,7 +209,8 @@ class Movable(Automaton):
   def ground(self):
     '''
     This function finds the nearest beam to the robot that is connected 
-    to the xy-place (ground). It returns that beam and its direction from the robot.
+    to the xy-place (ground). It returns that beam and its direction from the 
+    robot.
     '''
     box = self.structure.get_box(self.location)
     distances = {}
@@ -216,16 +243,17 @@ class Movable(Automaton):
 
   def get_ground_direction(self):
     ''' 
-    In future classes, this function can be altered to return a preferred direction, 
-    but currently it only returns a random feasable direction if no direction is assigned
-    for the robot (self.ground_direction)
+    In future classes, this function can be altered to return a preferred 
+    direction,  but currently it only returns a random feasable direction if no
+    direction is assigned for the robot (self.ground_direction)
     '''
     def random_direction():
       '''
       Returns a random, new location (direction)
       '''
       # obtain a random direction
-      direction = (random.uniform(-1 * self.step, self.step), random.uniform(-1 * self.step, self.step), 0)
+      direction = (random.uniform(-1 * self.step, self.step), random.uniform(
+        -1 * self.step, self.step), 0)
 
       # The they can't all be zero!
       if helpers.length(direction) == 0:
@@ -238,11 +266,13 @@ class Movable(Automaton):
         else:
           return random_direction()
 
-    # If we have a currently set direction, check to see if we will go out of bounds.
+    # If we have a currently set direction, check to see if we will go out of 
+    # bounds.
     if self.ground_direction != None:
       step = helpers.scale(self.step,helpers.make_unit(self.ground_direction))
       predicted_location = helpers.sum_vectors(step, self.location)
-      # We are going out of bounds, so set the direction to none and call yourself again (to find a new location)
+      # We are going out of bounds, so set the direction to none and call 
+      # yourself again (to find a new location)
       if not helpers.check_location(predicted_location):
         self.ground_direction = None
         return self.get_ground_direction()
@@ -250,31 +280,37 @@ class Movable(Automaton):
       else:
         assert self.ground_direction != None
         return self.ground_direction
-    # We don't have a direction, so pick a random one (it is checked when we pick it)
+    # We don't have a direction, so pick a random one (it is checked when we 
+    # pick it)
     else:
       self.ground_direction = random_direction()
       return self.ground_direction
 
   def wander(self):
     '''
-    When a robot is not on a structure, it wanders around randomly. The wandering is
-    restricted to the 1st octant in global coordinates. If the robot is near enough a beam
-    to be on it in the next time step, it jumps on the beam. The robots have a tendency
-    to scale the structure, per se, but are restricted to their immediate surroundings.
+    When a robot is not on a structure, it wanders around randomly. The 
+    wandering is restricted to the 1st octant in global coordinates. If the 
+    robot is near enough a beam to be on it in the next time step, it jumps on 
+    the beam. The robots have a tendency to scale the structure, per se, but are
+    restricted to their immediate surroundings.
     '''
-    # Check to see if robot is on a beam. If so, pick between moving on it or off it.
+    # Check to see if robot is on a beam. If so, pick between moving on it or 
+    # off it.
     result = self.ground()
     if result == None:
       direction = self.get_ground_direction()
-      new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
+      new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
+        helpers.make_unit(direction)))
       self.change_location_local(new_location)
     else:
-      dist, close_beam, direction = result['distance'], result['beam'], result['direction']
+      dist, close_beam, direction = (result['distance'], result['beam'],
+        result['direction'])
       if dist < self.step:
         self.move(direction,close_beam)
       else:
         direction = self.get_ground_direction()
-        new_location = helpers.sum_vectors(self.location,helpers.scale(self.step, helpers.make_unit(direction)))
+        new_location = helpers.sum_vectors(self.location,helpers.scale(
+          self.step, helpers.make_unit(direction)))
         self.change_location_local(new_location)
 
   def move(self, direction, beam):
@@ -283,18 +319,20 @@ class Movable(Automaton):
     '''
     length = helpers.length(direction)
 
-    # The direction is smaller than the determined step, so move exactly by direction
+    # The direction is smaller than the determined step, so move exactly by 
+    # direction
     if length < self.step:
       new_location = helpers.sum_vectors(self.location, direction)
       self.change_location(new_location, beam)
 
-      # call do_action again since we still have some distance left, and update step to reflect how much 
-      # distance is left to cover
+      # call do_action again since we still have some distance left, and update
+      # step to reflect how much distance is left to cover
       self.step = self.step - length
       if helpers.compare(self.step,0):
         self.step == variables.step_length
 
-    # The direction is larger than the usual step, so move only the step in the specified direction
+    # The direction is larger than the usual step, so move only the step in the 
+    # specified direction
     else:
       movement = helpers.scale(self.step, helpers.make_unit(direction))
       new_location = helpers.sum_vectors(self.location, movement)
@@ -305,14 +343,16 @@ class Movable(Automaton):
 
   def get_directions_info(self):
     '''
-    Returns a list of triplets with delta x, delta y, and delta z of the direction the robot can
-    move in. These directions constitute the locations where beams currently exist. Additionally,
-    it returns the "box of locality" to which the robot is restricted containing all of the beams
-    nearby that the robot can detect (though, this should only be used for finding a connection,
+    Returns a list of triplets with delta x, delta y, and delta z of the 
+    direction the robot can move in. These directions constitute the locations 
+    where beams currently exist. Additionally, it returns the "box of locality" 
+    to which the robot is restricted containing all of the beams nearby that the
+    robot can detect (though, this should only be used for finding a connection,
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
     # Verify that the robot is on its beam and
-    # correct if necessary. This is done so that floating-point arithmethic errors don't add up.
+    # correct if necessary. This is done so that floating-point arithmethic 
+    # errors don't add up.
     (e1, e2) = self.beam.endpoints
     if not (helpers.on_line (e1,e2,self.location)):
       self.change_location(helpers.correct(e1,e2,self.location), self.beam)
@@ -330,10 +370,11 @@ class Movable(Automaton):
 
   def get_direction(self):
     ''' 
-    Figures out which direction to move in. In this class, it simply picks a random
-    direction (eventually, it will have a tendency to move upwards when carrying a beam
-    and downwards when needing material for the structure). The direction 
-    is also returned with it's corresponding beam in the following format (direction, beam).
+    Figures out which direction to move in. In this class, it simply picks a 
+    random direction (eventually, it will have a tendency to move upwards when 
+    carrying a beam and downwards when needing material for the structure). The 
+    direction is also returned with it's corresponding beam in the following 
+    format (direction, beam).
     '''
     info = self.get_directions_info()
 

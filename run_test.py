@@ -7,4 +7,4 @@ def test(times=50):
     return sim
 
 if __name__ == '__main__':
-    sim = test(50)
+    sim = test(40)

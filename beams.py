@@ -37,8 +37,8 @@ class Beam:
 
   def addjoint(self, coord, beam):
     '''
-    Adds a joint (at the specified coordinate), to the beam itself. The beam variable
-    defines the which crosses this one at the joint
+    Adds a joint (at the specified coordinate), to the beam itself. The beam 
+    variable defines the which crosses this one at the joint
     '''
     # Verify that the coordinate is on the beam based on endpoints
     if not helpers.on_line(self.endpoints.i, self.endpoints.j, coord):
@@ -47,7 +47,8 @@ class Beam:
     else:
       coord = Coord(x=coord[0],y=coord[1],z=coord[2])
       if coord in self.joints:
-        # Make sure we only keep track of the beam once (no multiple same name beams per coord)
+        # Make sure we only keep track of the beam once (no multiple same name
+        # beams per coord)
         if beam not in self.joints[coord]:
           self.joints[coord].append(beam)
       else:
