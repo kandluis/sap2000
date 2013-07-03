@@ -1,4 +1,4 @@
-from . import construction, commandline, helpers, tablib, variables
+from . import construction, commandline, helpers, variables
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from colony import ReactiveSwarm
 from structure import Structure
