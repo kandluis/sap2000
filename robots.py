@@ -1,6 +1,7 @@
 from sap2000.constants import EOBJECT_TYPES
 import helpers, construction, variables, random, pdb
 
+# Basic class for any automatic object that needs access to the SAP program
 class Automaton:
   def __init__(self,program):
     # Accesss to the SapModel from SAP 2000
@@ -12,6 +13,7 @@ class Automaton:
   def current_state(self):
     return {}
 
+# Class of objects that can move around (on the ground and on the structure)
 class Movable(Automaton):
   def __init__(self,structure,location,program):
     super(Movable, self).__init__(program)
@@ -348,7 +350,7 @@ class Movable(Automaton):
     '''
     Returns whether or not the robot is on the structure
     '''
-    return self.beam == None
+    return not self.beam == None
 
   def do_action(self):
     '''

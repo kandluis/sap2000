@@ -19,6 +19,18 @@ class Beam:
     # This is how much each beam weighs
     self.weight = variables.beam_load
 
+  def current_state(self):
+    '''
+    Returns the current state
+    '''
+    joints = {}
+    for coord, beam in self.joints.items():
+      joints[coord] = beam.name
+
+    return {  'endpoints' : self.endpoints,
+              'joints'    : joints,
+              'weight'    : self.weight  }
+
   def addjoint(self, coord, beam):
     '''
     Adds a joint (at the specified coordinate), to the beam itself. The beam variable

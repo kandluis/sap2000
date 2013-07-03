@@ -116,23 +116,17 @@ class Simulation:
     # Write out the data and you are now done
     file_obj.write(data)
 
-  def __push_structure(self,file_obj):
+  def __push_data(self,data,file_obj,i):
     '''
-    Writes out the data pertaining to the python structure stored in memory
+    Writes a set of data to a data file in specified format
     '''
-    data = ''
-    for name, endpoints in self.Structure.information().items():
-      data += "Beam {} has endpoints: {}\n".format(name,str(endpoints))
-    file_obj.write(data)
-
-  def __push_timestep(self,file_obj,i):
-    information = self.Swarm.get_information()
-    data = "Timesteps: {}\n\n".format(str(i))
-    for name, worker_data in information.items():
-      for key, temp_data in worker_data.items():
+    data = "Timestep: {}\n\n\n".format(str(i))
+    for name, state in data.items():
+      data += "{} = \n\n".format(name)
+      for key, temp_data in state.items():
         data += "{} : {}\n".format(str(key),str(temp_data))
       data += "\n"
-    file_obj.write(data + "\n")
+    file_obj.write(data + "\n")    
 
   def reset(self, comment = ""):
     '''
@@ -272,7 +266,10 @@ class Simulation:
 
         # This section writes the robots decisions out to a file
         if debug:
-          self.__push_timestep(loc_text,i)
+          swarm_data = self.Swarm.get_information()
+          beam_data = self.Structure.get_information()
+          self.__push_data(swarm_data,loc_text,i+1)
+          self.__push_data(beam_data,struct_data,i+1)
           
         # Change the model based on decisions made (act on your decisions)
         self.Swarm.act()
@@ -286,5 +283,3 @@ class Simulation:
       run_data += "\n\n Maximum height of structure : " +  str(self.Structure.height) + "."
 
       run_text.write(run_data)
-
-      self.__push_structure(struct_data)

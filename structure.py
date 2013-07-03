@@ -317,7 +317,7 @@ class Structure:
         return True
     return False
 
-  def information(self):
+  def get_information(self):
     '''
     Returns the name of each beam along with it's endpoints
     '''
@@ -326,10 +326,8 @@ class Structure:
       for column in wall:
         for box in column:
           for name, beam in box.items():
-            if name in beams:
-              assert beams[name] == (beam.endpoints.i, beam.endpoints.j)
-            else:
-              beams[name] = (beam.endpoints.i, beam.endpoints.j)
+            if name not in beams:
+              beams[name] = beam.current_state()
 
     return beams
 
