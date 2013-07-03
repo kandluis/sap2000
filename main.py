@@ -120,13 +120,13 @@ class Simulation:
     '''
     Writes a set of data to a data file in specified format
     '''
-    data = "Timestep: {}\n\n\n".format(str(i))
+    to_write = "Timestep: {}\n\n\n".format(str(i))
     for name, state in data.items():
-      data += "{} = \n\n".format(name)
+      to_write += "{} = \n\n".format(name)
       for key, temp_data in state.items():
-        data += "{} : {}\n".format(str(key),str(temp_data))
-      data += "\n"
-    file_obj.write(data + "\n")    
+        to_write += "{} : {}\n".format(str(key),str(temp_data))
+      to_write += "\n"
+    file_obj.write(to_write + "\n")    
 
   def reset(self, comment = ""):
     '''

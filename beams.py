@@ -10,7 +10,7 @@ class Beam:
     self.endpoints = EndPoints(i=endpoints[0], j=endpoints[1])
 
     # Each beam keeps track of all its joints. This is a dictionary as follows:
-    # {coord : beam}
+    # {coord : list of beams}
     self.joints = {}
 
     # This is the name of the beam
@@ -24,8 +24,12 @@ class Beam:
     Returns the current state
     '''
     joints = {}
-    for coord, beam in self.joints.items():
-      joints[coord] = beam.name
+    for coord, beams in self.joints.items():
+      for beam in beams:
+        if coord in joints:
+          joints[coord].append(beam.name)
+        else:
+          joints[coord] = [beam.name]
 
     return {  'endpoints' : self.endpoints,
               'joints'    : joints,
