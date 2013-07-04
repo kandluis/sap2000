@@ -39,6 +39,9 @@ class Movable(Automaton):
     # The weight of the robot
     self.weight = variables.robot_load
 
+    # The direction in which we should move
+    self.next_direction_info = None
+
   def current_state(self):
     '''
     Returns the current state of the robot. This is used when we write the 
@@ -331,6 +334,9 @@ class Movable(Automaton):
       self.step = self.step - length
       if helpers.compare(self.step,0):
         self.step == variables.step_length
+      else:
+        self.next_direction_info = self.get_direction()
+        self.do_action()
 
     # The direction is larger than the usual step, so move only the step in the 
     # specified direction

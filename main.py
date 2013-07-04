@@ -332,7 +332,7 @@ class Simulation:
         if self.Structure.tubes > 0 and not self.Swarm.on_ground():
           # Save to a different filename every now and again
           if i % variables.analysis_timesteps == 0:
-            filename = "tower-" + str(timesteps) + ".sdb"
+            filename = "tower-" + str(i) + ".sdb"
             self.SapModel.File.Save(outputfolder + filename)
 
           ret = self.SapModel.Analyze.RunAnalysis()

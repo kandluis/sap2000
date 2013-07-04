@@ -16,6 +16,8 @@ class Structure:
     self.box_size = (variables.dim_x / variables.num_x, variables.dim_y / 
       variables.num_y, variables.dim_y / variables.num_y)
 
+    self.origin = variables.origin
+
     # size of the entire structure
     self.size = variables.dim_x, variables.dim_y, variables.dim_z
 
@@ -27,6 +29,13 @@ class Structure:
     self.tubes = 0
 
     self.height = 0
+
+  def __feasable_point(self,p):
+    '''
+    Checks whether or not a point lies within the defined limits of the 
+    structure
+    '''
+    return helpers.within(self.origin,self.size,p)
 
   def __get_indeces(self,point):
     '''
@@ -294,8 +303,9 @@ class Structure:
     Returns whether or not the location between e1 and e2 is available for 
     positioning a beam. 
     To be available, two requirements exist:
-      1. No beam exists in that location.
-      2. No beam exists for part of that location (ie, no overlap)
+      1. The endpoints lie within the structure
+      2. No beam exists in that location.
+      3. No beam exists for part of that location (ie, no overlap)
     '''
     def box_available(box):
       for name in box:
@@ -311,9 +321,12 @@ class Structure:
       return True
 
     # Requirement 1
-    if self.exists(e1,e2):
+    if not self.__feasable_point(e1) or not self.__feasable_point(e2):
       return False
-    # Check requirement 2
+    # Requirement 2
+    elif self.exists(e1,e2):
+      return False
+    # Check requirement 3
     else:
       # Get the box for e1 and check it
       xi1, yi1, zi1 = self.__get_indeces(e1)

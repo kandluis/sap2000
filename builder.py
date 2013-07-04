@@ -13,9 +13,6 @@ class Builder(Movable):
     # Whether or not we should start construction
     self.start_construction = False
 
-    # The direction in which we should move
-    self.next_direction_info = None
-
     # Set the right weight
     self.weight = (variables.robot_load + variables.beam_load * 
       variables.beam_capacity)
@@ -153,7 +150,7 @@ class Builder(Movable):
 
     # This will only occur if no direction changes our vertical height. If this 
     # is the case, get directions as before
-    if directions == {} and not self.at_top:
+    if directions == {}:
       beam_name = random.choice(list(info['directions'].keys()))
       direction = random.choice(info['directions'][beam_name])
       self.at_top = True

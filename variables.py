@@ -14,12 +14,13 @@ beam_length = 120 # 10ft
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)
-beam_capacity = 10
+beam_capacity = 20
 
 # The size of the division of space into blocks. 
 # x,y,z gives the number of blocks along the x axix, the y axis, and the z axis
 # dim_var gives the limit of the structure on the axis indicated by var. 
 # Keep in mind that the origin is the bottom-left part of this structure
+origin = (0,0,0)
 num_x = 100
 num_y = 100
 num_z = 100
