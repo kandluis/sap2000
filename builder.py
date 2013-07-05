@@ -118,7 +118,7 @@ class Builder(Movable):
         self.next_direction_info['beam'])
       self.next_direction_info = None
 
-    # We're still on the ground, so wander
+    # We have climbed off, so wander about
     else:
       self.wander()
 

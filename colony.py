@@ -126,7 +126,7 @@ class ReactiveSwarm(Swarm):
 
     return deleted
 
-  def delete_robots(self, names):
+  def delete_robots(self, names = []):
     '''
     Deletes the specified robots from the swarm (if found). If no name is passed
     in, it deletes nothing. Returns the number of robots successfully deleted.
