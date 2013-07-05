@@ -7,9 +7,6 @@ class Builder(Movable):
     # The number of beams the robot is carrying
     self.num_beams = variables.beam_capacity
 
-    # Whether we should move or upwards
-    self.upwards = False
-
     # Whether or not we should start construction
     self.start_construction = False
 
@@ -27,7 +24,6 @@ class Builder(Movable):
   def current_state(self):
     state = super(Builder, self).current_state()
     state.update({  'num_beams'           : self.num_beams,
-                    'upwards'             : self.upwards,
                     'start_construction'  : self.start_construction,
                     'next_direction_info' : self.next_direction_info,
                     'memory'              : self.memory})
@@ -43,7 +39,7 @@ class Builder(Movable):
       self.ground_direction = None
       return False
 
-  def __pickup_beams(self,num = variables.beam_capacity):
+  def pickup_beams(self,num = variables.beam_capacity):
     '''
     Pickup beams by adding weight to the robot and by adding num to number 
     carried
@@ -51,7 +47,7 @@ class Builder(Movable):
     self.num_beams = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
 
-  def __discard_beams(self,num = 1):
+  def discard_beams(self,num = 1):
     '''
     Get rid of the specified number of beams by decresing the weight and the 
     number carried
@@ -65,6 +61,7 @@ class Builder(Movable):
     '''
     return helpers.within(construction.home, construction.home_size,
       self.location)
+
   def at_site(self):
     '''
     True if the robot is in the area designated as the construction site 
@@ -122,33 +119,36 @@ class Builder(Movable):
     else:
       self.wander()
 
+  def filter_dict(self,dirs,new_dirs,comp_functions):
+    '''
+    Filters a dictinary of directions, taking out all directions not in the 
+    correct directions based on the list of comp_functions (x,y,z)
+    '''
+    for beam, vectors in dirs.items():
+      for vector in vectors:
+        coord_bool = True
+        for function, coord in zip(comp_functions,vector)
+          coord_bool = coord_bool and function(coord)
+        if coord_bool:
+          new_dirs[beam] = vector
+    return new_dirs
+
   def filter_directions(self,dirs):
     '''
-    Filteres the available directions and returns those that move us in the 
+    Filters the available directions and returns those that move us in the 
     desired direction. Should be overwritten to provide more robost 
     functionality
     '''
-    def filter_dict(dirs, new_dirs, comp_f):
-      '''
-      Filters a dictinary, taking out all directions not in the correct 
-      z-direction
-      '''
-      for beam, vectors in info['directions'].items():
-        for vector in vectors:
-          # vector[2] = the z-component
-          if comp_f(vector[2]):
-            new_dirs[beam] = vector
-      return new_dirs
-
     directions = {}
+    base = [lambda x : True, lambda y : True]
     # Still have beams, so move upwards
-    if self.num_beams > 0 or self.upwards:
-      directions = filter_dict(info['directions'], directions,
-        (lambda z : z > 0))
+    if self.num_beams > 0:
+      directions = self.filter_dict(dirs, directions,
+        (base.append(lambda z : z > 0)))
     # No more beams, so move downwards
     else:
-      directions = filter_dict(info['directions'], directions,
-        (lambda z : z < 0))
+      directions = self.filter_dict(dirs, directions,
+        (base.append(lambda z : z < 0)))
 
     return directions
 
@@ -157,7 +157,8 @@ class Builder(Movable):
     This specifies what the robot should do if there are no directions available
     for travel. This basically means that no beams are appropriate to climb on.
     '''
-    pass
+    # This means we've reached the top.
+    self.at_top = True
 
   def get_direction(self):
     ''' 
@@ -173,18 +174,17 @@ class Builder(Movable):
     # This will only occur if no direction changes our vertical height. If this 
     # is the case, get directions as before
     if directions == {}:
+      # Do some stuff here
+      self.no_available_direction()
+
+      # We're at the top
       beam_name = random.choice(list(info['directions'].keys()))
       direction = random.choice(info['directions'][beam_name])
-      self.at_top = True
 
     # Otherwise we do have a set of directions taking us in the right place, so 
     # randomly pick any of them. We will change this later based on the analysis
     # results from the program.
     else:
-      # Do some stuff here
-      self.no_available_direction()
-
-      # Always return SOME direction since we need this.
       beam_name = random.choice(list(directions.keys()))
       direction = directions[beam_name]
 
@@ -204,7 +204,7 @@ class Builder(Movable):
     '''
     # Check to see if robot is at home location and has no beams
     if self.at_home() and self.num_beams == 0 :
-      self.__pickup_beams()
+      self.pickup_beams()
 
     # Find nearby beams to climb on
     result = self.ground()
@@ -268,7 +268,7 @@ class Builder(Movable):
       propName=variables.frame_property_name)
 
     # Get rid of one beam
-    self.__discard_beams()
+    self.discard_beams()
 
     # Successfully added to at least one box
     if self.structure.add_beam(p1,p2,name) > 0:

@@ -1,5 +1,4 @@
 from main import Simulation
-import cProfile
 
 sim = Simulation()
 path = sim.start(1)
