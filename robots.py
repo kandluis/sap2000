@@ -335,8 +335,6 @@ class Movable(Automaton):
       self.step = self.step - length
       if helpers.compare(self.step,0):
         self.step == variables.step_length
-      elif helpers.compare(length,0):
-        self.step == variables.step_length
       else:
         self.next_direction_info = self.get_direction()
         self.do_action()

@@ -65,7 +65,6 @@ class Worker(Builder):
     Change start construction to true
     '''
     super(Worker,self).no_available_direction()
-    self.start_construction = True
 
   def construct(self):
     '''
