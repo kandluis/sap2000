@@ -137,4 +137,3 @@ class ReactiveSwarm(Swarm):
         deleted += 1
 
     return deleted
-
