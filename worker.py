@@ -47,9 +47,9 @@ class Worker(Builder):
       Returns the correct funtion depending on the information stored in memory
       '''
       if self.memory[string]:
-        return (lambda a : a >= 0)
+        return (lambda a : a > 0)
       elif self.memory[string] is not None:
-        return (lambda a : a <= 0)
+        return (lambda a : a < 0)
       else:
         return (lambda a: True)
 
