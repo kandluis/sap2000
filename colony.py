@@ -1,4 +1,5 @@
 from worker import Worker
+import construction
 
 class Swarm:
   def __init__(self,size, structure, program):
@@ -51,13 +52,17 @@ class Swarm:
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,program):
     super(ReactiveSwarm, self).__init__(size,structure,program)
+    # Keeps track of how many robots we have created (in order to keep the 
+    # names different)
+    self.num_created = size
+    self.original_size = size
 
   def reset(self):
     '''
-    Create a spanking new army of workers
+    Create a spanking new army of workers the size of the original army!
     '''
     self.workers = {}
-    for i in range(self.size):
+    for i in range(self.original_size):
       name = "worker_" + str(i)
       location = (i,0,0)
       self.workers[name] = Worker(self.structure,location,self.model)
@@ -72,3 +77,64 @@ class ReactiveSwarm(Swarm):
         return False
 
     return True
+
+  def new_robots(self, num = 1):
+    '''
+    Creates new robots at the home location. They line up along the positive
+    x-axis. The names are a continuation of the size of the swarm.
+    '''
+    for i in range(self.num_created, self.num_created + num):
+      name = "worker_" + str(i)
+      location = (i - num, 0, 0)
+      self.workers[name] = Worker(self.structure,location,self.model)
+
+    self.size += num
+    self.num_created += num
+
+  def delete_robot(self, name):
+    '''
+    Deletes the specified robot from the swarm if it exists
+    '''
+    if name in self.workers:
+      self.workers[worker_name].change_location(construction.home, None)
+      del(self.workers[worker_name])
+      self.size -= 1
+      return True
+    else:
+      return False
+
+  def delete_random_robot(self):
+    '''
+    Deletes a random robot from the swarm.
+    '''
+    # Pick a random worker
+    from random import choice
+    worker_name = choice(self.workers.keys())
+
+    return self.delete_robot(worker_name)
+
+  def delete_random_robots(self,num = 1):
+    '''
+    Deletes the specified number of robots from the swarm. They are selected
+    at random. Returns the number of robots successfully deleted.
+    '''
+    deleted = 0
+    for i in range(num):
+      if self.size > 0:
+        if self.delete_random_robot():
+          deleted += 1
+
+    return deleted
+
+  def delete_robots(self, names):
+    '''
+    Deletes the specified robots from the swarm (if found). If no name is passed
+    in, it deletes nothing. Returns the number of robots successfully deleted.
+    '''
+    deleted = 0
+    for name in names:
+      if delete_robot(name):
+        deleted += 1
+
+    return deleted
+

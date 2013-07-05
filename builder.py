@@ -35,7 +35,13 @@ class Builder(Movable):
     return state
 
   def climb_off(self,loc):
-    return helpers.compare(self.location[2],0) and self.num_beams == 0
+    if helpers.compare(self.location[2],0) and self.num_beams == 0:
+      self.ground_direction = helpers.make_vector(self.location,
+        construction.home)
+      return True
+    else:
+      self.ground_direction = None
+      return False
 
   def __pickup_beams(self,num = variables.beam_capacity):
     '''
@@ -116,12 +122,11 @@ class Builder(Movable):
     else:
       self.wander()
 
-  def get_direction(self):
-    ''' 
-    Figures out which direction to move in. This means that if the robot is 
-    carrying a beam, it wants to move upwards. If it is not, it wants to move 
-    downwards. So basically the direction is picked by filtering by the 
-    z-component
+  def filter_directions(self,dirs):
+    '''
+    Filteres the available directions and returns those that move us in the 
+    desired direction. Should be overwritten to provide more robost 
+    functionality
     '''
     def filter_dict(dirs, new_dirs, comp_f):
       '''
@@ -135,11 +140,8 @@ class Builder(Movable):
             new_dirs[beam] = vector
       return new_dirs
 
-    # Get all the possible directions, as normal
-    info = self.get_directions_info()
-
-    # Still have beams, so move upwards
     directions = {}
+    # Still have beams, so move upwards
     if self.num_beams > 0 or self.upwards:
       directions = filter_dict(info['directions'], directions,
         (lambda z : z > 0))
@@ -147,6 +149,26 @@ class Builder(Movable):
     else:
       directions = filter_dict(info['directions'], directions,
         (lambda z : z < 0))
+
+    return directions
+
+  def no_available_direction(self):
+    '''
+    This specifies what the robot should do if there are no directions available
+    for travel. This basically means that no beams are appropriate to climb on.
+    '''
+    pass
+
+  def get_direction(self):
+    ''' 
+    Figures out which direction to move in. This means that if the robot is 
+    carrying a beam, it wants to move upwards. If it is not, it wants to move 
+    downwards. So basically the direction is picked by filtering by the 
+    z-component
+    '''
+    # Get all the possible directions, as normal
+    info = self.get_directions_info()
+    directions = self.filter_directions(info['directions'])
 
     # This will only occur if no direction changes our vertical height. If this 
     # is the case, get directions as before
@@ -159,6 +181,10 @@ class Builder(Movable):
     # randomly pick any of them. We will change this later based on the analysis
     # results from the program.
     else:
+      # Do some stuff here
+      self.no_available_direction()
+
+      # Always return SOME direction since we need this.
       beam_name = random.choice(list(directions.keys()))
       direction = directions[beam_name]
 
@@ -415,8 +441,6 @@ class Builder(Movable):
   def construct(self):
     '''
     Decides whether the local conditions dictate we should build (in which case)
-    It returns the two points that should be connected, or we should continue
-    moving (in which case, it returns None)
     ''' 
     if ((self.at_top or self.at_site()) and not self.memory['built'] and 
       self.num_beams > 0):
