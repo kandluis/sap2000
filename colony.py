@@ -1,5 +1,5 @@
 from worker import Worker
-import construction
+import construction, vectors
 
 class Swarm:
   def __init__(self,size, structure, program):
@@ -7,7 +7,7 @@ class Swarm:
     self.size = size
 
     # The location of the swarm.
-    self.home = (0,0,0)
+    self.home = construction.home
 
     # Access to the structure, so we can create workers
     self.structure = structure
@@ -21,7 +21,7 @@ class Swarm:
       name = "worker_" + str(i)
 
       # workers start at home
-      location = (i,0,0) 
+      location = vectors.sum_vectors(home,(i,0,0)) 
       self.workers[name] = Worker(structure,location,program)
 
   def decide(self):
@@ -56,7 +56,7 @@ class ReactiveSwarm(Swarm):
     self.workers = {}
     for i in range(self.original_size):
       name = "worker_" + str(i)
-      location = (i,0,0)
+      location = vectors.sum_vectors(home,(i,0,0)) 
       self.workers[name] = Worker(self.structure,location,self.model)
 
   def on_ground(self):
@@ -77,7 +77,7 @@ class ReactiveSwarm(Swarm):
     '''
     for i in range(self.num_created, self.num_created + num):
       name = "worker_" + str(i)
-      location = (i - num, 0, 0)
+      location = vectors.sum_vectors(home,(i - num, 0, 0))
       self.workers[name] = Worker(self.structure,location,self.model)
 
     self.size += num

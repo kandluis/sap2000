@@ -1,4 +1,5 @@
 from builder import Builder
+import variables
 
 class Worker(Builder):
   def __init__(self,structure,location,program):
@@ -10,7 +11,7 @@ class Worker(Builder):
     self.memory['pos_x'] = None
 
     # Move further in the y-direction?
-    self.memory['pox_y'] = None
+    self.memory['pos_y'] = None
 
     # Move further up in the z-direction?
     self.memory['pos_z'] = None
@@ -81,7 +82,6 @@ class Worker(Builder):
     3.  Still carrying construction material
     '''
     # Check to see if we have an analysis model!
-    if self.
 
 
     if ((self.at_top or (self.at_site() and self.structure.tubes == 0)) and not 

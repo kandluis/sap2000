@@ -127,7 +127,7 @@ class Builder(Movable):
     for beam, vectors in dirs.items():
       for vector in vectors:
         coord_bool = True
-        for function, coord in zip(comp_functions,vector)
+        for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
         if coord_bool:
           new_dirs[beam] = vector

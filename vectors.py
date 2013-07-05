@@ -2,6 +2,7 @@
 Helper functions for vector operations when keeping track of the structure in 
 Python
 '''
+import math
 
 def distance(p1,p2):
   '''
