@@ -49,8 +49,9 @@ class Movable(Automaton):
     '''
     beam = self.beam.name if self.beam is not None else self.beam
     state = super(Movable,self).current_state()
+    location = [round(coord,2) for coord in self.location]
     state.update({  'step'              : self.step,
-                    'location'          : self.location,
+                    'location'          : location,
                     'at_top'            : self.at_top,
                     'ground_direction'  : self.ground_direction,
                     'beam'              : beam,
