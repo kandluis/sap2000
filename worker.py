@@ -13,10 +13,6 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
-    # Move further up in the z-direction?
-    self.memory['pos_z'] = None
-
-
   def current_state(self):
     state = super(Worker,self).current_state()
     return state
@@ -56,7 +52,7 @@ class Worker(Builder):
     # direction functions
     funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
 
-    directions =  self.filter_dict(dirs, {},funs)
+    directions =  self.filter_dict(dirs, {}, funs)
 
     return directions
 
@@ -65,6 +61,10 @@ class Worker(Builder):
     Change start construction to true
     '''
     super(Worker,self).no_available_direction()
+
+    # Construct a beam instead of moving if we have beams left
+    if self.num_beams > 0:
+      self.start_construction = True
 
   def construct(self):
     '''
@@ -83,15 +83,13 @@ class Worker(Builder):
     # Check to see if we have an analysis model!
 
 
-    if ((self.at_top or (self.at_site() and self.structure.tubes == 0)) and not 
+    if (((self.at_site() and self.structure.tubes == 0)) and not 
       self.memory['built'] and 
       self.num_beams > 0):
 
-      self.at_top = False
       self.memory['built'] = True
       self.memory['construct'] += 1
       return True
     else:
-
       self.memory['built'] = False
       return False

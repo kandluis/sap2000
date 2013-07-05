@@ -5,7 +5,7 @@ SAP program when absolutely necessary. The following functions are all helpful
 '''
 from beams import Beam
 from errors import OutofBox
-import helpers, math, sys, variables
+import helpers, math, sys, variables, pdb
 
 class Structure:
   def __init__(self):

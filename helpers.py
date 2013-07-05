@@ -122,7 +122,8 @@ def between(c1,c2,c3, inclusive = True):
   '''
   Returns whether or not c3 is between c1 and c2, inclusive.
   '''
-  compare = lambda x,y: x <= y if inclusive else lambda x,y : x < y
+  compare = (lambda x,y: x <= y) if inclusive else (
+    lambda x,y : x < y)
   if c1 < c2:
     return compare(c1,c3) and compare(c3,c2)
   else:
@@ -324,7 +325,7 @@ def closest_points(l1,l2, segment = True):
   # l2.
   if not between_points(l2[0],l2[1],true_intersect_point) and segment:
     return None
-  pdb.set_trace()
+
   # Now return the two points.
   return (intersection_point, true_intersect_point)
 

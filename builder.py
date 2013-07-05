@@ -17,6 +17,9 @@ class Builder(Movable):
     # Stores variables for construction algorithm (this is the robots memory)
     self.memory = {}
 
+    # Climbing up or down
+    self.memory['pos_z'] = None
+
     # Starting defaults
     self.memory['built'] = False
     self.memory['construct'] = 0
@@ -46,6 +49,10 @@ class Builder(Movable):
     '''
     self.num_beams = self.num_beams + num
     self.weight = self.weight + variables.beam_load * num
+
+    # Set the direction towards the structure
+    self.ground_direction = helpers.make_vector(self.location,
+      construction.construction_location)
 
   def discard_beams(self,num = 1):
     '''
@@ -79,6 +86,8 @@ class Builder(Movable):
     and then stores that information in the robot. The robot will then act 
     based on that information once the model has been unlocked. 
     '''
+    # We build almost never.
+    self.start_construction = False
     # If we decide to construct, then we store that fact in a bool so action 
     # knows to wiggle the beam
     if self.construct():
@@ -109,8 +118,9 @@ class Builder(Movable):
 
     # Otherwise, we're on a beam but decided not to build, so get direction we 
     # decided to move in, and move.
-    elif self.beam != None:
+    elif self.beam is not None:
       assert self.next_direction_info != None
+      assert (self.beam is not None)
       self.move(self.next_direction_info['direction'],
         self.next_direction_info['beam'])
       self.next_direction_info = None
@@ -157,8 +167,7 @@ class Builder(Movable):
     This specifies what the robot should do if there are no directions available
     for travel. This basically means that no beams are appropriate to climb on.
     '''
-    # This means we've reached the top.
-    self.at_top = True
+    pass
 
   def get_direction(self):
     ''' 
@@ -205,6 +214,11 @@ class Builder(Movable):
     # Check to see if robot is at home location and has no beams
     if self.at_home() and self.num_beams == 0 :
       self.pickup_beams()
+
+    # If we have no beams, set the ground direction to home
+    if self.num_beams == 0:
+      self.ground_direction = helpers.make_vector(self.location,
+        construction.home)
 
     # Find nearby beams to climb on
     result = self.ground()
@@ -294,6 +308,9 @@ class Builder(Movable):
     connection which makes the smallest angle). Returns false if something went 
     wrong, true otherwise.
     '''
+    # Sanitiy check
+    assert (self.num_beams > 0)
+
     # This is the i-end of the beam being placed. We pivot about this
     pivot = self.location
 
@@ -314,7 +331,7 @@ class Builder(Movable):
       # some side
       if not self.structure.available(i,j):
         limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
-         construction.beam['length'] / math.sqrt(2))
+         construction.beam['length'] / 3)
         return check(i,(random.uniform(-1* limit, limit),random.uniform(
           -1 * limit,limit), j[2]))
       else:
@@ -435,6 +452,10 @@ class Builder(Movable):
 
     # If we get to this point, we have already built all possible ratios, so 
     # just stick something up
+    disturbance = helpers.make_unit((random.uniform(-1,1),random.uniform(-1,1),
+      random.uniform(-1,1)))
+    default_endpoint = default_endpoint if random.randint(0,6) != 1 else (
+      helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
     return self.addbeam(i,j)
 
@@ -442,9 +463,8 @@ class Builder(Movable):
     '''
     Decides whether the local conditions dictate we should build (in which case)
     ''' 
-    if ((self.at_top or self.at_site()) and not self.memory['built'] and 
+    if ((self.at_site()) and not self.memory['built'] and 
       self.num_beams > 0):
-      self.at_top = False
       self.memory['built'] = True
       self.memory['construct'] += 1
       return True

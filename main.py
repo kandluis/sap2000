@@ -155,7 +155,7 @@ class Simulation:
     '''
     Writes a set of data to a data file in specified format
     '''
-    to_write = "Timestep: {}\n\n\n".format(str(i))
+    to_write = "Data for Timestep: {}\n\n\n".format(str(i))
     for name, state in data.items():
       to_write += "{} = \n\n".format(name)
       for key, temp_data in state.items():

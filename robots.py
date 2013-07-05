@@ -26,9 +26,6 @@ class Movable(Automaton):
     # The current location of the robot
     self.location = location
 
-    # Whether or not the robot has reached the top
-    self.at_top = False
-
     # The robots all initially move towards the centertower
     self.ground_direction = helpers.make_vector(location,
       construction.construction_location)
@@ -52,7 +49,6 @@ class Movable(Automaton):
     location = [round(coord,2) for coord in self.location]
     state.update({  'step'              : self.step,
                     'location'          : location,
-                    'at_top'            : self.at_top,
                     'ground_direction'  : self.ground_direction,
                     'beam'              : beam,
                     'weight'            : self.weight})
@@ -335,10 +331,16 @@ class Movable(Automaton):
       self.step = self.step - length
       if helpers.compare(self.step,0):
         self.step == variables.step_length
-      else:
+
+      # We still have steps to go
+      elif self.beam is not None:
         self.next_direction_info = self.get_direction()
         self.do_action()
 
+      # We climbed off
+      else:
+        self.do_action()
+        
     # The direction is larger than the usual step, so move only the step in the 
     # specified direction
     else:
