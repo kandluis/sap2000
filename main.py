@@ -2,6 +2,7 @@ from colony import ReactiveSwarm
 from structure import Structure
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
+from visual import *
 from xlsxwriter.workbook import Workbook
 import commandline, construction, helpers, os, sys, variables
 
@@ -242,7 +243,7 @@ class Simulation:
     else:
       print("The simulation is not started. Cannot reset.")
 
-  def start(self, robots = 10, comment = ""):
+  def start(self, visualization = False, robots = 10, comment = ""):
     '''
     This starts up the SAP 2000 Program and hides it.
     '''
@@ -258,7 +259,7 @@ class Simulation:
       self.started = True
 
     # Make python structure and start up the colony
-    self.Structure = Structure()
+    self.Structure = Structure(visualization)
     self.Swarm = ReactiveSwarm(robots, self.Structure, self.SapProgram)
 
     return outputfolder
@@ -274,18 +275,19 @@ class Simulation:
     else:
       print("No simulation started. Use Simulation.Start() to begin.")
 
-  def go(self,robots = 10, timesteps = 10, debug = True, comment = ""):
+  def go(self,visualization = False, robots = 10, timesteps = 10, debug = True, 
+    comment = ""):
     '''
     Direct accesss
     '''
     outputfolder = ""
     if not self.started:
-      outputfolder = self.start(robots=robots, comment=comment)
-    self.run_simulation(timesteps,debug,comment,outputfolder)
+      outputfolder = self.start(visualization,robots,comment)
+    self.run_simulation(visualization,timesteps,debug,comment,outputfolder)
     self.stop()
 
-  def run_simulation(self,timesteps = 10, debug = True,comment = "",
-    outputfolder=""):
+  def run_simulation(self,visualization = False, timesteps = 10, debug = True,
+    comment = "", outputfolder=""):
     '''
     Runs the simulation according to the variables passed in.
     '''
@@ -326,6 +328,13 @@ class Simulation:
 
       # Run the simulation!
       for i in range(timesteps):
+
+        # Display the swarm if specified
+        if visualization:
+          self.Swarm.show()
+
+        # Add number and new line to structure
+        self.Structure.visualization_data += "{}.\n".format(str(i+1))
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
@@ -384,3 +393,8 @@ class Simulation:
 
       # Write out locations
       self.__push_excel(outputfolder + "locations.xlsx")
+
+      # Write out visualization data
+      with open(outputfolder + 'swarm_visualization.txt', 'w+') as v_swarm, open(outputfolder + 'structure_visualization.txt','w+') as v_struct:
+        v_swarm.write(self.Swarm.visualization_data)
+        v_struct.write(self.Structure.visualization_data)

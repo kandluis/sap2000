@@ -1,3 +1,4 @@
+from visual import *
 from worker import Worker
 import construction, vectors
 
@@ -24,10 +25,19 @@ class Swarm:
       location = vectors.sum_vectors(self.home,(i,0,0)) 
       self.workers[name] = Worker(structure,location,program)
 
+    # Keeps track of visualization data
+    self.visualization_data = ''
+
   def decide(self):
     # Tell each robot to make the decion
     for worker in self.workers:
       self.workers[worker].decide()
+
+      # Add location data
+      self.visualization_data += "{}:{},".format(worker,
+        str(self.workers[worker].location))
+
+    self.visualization_data += "\n"
 
   def act(self):
     # Tell each robot to act
@@ -48,6 +58,22 @@ class ReactiveSwarm(Swarm):
     # names different)
     self.num_created = size
     self.original_size = size
+
+  def show(self):
+    '''
+    Renders the colony in 3D. Each time this function is called, the colony is
+    rendered.
+    '''
+    # Cycle through workers
+    for worker_name, worker in self.workers.items():
+      # If model exists, move it to new location
+      if worker.simulation_model is not None:
+        worker.simulation_model.pos = worker.location
+    
+      # Otherwise create a new model for the robot at the current location
+      else:
+        worker.simulation_model = sphere(make_trail=False)
+        worker.simulation_model.color = (1,0,1)
 
   def reset(self):
     '''

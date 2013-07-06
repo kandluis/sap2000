@@ -235,8 +235,13 @@ def intersection(l1, l2, segment = True):
   # norm1 and norm2 must be parallel (coplanar) but norm2 must be non-zero 
   # (not parallel)
   if not parallel(norm1,norm2) or length(norm1) == 0:
-    return None
-
+    if (p1 == p2 and ep1 != ep2) or (p1 == ep2 and ep1 != p2):
+      return p1
+    elif (ep1 == ep2 and p1 != p2 or ep1 == p2 and p1 != ep2):
+      return ep1
+    else:
+      return None
+      
   # Obtain the distance along line1 travelled
   unsigned_a = length(norm2) / length(norm1)
   a = unsigned_a if same_direction(norm1, norm2) else -1 * unsigned_a

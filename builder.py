@@ -34,7 +34,7 @@ class Builder(Movable):
     return state
 
   def climb_off(self,loc):
-    if helpers.compare(self.location[2],0) and self.num_beams == 0:
+    if helpers.compare(loc[2],0) and self.num_beams == 0:
       self.ground_direction = helpers.make_vector(self.location,
         construction.home)
       return True
@@ -169,6 +169,15 @@ class Builder(Movable):
     '''
     pass
 
+  def elect_direction(self,directions):
+    '''
+    Takes the filtered directions and elects the appropriate one
+    '''
+    beam_name = random.choice(list(directions.keys()))
+    direction = directions[beam_name]
+    
+    return (beam_name, direction)
+
   def get_direction(self):
     ''' 
     Figures out which direction to move in. This means that if the robot is 
@@ -194,8 +203,7 @@ class Builder(Movable):
     # randomly pick any of them. We will change this later based on the analysis
     # results from the program.
     else:
-      beam_name = random.choice(list(directions.keys()))
-      direction = directions[beam_name]
+      beam_name, direction = self.elect_direction(directions)
 
     return {  'beam'      : info['box'][beam_name],
               'direction' : direction }

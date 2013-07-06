@@ -1,7 +1,7 @@
 import variables
 
 # Home location
-home = (variables.dim_x / 2.05, variables.dim_y / 2.05, 0)
+home = (variables.dim_x / 2.1, variables.dim_y / 2.1, 0)
 home_size = (13, 13, 0)
 
 # Location where construction is to begin

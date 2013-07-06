@@ -5,10 +5,11 @@ SAP program when absolutely necessary. The following functions are all helpful
 '''
 from beams import Beam
 from errors import OutofBox
-import helpers, math, sys, variables, pdb
+from visual import *
+import construction, helpers, math, sys, variables, pdb
 
 class Structure:
-  def __init__(self):
+  def __init__(self, visualization):
     # number of boxes
     self.num = variables.num_x, variables.num_y, variables.num_z
 
@@ -28,7 +29,14 @@ class Structure:
     # Keeps track of how many tubes we have in the structure
     self.tubes = 0
 
+    # Maximum height of the strucutre
     self.height = 0
+
+    # Whether or not we should display the structure
+    self.visualization = visualization
+
+    # Keeps track of the visualization data
+    self.visualization_data = ''
 
   def __feasable_point(self,p):
     '''
@@ -235,6 +243,15 @@ class Structure:
 
     # If something went wrong, kill the program
     assert total_boxes > 0
+
+    # If showing the visualization, add the cylinder to the structure
+    if self.visualization:
+      temp = cylinder(pos=p1,axis=helpers.make_vector(p1,p2),
+        radius=variables.outside_diameter)
+      temp.color = (0,1,1)
+
+    # Safe visualization data
+    self.visualization_data += "{},{}\n".format(str(p1),str(p2)) 
 
     # Add a beam to the structure count and increase height if necessary
     self.tubes += 1

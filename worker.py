@@ -1,5 +1,5 @@
 from builder import Builder
-import variables
+import helpers,variables, pdb
 
 class Worker(Builder):
   def __init__(self,structure,location,program):
@@ -36,7 +36,7 @@ class Worker(Builder):
     '''
     Filters the available directions and returns those that move us in the 
     desired direction. Overwritten to take into account the directions in
-    which we want to move in.
+    which we want to move. When climbing down, it will take the steepest path.
     '''
     def bool_fun(string):
       '''
@@ -55,6 +55,17 @@ class Worker(Builder):
     directions =  self.filter_dict(dirs, {}, funs)
 
     return directions
+
+  def elect_direction(self,directions):
+    # Climb down the steepest descent
+    if not self.memory['pos_z']:
+      beam, direction = min([(n, helpers.make_unit(v))for n,v in directions.items()],
+        key=lambda t : t[1][2])
+      return (beam, directions[beam])
+
+    # Randomly moving up
+    else:
+      return super(Worker,self).elect_direction(directions)
 
   def no_available_direction(self):
     '''

@@ -10,6 +10,9 @@ class Automaton:
     # Access to the SAP 2000 Program
     self.program = program
 
+    # Storage of the sphere model
+    self.simulation_model = None
+
   def current_state(self):
     return {}
 
@@ -194,10 +197,22 @@ class Movable(Automaton):
     # There are no joints nearby. This means we are either on a joint OR far 
     # from one. Therefore, we add the directions to the endpoint of our current 
     # beam to the current set of directions
+    v1, v2 = (helpers.make_vector(self.location,self.beam.endpoints.i), 
+      helpers.make_vector(self.location,self.beam.endpoints.j))
     if self.beam.name not in crawlable:
-      crawlable[self.beam.name] = [helpers.make_vector(self.location,
-        self.beam.endpoints.i), helpers.make_vector(self.location,
-        self.beam.endpoints.j)]
+      crawlable[self.beam.name] = [v1,v2]
+    # Add directions that might not have been entered by joints
+    else:
+      bool_v1, bool_v2 = True, True
+      for direct in crawlable[self.beam.name]:
+        if helpers.parallel(direct,v1) and helpers.dot(direct,v1) > 0:
+          bool_v1 = False
+        if helpers.parallel(direct,v2) and helpers.dot(direct,v2) > 0:
+          bool_v2 = False
+      if bool_v2:
+        crawlable[self.beam.name].append(v2)
+      if bool_v1:
+        crawlable[self.beam.name].append(v1)
 
     return crawlable
 
@@ -340,7 +355,7 @@ class Movable(Automaton):
       # We climbed off
       else:
         self.do_action()
-        
+
     # The direction is larger than the usual step, so move only the step in the 
     # specified direction
     else:
