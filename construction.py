@@ -1,12 +1,12 @@
 import variables
 
 # Home location
-home = (variables.dim_x / 2.1, variables.dim_y / 2.1, 0)
-home_size = (13, 13, 0)
+home = (variables.dim_x / 2.2, variables.dim_y / 2.2, 0)
+home_size = (36, 36, 0)
 
 # Location where construction is to begin
 construction_location = (variables.dim_x / 2, variables.dim_y / 2, 0)
-construction_size = (24,24,0)
+construction_size = (36,36,0)
 
 # Angle Contraint : When wiggling, if no beam is found within this
 # angle from the vertical, than the beam is laid at vertical_angle_set (

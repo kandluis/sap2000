@@ -251,7 +251,7 @@ class Structure:
       temp.color = (0,1,1)
 
     # Safe visualization data
-    self.visualization_data += "{},{}\n".format(str(p1),str(p2)) 
+    self.visualization_data += "{}:{}<>".format(str(p1),str(p2)) 
 
     # Add a beam to the structure count and increase height if necessary
     self.tubes += 1

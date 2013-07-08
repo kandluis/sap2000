@@ -64,7 +64,7 @@ class Movable(Automaton):
     location
     '''
     self.beam = beam
-    distance = helpers.distance(self.location,location)
+    distance = helpers.distance(beam.endpoints.i,location)
     ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
       1,10,distance,value,"Global", False, True,0)
     assert ret == 0
@@ -84,7 +84,7 @@ class Movable(Automaton):
     assert self.location[1] >= 0
 
     # Verify that we are still on the xy plane
-    assert self.location[2] == 0
+    assert helpers.compare(self.location[2],0)
 
   def climb_off(self, loc):
     '''

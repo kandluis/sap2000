@@ -3,6 +3,7 @@ from structure import Structure
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
 from visual import *
+from visualization import Visualization
 from xlsxwriter.workbook import Workbook
 import commandline, construction, helpers, os, sys, variables
 
@@ -286,6 +287,11 @@ class Simulation:
     self.run_simulation(visualization,timesteps,debug,comment,outputfolder)
     self.stop()
 
+    # Show the visualization
+    window = Visualization(outputfolder)
+    window.load_data('swarm_visualization.txt','structure_visualization.txt')
+    window.run()
+
   def run_simulation(self,visualization = False, timesteps = 10, debug = True,
     comment = "", outputfolder=""):
     '''
@@ -333,8 +339,8 @@ class Simulation:
         if visualization:
           self.Swarm.show()
 
-        # Add number and new line to structure
-        self.Structure.visualization_data += "{}.\n".format(str(i+1))
+        # Add number and new line to structure visualization data
+        self.Structure.visualization_data += "\n"
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
@@ -379,10 +385,13 @@ class Simulation:
         self.Swarm.act()
 
         # Give a status update if necessary
-        print("Finished timestep {}".format(str(i + 1)))
+        print("Finished timestep {}\r".format(str(i + 1))),
 
       # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
+      # Move to next line
+      print
 
+      # Finish up run_data (add ending time and maximum height)
       run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + ".\n\n Total beams"
        + " on structure: " + str(self.Structure.tubes) + ".")
       run_data += "\n\n Maximum height of structure : " +  str(

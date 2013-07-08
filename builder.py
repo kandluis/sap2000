@@ -370,7 +370,7 @@ class Builder(Movable):
             e1,e2 = points
             # Let's do a sanity check. The shortest distance should have no 
             # change in z
-            assert e1[2] == e2[2]
+            assert helpers.compare(e1[2],e2[2])
             # If we can actually reach the second point from vertical
             if helpers.distance(pivot,e2) <= variables.beam_length:
               # Distance between the two endpoints
@@ -383,7 +383,7 @@ class Builder(Movable):
                 # Check to see if in the dictionary. If it is, associate point 
                 # with ratio
                 if e2 in dictionary:
-                  assert(dictionary[e2] == ratio)
+                  assert hlpers.compare(dictionary[e2],ratio)
                 else:
                   dictionary[e2] = ratio
 
@@ -401,13 +401,13 @@ class Builder(Movable):
               if point[2] >= pivot[2]:
                 projection = helpers.correct(pivot,vertical_point,point)
                 # Sanity check
-                assert(projection[2] == point[2])
+                assert helpers.compare(projection[2],point[2])
 
                 dist = helpers.distance(projection,point)
                 delta_z = abs(point[2] - vertical_point[2])
                 ratio = dist / delta_z
                 if point in dictionary:
-                  assert(dictionary[point] == ratio)
+                  assert hlpers.compare(dictionary[point],ratio)
                 else:
                   dictionary[point] = ratio
 
@@ -460,9 +460,9 @@ class Builder(Movable):
 
     # If we get to this point, we have already built all possible ratios, so 
     # just stick something up
-    disturbance = helpers.make_unit((random.uniform(-1,1),random.uniform(-1,1),
-      random.uniform(-1,1)))
-    default_endpoint = default_endpoint if random.randint(0,6) != 1 else (
+    disturbance = helpers.make_unit((random.uniform(-12,12),random.uniform(-12,12),
+      random.uniform(-12,12)))
+    default_endpoint = default_endpoint if random.randint(0,10) == 1 else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
     return self.addbeam(i,j)

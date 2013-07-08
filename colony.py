@@ -34,7 +34,7 @@ class Swarm:
       self.workers[worker].decide()
 
       # Add location data
-      self.visualization_data += "{}:{},".format(worker,
+      self.visualization_data += "{}:{}<>".format(worker,
         str(self.workers[worker].location))
 
     self.visualization_data += "\n"
@@ -72,7 +72,8 @@ class ReactiveSwarm(Swarm):
     
       # Otherwise create a new model for the robot at the current location
       else:
-        worker.simulation_model = sphere(make_trail=False)
+        worker.simulation_model = sphere(pos=self.location,
+          radius=variables.local_radius,make_trail=False)
         worker.simulation_model.color = (1,0,1)
 
   def reset(self):

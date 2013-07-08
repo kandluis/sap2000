@@ -14,7 +14,7 @@ beam_length = 120 # 10ft
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)
-beam_capacity = 10
+beam_capacity = 1
 
 # The size of the division of space into blocks. 
 # x,y,z gives the number of blocks along the x axix, the y axis, and the z axis
