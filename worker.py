@@ -77,6 +77,32 @@ class Worker(Builder):
     if self.num_beams > 0:
       self.start_construction = True
 
+  def basic_rules(self):
+    '''
+    Decides whether to build or not. Uses some relatively simple rules to decide.
+    Here is the basic logic it is following.
+    1.  a)  If we are at the top of a beam
+        OR
+        b)  i)  We are at the specified construction site
+            AND
+            ii) There is no beginning tube
+    AND
+    2.  Did not build in the previous timestep
+    AND
+    3.  Still carrying construction material
+    '''
+
+    if (((self.at_site() and self.structure.tubes == 0)) and not 
+      self.memory['built'] and 
+      self.num_beams > 0):
+
+      self.memory['built'] = True
+      self.memory['construct'] += 1
+      return True
+    else:
+      self.memory['built'] = False
+      return False
+
   def construct(self):
     '''
     Decides whether the local conditions dictate we should build.
@@ -93,14 +119,6 @@ class Worker(Builder):
     '''
     # Check to see if we have an analysis model!
 
-
-    if (((self.at_site() and self.structure.tubes == 0)) and not 
-      self.memory['built'] and 
-      self.num_beams > 0):
-
-      self.memory['built'] = True
-      self.memory['construct'] += 1
-      return True
-    else:
-      self.memory['built'] = False
-      return False
+class Repairer(Worker):
+  def __init__(self,structure,location,program):
+    super(Repairer,self).__init__(structure,location,program)

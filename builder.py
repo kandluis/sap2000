@@ -467,6 +467,7 @@ class Builder(Movable):
     default_endpoint = default_endpoint if random.randint(0,10) == 1 else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
+
     return self.addbeam(i,j)
 
   def construct(self):

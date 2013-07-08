@@ -51,7 +51,7 @@ class Visualization:
     with open(self.folder + swarm, 'r') as s_file, open(self.folder + structure, 'r') as st_file:
       self.data = zip(load_file(s_file,False),load_file(st_file,True))
 
-  def run(self,fullscreen = True):
+  def run(self,fullscreen = True, inverse_speed=.25):
     if self.data == []:
       print("No data has been loaded. Cannot run simulation.")
     else:
@@ -65,6 +65,12 @@ class Visualization:
       scene.forward = (1,0,0)
       scene.up = (0,0,1)
       scene.exit = False
+
+      # Setup the ground
+      dim = variables.dim_x,variables.dim_y,variables.epsilon/2
+      center = tuple([v/2 for v in dim])
+      temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
+      temp.color = (1,1,1)
 
       # Setup the Home Plate
       dim = construction.home_size
@@ -106,6 +112,6 @@ class Visualization:
             scene.center = helpers.scale(.5,helpers.sum_vectors(
               construction.construction_location,scene.range))
 
-        time.sleep(.5)
-        print(timestep)
+        time.sleep(inverse_speed)
+        print("{},".format(str(timestep)),end="\r")
         timestep += 1

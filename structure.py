@@ -23,8 +23,8 @@ class Structure:
     self.size = variables.dim_x, variables.dim_y, variables.dim_z
 
     # Storage of information
-    self.model =  ([[[{} for k in range(variables.num_x)] for j in 
-      range(variables.num_y)] for i in range(variables.num_z)])
+    self.model =  ([[[{} for k in range(variables.num_z)] for j in 
+      range(variables.num_y)] for i in range(variables.num_x)])
 
     # Keeps track of how many tubes we have in the structure
     self.tubes = 0
