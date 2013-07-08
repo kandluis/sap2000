@@ -67,7 +67,7 @@ class Visualization:
       # Setup the Home Plate
       dim = construction.home_size
       center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
-        zip(construction.home,dim)])
+        zip(construction.location,dim)])
       temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
       temp.color = (1,0,0)
 
