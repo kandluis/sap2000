@@ -21,12 +21,12 @@ beam_capacity = 1
 # dim_var gives the limit of the structure on the axis indicated by var. 
 # Keep in mind that the origin is the bottom-left part of this structure
 origin = (0,0,0)
-num_x = 100
-num_y = 100
+num_x = 10
+num_y = 10
 num_z = 100
 dim_x = 1200 # 100 ft
 dim_y = 1200
-dim_z = 1200
+dim_z = 120000
 
 # This defines how sensitive the program is to accepting errors within the beam 
 # structure

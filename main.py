@@ -344,7 +344,7 @@ class Simulation:
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
-        if self.Structure.tubes > 0 and not self.Swarm.on_ground():
+        if self.Structure.tubes > 0 and not self.Swarm.need_data():
           # Save to a different filename every now and again
           if i % variables.analysis_timesteps == 0:
             filename = "tower-" + str(i) + ".sdb"

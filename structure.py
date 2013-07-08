@@ -347,14 +347,13 @@ class Structure:
     else:
       # Get the box for e1 and check it
       xi1, yi1, zi1 = self.__get_indeces(e1)
-      if not box_available(self.model[xi1][yi1][zi1]):
+      if not box_available(self.get_box(e1)):
         return False
 
       xi2, yi2, zi2 = self.__get_indeces(e2)
-
       # If the next box is not the same box, check it
       if xi1 != xi2 or yi1 != yi2 or zi1 != zi2:
-        if not box_available(self.model[xi2][yi2][zi2]):
+        if not box_available(self.get_box(e2)):
           return False
 
       return True

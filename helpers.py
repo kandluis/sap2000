@@ -83,8 +83,8 @@ def check_location(p):
   restricted coordinates
   '''
   x,y,z = p
-  return (x >=0 and y >= 0 and z >= 0 and x < variables.dim_x and 
-    y < variables.dim_y and z < variables.dim_z)
+  return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or compare(z,0)) 
+    and x < variables.dim_x and y < variables.dim_y and z < variables.dim_z))
 
 def on_line(l1,l2,point,segment = True):
   '''
@@ -173,6 +173,12 @@ def compare(x,y):
   Compares two int/floats by taking into account "epsilon"
   '''
   return (abs(x - y) < variables.epsilon)
+
+def compare_tuple(v1,v2):
+  '''
+  Comapres two floats using our compare function
+  '''
+  return all([compare(x,y) for x,y in zip(v1,v2)])
 
 '''
 Helper functions pertaining to the SAP program

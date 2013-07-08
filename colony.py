@@ -1,6 +1,6 @@
 from visual import *
 from worker import Worker
-import construction, vectors
+import construction, helpers, vectors
 
 class Swarm:
   def __init__(self,size, structure, program):
@@ -34,8 +34,10 @@ class Swarm:
       self.workers[worker].decide()
 
       # Add location data
-      self.visualization_data += "{}:{}<>".format(worker,
-        str(self.workers[worker].location))
+      loc = self.workers[worker].location
+      location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
+
+      self.visualization_data += "{}:{}<>".format(worker,str(location))
 
     self.visualization_data += "\n"
 
@@ -86,6 +88,17 @@ class ReactiveSwarm(Swarm):
       location = vectors.sum_vectors(self.home,(i,0,0)) 
       self.workers[name] = Worker(self.structure,location,self.model)
 
+  def need_data(self):
+    '''
+    Returns whether or not the robots will need to data in order to make decisions.
+    This basically checks to see if they are moving down. If so, then they don't need
+    data.
+    '''
+    for name, worker in self.workers.items():
+      if worker.memory['pos_z'] == True or worker.memory['pos_z'] == None:
+        return False
+
+    return True
   def on_ground(self):
     '''
     Returns whether or not all of the swarm is on the ground. If it is,

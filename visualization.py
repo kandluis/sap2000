@@ -51,30 +51,32 @@ class Visualization:
     with open(self.folder + swarm, 'r') as s_file, open(self.folder + structure, 'r') as st_file:
       self.data = zip(load_file(s_file,False),load_file(st_file,True))
 
-  def run(self):
+  def run(self,fullscreen = True):
     if self.data == []:
       print("No data has been loaded. Cannot run simulation.")
     else:
       # Setup the scene
       scene = display(title="Robot Simulation",background=(1,1,1))
-      scene.center = construction.construction_location
       scene.autocenter = True
-      scene.fullscreen = True
-      scene.range = (variables.dim_x,variables.dim_y,variables.dim_z)
+      scene.fullscreen = fullscreen
+      scene.range = (variables.beam_length,variables.beam_length,variables.beam_length)
+      scene.center = helpers.scale(.5,helpers.sum_vectors(
+        construction.construction_location,scene.range))
       scene.forward = (1,0,0)
       scene.up = (0,0,1)
+      scene.exit = False
 
       # Setup the Home Plate
       dim = construction.home_size
       center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
-        zip(construction.location,dim)])
+        zip(construction.home,dim)])
       temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
       temp.color = (1,0,0)
 
       # Setup the construction plate
       dim = construction.construction_size
       center = tuple([c_coord + size_coord / 2 for c_coord, size_coord in
-        zip(construction.construction_home,dim)])
+        zip(construction.construction_location,dim)])
       temp = box(pos=center, length=dim[0],height=dim[1],width=0.1)
       temp.color = (0,1,0)
       
@@ -97,6 +99,13 @@ class Visualization:
             radius=variables.outside_diameter)
           temp.color = (.5,1,.1)
 
-        time.sleep(.3)
+          # Update window dimensions
+          limit = max(j)
+          if limit > max(scene.range):
+            scene.range = (limit,limit,limit)
+            scene.center = helpers.scale(.5,helpers.sum_vectors(
+              construction.construction_location,scene.range))
+
+        time.sleep(.5)
         print(timestep)
         timestep += 1

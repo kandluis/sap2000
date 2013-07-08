@@ -84,7 +84,10 @@ class Movable(Automaton):
     assert self.location[1] >= 0
 
     # Verify that we are still on the xy plane
-    assert helpers.compare(self.location[2],0)
+    if helpers.compare(self.location[2], 0):
+      loc = list(self.location)
+      loc[2] = 0
+      self.location = tuple(loc)
 
   def climb_off(self, loc):
     '''
@@ -291,6 +294,7 @@ class Movable(Automaton):
       # yourself again (to find a new location)
       if not helpers.check_location(predicted_location):
         self.ground_direction = None
+        pdb.set_trace()
         return self.get_ground_direction()
       # Here, we return the right direction
       else:

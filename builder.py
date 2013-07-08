@@ -88,6 +88,8 @@ class Builder(Movable):
     '''
     # We build almost never.
     self.start_construction = False
+    self.step = variables.step_length
+
     # If we decide to construct, then we store that fact in a bool so action 
     # knows to wiggle the beam
     if self.construct():
@@ -95,6 +97,7 @@ class Builder(Movable):
 
     # Otherwise, if we're not on a beam, then we will wander on the ground
     elif self.beam == None:
+      # reset steps
       self.next_direction_info = None
 
     # Otherwise, we are not on the ground and we decided not to build, so pick 
@@ -125,7 +128,7 @@ class Builder(Movable):
         self.next_direction_info['beam'])
       self.next_direction_info = None
 
-    # We have climbed off, so wander about
+    # We have climbed off, so wander about (set the step to 12)
     else:
       self.wander()
 
@@ -238,7 +241,6 @@ class Builder(Movable):
     else:
       dist, close_beam, direction = (result['distance'], result['beam'],
         result['direction'])
-
       # If the beam is within steping distance, just jump on it
       if self.num_beams > 0 and dist <= self.step:
         # Set the ground direction to None (so we walk randomly if we do get off
