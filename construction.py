@@ -15,5 +15,8 @@ construction_size = (36,36,variables.epsilon)
 beam = {
   'length'            : variables.beam_length,
   'angle_constraint'  : 45,
-  'vertical_dir_set'  : (0,0,1)
+  'vertical_dir_set'  : (0,0,1),
+  'joint_limit'       : variables.joint_limit,
+  'beam_limit'        : variables.beam_limit,
+  'structure_check'   : variables.structure_check
 }

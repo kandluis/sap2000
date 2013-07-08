@@ -13,7 +13,30 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
+  def __at_joint(self):
+    if self.beam is not None:
+      for joint in self.beam.joints:
+        # If we're at a joint
+        if helpers.compare(helpers.distance(self.location,joint),0):
+          return joint
+
+    return False
+
+  def at_top(self):
+    '''
+    Returns if we really are at the top, in which case build
+    '''
+    if self.beam is not None:
+      for endpoint in self.beam.endpoints:
+        if helpers.compare(self.location,endpoint):
+          return True
+
+    return False
+
   def current_state(self):
+    '''
+    Returns current state of robot
+    '''
     state = super(Worker,self).current_state()
     return state
 
@@ -49,6 +72,8 @@ class Worker(Builder):
       else:
         return (lambda a: True)
 
+    # Get the current bending 
+
     # direction functions
     funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
 
@@ -71,10 +96,11 @@ class Worker(Builder):
     '''
     Change start construction to true
     '''
+    # Do parent class' work  
     super(Worker,self).no_available_direction()
 
     # Construct a beam instead of moving if we have beams left
-    if self.num_beams > 0:
+    if self.num_beams > 0 and at_top():
       self.start_construction = True
 
   def basic_rules(self):
@@ -103,21 +129,32 @@ class Worker(Builder):
       self.memory['built'] = False
       return False
 
+  def start_repair(self,beam):
+    '''
+    Initializes the repair of the specified beam. Figures out which direction to
+    travel in and stores it within the robot's memory, then tells it to climb
+    down in a specific direction if necessary.
+    '''
+
+  def local_rules(self):
+    '''
+    Uses the information from SAP2000 to decide what needs to be done. This 
+    funtion returns true if we should construct, and return false otherwise.
+    Also calls the function start_repair in case a repair is necessary
+    '''
+    # If the program is not locked, there are no analysis results so True
+    if not self.model.GetModelIsLocked():
+      return True
+
+    # Analysis results available
+    else:
+      return True
+
   def construct(self):
     '''
-    Decides whether the local conditions dictate we should build.
-    Here is the basic logic it is following.
-    1.  a)  If we are at the top of a beam
-        OR
-        b)  i)  We are at the specified construction site
-            AND
-            ii) There is no beginning tube
-    AND
-    2.  Did not build in the previous timestep
-    AND
-    3.  Still carrying construction material
+    Decides whether the robot should construct or not
     '''
-    # Check to see if we have an analysis model!
+    return self.basic_rules() and self.local_rules()
 
 class Repairer(Worker):
   def __init__(self,structure,location,program):

@@ -1,3 +1,5 @@
+import math
+
 # Units for starting the program
 program_units = "kip_in_F"
 
@@ -33,10 +35,10 @@ dim_z = 120000
 epsilon = 0.0001
 
 # This defines the mass of each robot in the units specified by program_units
-robot_load = 0.025 # This is around 35 pounds in kip.
+robot_load = 0.035 # kip
 
 # This defines the load of each beam carried by the robots
-beam_load = 0.010 # This is around twelve pounds in kN
+beam_load = 0.027 # kip
 
 # Name of the load case for the robots
 robot_load_case = "ROBOTS"
@@ -50,5 +52,18 @@ wall_thickness = 0.145 # inches
 material_type = "MATERIAL_STEEL"
 material_subtype = "MATERIAL_STEEL_SUBTYPE_ASTM_A500GrB_Fy42"
 
+steel_yield = 42 #ksi
+density_ = 0.28 # pci
+cross_sect_area = math.pi * ((outside_diameter / 2)**2 - (outside_diameter / 2 -
+  wall_thickness)**2) # in*in
+moment_of_intertia = math.pi * ((outside_diameter/2)**4 - (outside_diameter / 2 -
+  wall_thickness)**4) / 4
+
+# Calculating limits
+joint_limit = beam_length * beam_load / 2
+structure_check = joint_limit + (beam_load + robot_load)*beam_length
+beam_limit = steel_yield * moment_of_intertia / (outside_diameter / 2)
+
+
 # The number of timesteps before an analysis model is saved.
-analysis_timesteps = 20
+analysis_timesteps = 40
