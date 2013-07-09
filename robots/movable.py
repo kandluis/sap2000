@@ -54,7 +54,9 @@ class Movable(Automaton):
     distance = helpers.distance(beam.endpoints.i,location)
     ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
       1,10,distance,value,"Global", False, True,0)
-    assert ret == 0
+    if ret != 0:
+      print("Error occured when adding load. beam: {}, distance: {}, location {}.".format(
+        beam.name,str(distance),str(self.location)))
 
   def change_location_local(self,new_location, first_beam = None):
     '''
@@ -124,6 +126,9 @@ class Movable(Automaton):
         variables.robot_load_case)
       #ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
       # variables.robot_load_case,1,10,.5,0)
+      if ret != 0:
+        print("Error occured when deleting loads. beam: {}, distance: {}, location {}.".format(
+          self.beam.name,str(curr_dist),str(self.location)))
 
       # add the loads we want back to the frame (automatically deletes all 
       # previous loads)
