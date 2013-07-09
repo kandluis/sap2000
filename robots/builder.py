@@ -162,7 +162,10 @@ class Builder(Movable):
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
         if coord_bool:
-          new_dirs[beam] = vector
+          if beam not in new_dirs:
+            new_dirs[beam] = [vector]
+          else:
+            new_dirs[beam].append(vector)
     return new_dirs
 
   def filter_directions(self,dirs):
@@ -192,12 +195,12 @@ class Builder(Movable):
     '''
     pass
 
-  def pick_direction(directions):
+  def pick_direction(self,directions):
     '''
     Functions to pick a new direction once it is determined that we either have no previous direction, we are at a joint, or the previous direction is unacceptable)
     '''
     beam_name = random.choice(list(directions.keys()))
-    direction = directions[beam_name]
+    direction = random.choice(directions[beam_name])
 
     self.memory['previous_direction'] = beam_name, direction
 
@@ -215,11 +218,16 @@ class Builder(Movable):
       '''
       key, value = item
       temp = {}
-      for test_key,test_value in dictionary.items():
+      for test_key,test_values in dictionary.items():
         # Keys are the same, vectors are parallel, and point in the same direction
-        if (key == test_key and helpers.parallel(value,test_value) and 
-          helpers.dot(value,test_value) > 0):
-          temp[test_key] = test_value
+        if key == test_key:
+          for test_value in test_values:
+            if (helpers.parallel(value,test_value) and 
+              helpers.dot(value,test_value) > 0):
+              if test_key in temp:
+                temp[test_key].append(test_value)
+              else:
+                temp[test_key] = [test_value]
       
       # No values are parallel, so return None
       if temp == {}:
@@ -227,12 +235,14 @@ class Builder(Movable):
 
       # Pick a direction randomly from those that are parallel
       else:
-        pick_random(temp)
+        pick_direction(temp)
 
     # We are not at a joint and we have a previous direction
     if not self.__at_joint() and self.memory['previous_direction'] is not None:
+
       # Pull a direction parallel to our current from the set of directions
       direction_info = next_dict(self.memory['previous_direction'],directions)
+
       if direction_info is not None:
         return direction_info
 
@@ -254,12 +264,12 @@ class Builder(Movable):
     # Find index of closest data_point
     close_index, i = 0, 0
     shortest_distance = None
-    distances = data[3]
+    distances = results[3]
     for i_distance in distances:
       # Get beam endpoints to calculate global position of moment
-      i,j = self.structure.get_endpoints(name,self.location)
-      beam_direction = helpers.make_unit(helpers.make_vector(i,j))
-      point = helpers.sum_vectors(i,helpers.scale(i_distance,beam_direction))
+      i_end,j_end = self.structure.get_endpoints(name,self.location)
+      beam_direction = helpers.make_unit(helpers.make_vector(i_end,j_end))
+      point = helpers.sum_vectors(i_end,helpers.scale(i_distance,beam_direction))
       distance = helpers.distance(self.location,point)
 
       # If closer than the current closes point, update information
@@ -273,7 +283,7 @@ class Builder(Movable):
     assert close_index < results[1]
 
     # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
-    return math.sqrt(results[11][close_index]**2 + results[12[close_index]]**2)
+    return math.sqrt(results[11][close_index]**2 + results[12][close_index]**2)
 
 
   def filter_feasable(self,dirs):
@@ -290,16 +300,18 @@ class Builder(Movable):
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
     if self.__at_joint():
-      for name, direction in dirs:
+      for name, directions in dirs.items():
         moment = self.get_moment(name)
         # If the name is our beam, do a structural check instead of a joint check
         if ((self.beam.name == name and moment < construction.beam['beam_limit'])
          or moment < construction.beam['joint_limit']):
-          results[name] = direction
+          results[name] = directions
 
-    if results == {}:
-      pdb.set_trace()
-      
+    # Not at joint, so check own beam
+    moment = self.get_moment(self.beam.name)
+    if moment < construction.beam['beam_limit']:
+      results = dirs
+
     return results
 
   def get_direction(self):
@@ -314,7 +326,7 @@ class Builder(Movable):
 
     # Filter out directions which are unfeasable
     if self.model.GetModelIsLocked():
-      feasable_directions = self.__filter_feasable(info['directions'])
+      feasable_directions = self.filter_feasable(info['directions'])
     else:
       feasable_directions = info['directions']
 

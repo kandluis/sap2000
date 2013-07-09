@@ -71,16 +71,17 @@ class Worker(Builder):
 
     return directions
 
-  def pick_direction(directions):
+  def pick_direction(self,directions):
     '''
     Overwritting to pick the direction of steepest descent when climbing down
     instead of just picking a direction randomly
     '''
     # Pick the largest pos_z if moving down
     if not self.memory['pos_z']:
-      beam, direction = min([(n, helpers.make_unit(v))for n,v in directions.items()],
+      beam, direction = min([(n, min([helpers.make_unit(v) for v in vs],
+        key=lambda t : t[2])) for n,vs in directions.items()],
         key=lambda t : t[1][2])
-      return (beam, directions[beam])
+      return (beam, direction)
 
     # Randomly moving about along whatever directions are available
     else:
@@ -128,7 +129,7 @@ class Worker(Builder):
       self.memory['built'] = False
       return False
 
-  def start_repair(self,beam):
+  def start_repair(self):
     '''
     Initializes the repair of the specified beam. Figures out which direction to
     travel in and stores it within the robot's memory, then tells it to climb

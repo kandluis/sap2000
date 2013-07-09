@@ -119,12 +119,11 @@ class Movable(Automaton):
           indeces.append(index)
         index += 1
 
-      # Delete the previous loads from our load patter
+      # Delete the previous loads from our load pattern
       ret = self.model.FrameObj.DeleteLoadPoint(self.beam.name,
         variables.robot_load_case)
       #ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
       # variables.robot_load_case,1,10,.5,0)
-      assert ret == 0
 
       # add the loads we want back to the frame (automatically deletes all 
       # previous loads)
@@ -181,7 +180,7 @@ class Movable(Automaton):
       
       # For all joints within the timestep, return a direction that is exactly 
       # the change from current to that point
-      elif dist <= self.step:
+      elif dist <= self.step and not helpers.compare(dist,0):
         if self.beam.name in crawlable:
           crawlable[self.beam.name].append(helpers.make_vector(self.location,
             joint))
@@ -193,8 +192,16 @@ class Movable(Automaton):
     # beam to the current set of directions
     v1, v2 = (helpers.make_vector(self.location,self.beam.endpoints.i), 
       helpers.make_vector(self.location,self.beam.endpoints.j))
+    b_v1 = not helpers.compare(helpers.length(v1),0)
+    b_v2 = not helpers.compare(helpers.length(v2),0)
     if self.beam.name not in crawlable:
-      crawlable[self.beam.name] = [v1,v2]
+      if b_v1 and b_v2:
+        crawlable[self.beam.name] = [v1,v2]
+      elif b_v1:
+        crawlable[self.beam.name] = [v1]
+      elif b_v2:
+        crawlable[self.beam.name] = [v2]
+
     # Add directions that might not have been entered by joints
     else:
       bool_v1, bool_v2 = True, True

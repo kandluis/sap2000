@@ -187,7 +187,7 @@ class Structure:
         print("Could not add the beam {} at the points {}-{}. Maybe those \
           points are out of bounds?".format(name,str(e1),str(e2)))
 
-  def get_endpoints(beam_name,location):
+  def get_endpoints(self,beam_name,location):
     '''
     Returns the endpoints of the beam. It uses location to facilitate the search.
     Returns None if the beam is not found
