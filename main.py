@@ -274,7 +274,8 @@ class Simulation:
     # If we started with a previous model, we have to add all of the beams 
     # to our own model in python
     if model != "":
-
+      ret = self.Structure.load_model(self.SapProgram)
+      assert ret == 0
 
     self.folder = outputfolder
 

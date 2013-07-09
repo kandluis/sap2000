@@ -166,6 +166,28 @@ class Structure:
 
     return points
 
+  def load_model(self,program):
+    '''
+    Loads the model from SapModel (model variable) into the structure. Simply
+    mimicks constructing this model.
+    '''
+    frames = program.sap_frame_objects
+    points = program.sap_point_objects
+
+    # Get the names
+    names = frames.get_names()
+
+    # Cycle through names
+    for name in names:
+      # Get name of the endpoints for each beam, then the coordiantes of those points
+      p1,p2 = frames.get_points(name)
+      e1,e2 = points.get_cartesian(p1),points.get_cartesian(p2)
+      # Add the beam to the structure
+      if not self.add_beam(e1,e2,name):
+        print("Could not add the beam {} at the points {}-{}. Maybe those \
+          points are out of bounds?".format(name,str(e1),str(e2)))
+
+
   def get_box(self,point):
     '''
     Finds the box containing the specified point and returns a dictionary 

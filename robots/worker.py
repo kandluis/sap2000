@@ -14,7 +14,7 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
-  def at_top(self):
+  def __at_top(self):
     '''
     Returns if we really are at the top, in which case build
     '''
@@ -64,8 +64,6 @@ class Worker(Builder):
       else:
         return (lambda a: True)
 
-    # Get the current bending 
-
     # direction functions
     funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
 
@@ -73,26 +71,32 @@ class Worker(Builder):
 
     return directions
 
-  def elect_direction(self,directions):
-    # Climb down the steepest descent
+  def pick_direction(directions):
+    '''
+    Overwritting to pick the direction of steepest descent when climbing down
+    instead of just picking a direction randomly
+    '''
+    # Pick the largest pos_z if moving down
     if not self.memory['pos_z']:
       beam, direction = min([(n, helpers.make_unit(v))for n,v in directions.items()],
         key=lambda t : t[1][2])
       return (beam, directions[beam])
 
-    # Randomly moving up
+    # Randomly moving about along whatever directions are available
     else:
-      return super(Worker,self).elect_direction(directions)
+      return super(Worker,self).pick_direction(directions)
 
   def no_available_direction(self):
     '''
-    Change start construction to true
+    No direction takes us where we want to go, so check to see if we need to 
+      a) Construct
+      b) Repair
     '''
     # Do parent class' work  
     super(Worker,self).no_available_direction()
 
     # Construct a beam instead of moving if we have beams left
-    if self.num_beams > 0 and self.at_top():
+    if self.num_beams > 0 and self.__at_top():
       self.start_construction = True
 
   def basic_rules(self):
@@ -145,7 +149,7 @@ class Worker(Builder):
 
   def construct(self):
     '''
-    Decides whether the robot should construct or not
+    Decides whether the robot should construct or not based on some local rules.
     '''
     return self.basic_rules() and self.local_rules()
 

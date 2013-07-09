@@ -205,6 +205,7 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
+
 '''
 Helper functions pertaining to the beams (especially intersections)
 '''

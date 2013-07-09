@@ -153,9 +153,12 @@ class Builder(Movable):
     Filters a dictinary of directions, taking out all directions not in the 
     correct directions based on the list of comp_functions (x,y,z)
     '''
+    # Access items
     for beam, vectors in dirs.items():
+      # Access each directions
       for vector in vectors:
         coord_bool = True
+        # Apply each function to the correct coordinates
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
         if coord_bool:
@@ -185,25 +188,26 @@ class Builder(Movable):
     '''
     This specifies what the robot should do if there are no directions available
     for travel. This basically means that no beams are appropriate to climb on.
+    We pass here, because we just pick the directio randomly later on.
     '''
     pass
 
+  def pick_direction(directions):
+    '''
+    Functions to pick a new direction once it is determined that we either have no previous direction, we are at a joint, or the previous direction is unacceptable)
+    '''
+    beam_name = random.choice(list(directions.keys()))
+    direction = directions[beam_name]
+
+    self.memory['previous_direction'] = beam_name, direction
+
+    return beam_name, direction
+
   def elect_direction(self,directions):
     '''
-    Takes the filtered directions and elects the appropriate one
+    Takes the filtered directions and elects the appropriate one. This function
+    takes care of continuing in a specific direction whenever possible.
     '''
-    def pick_random(dictionary):
-      '''
-      Picks a random direction for a set of directions that is not empty.
-      Returns (name,direction). Also stores this direction in memory.
-      '''
-      beam_name = random.choice(list(directions.keys()))
-      direction = directions[beam_name]
-
-      self.memory['previous_direction'] = beam_name, direction
-
-      return beam_name, direction
-
     def next_dict(item,dictionary):
       '''
       Returns whether or the value (a direction vector) is found inside of 
@@ -234,7 +238,32 @@ class Builder(Movable):
 
     # If we get to this point, either we are at a joint, we don't have a previous
     # direction, or that previous direction is no longer acceptable
-    return pick_random(directions)
+    return self.pick_direction(directions)
+
+  def filter_feasable(self,dirs):
+    '''
+    Filters the set of dirs passed in to check that the beam can support a robot
+    + beam load if the robot were to walk in the specified direction to the
+    very tip of the beam.
+    This function is only ever called if an analysis model exists.
+    '''
+    def get_moment(name):
+      '''
+      Returns the moment for the beam specified by name at the point closest 
+      to the robot itself
+      '''
+      results = self.model.Results.FrameForce(name,0)
+      assert results[0] == 0
+
+    # Sanity check
+    assert self.model.GetModelIsLocked()
+
+    # If at a joint, cycle through possible directions and check that the beams
+    # meet the joint_limit. If they do, keep them. If not, discard them.
+    if self.__at_joint():
+      for name, direction in dirs:
+        # If the name is our beam, do a structural check instead of a joint
+
 
   def get_direction(self):
     ''' 
@@ -245,21 +274,27 @@ class Builder(Movable):
     '''
     # Get all the possible directions, as normal
     info = self.get_directions_info()
-    directions = self.filter_directions(info['directions'])
 
-    # This will only occur if no direction changes our vertical height. If this 
-    # is the case, get directions as before
+    # Filter out directions which are unfeasable
+    if self.model.GetModelIsLocked():
+      feasable_directions = self.__filter_feasable(info['directions'])
+    else:
+      feasable_directions = info['directions']
+
+    # Now filter on based where you want to go
+    directions = self.filter_directions(feasable_directions)
+
+    # This will only occur if no direction takes us where we want to go. If 
+    # that's the case, then just a pick a random direction to go on and run the
+    # routine for when no directions are available.
     if directions == {}:
-      # Do some stuff here
+      # No direction takes us exactly in the way we want to go, so check if we
+      # might need to construct up or might want to repair
       self.no_available_direction()
-
-      # We're at the top
-      beam_name = random.choice(list(info['directions'].keys()))
-      direction = random.choice(info['directions'][beam_name])
+      beam_name, direction = self.elect_direction(feasable_directions)
 
     # Otherwise we do have a set of directions taking us in the right place, so 
     # randomly pick any of them. We will change this later based on the analysis
-    # results from the program.
     else:
       beam_name, direction = self.elect_direction(directions)
 
