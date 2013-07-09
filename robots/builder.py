@@ -240,6 +240,42 @@ class Builder(Movable):
     # direction, or that previous direction is no longer acceptable
     return self.pick_direction(directions)
 
+  def get_moment(self,name):
+    '''
+    Returns the moment for the beam specified by name at the point closest 
+    to the robot itself
+    '''
+    # Format (ret[0], number_results[1], obj_names[2], i_end distances[3], 
+    # load_cases[4], step_types[5], step_nums[6], Ps[7], V2s[8], V3s[9], 
+    # Ts[10], M2s[11], M3s[12]
+    results = self.model.Results.FrameForce(name,0)
+    assert results[0] == 0
+
+    # Find index of closest data_point
+    close_index, i = 0, 0
+    shortest_distance = None
+    distances = data[3]
+    for i_distance in distances:
+      # Get beam endpoints to calculate global position of moment
+      i,j = self.structure.get_endpoints(name,self.location)
+      beam_direction = helpers.make_unit(helpers.make_vector(i,j))
+      point = helpers.sum_vectors(i,helpers.scale(i_distance,beam_direction))
+      distance = helpers.distance(self.location,point)
+
+      # If closer than the current closes point, update information
+      if shortest_distance is None or distance < shortest_distance:
+        close_index = i
+        shortest_distance = distance
+
+      i += 1
+
+    # Make sure index is indexiable
+    assert close_index < results[1]
+
+    # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
+    return math.sqrt(results[11][close_index]**2 + results[12[close_index]]**2)
+
+
   def filter_feasable(self,dirs):
     '''
     Filters the set of dirs passed in to check that the beam can support a robot
@@ -247,23 +283,24 @@ class Builder(Movable):
     very tip of the beam.
     This function is only ever called if an analysis model exists.
     '''
-    def get_moment(name):
-      '''
-      Returns the moment for the beam specified by name at the point closest 
-      to the robot itself
-      '''
-      results = self.model.Results.FrameForce(name,0)
-      assert results[0] == 0
-
     # Sanity check
     assert self.model.GetModelIsLocked()
 
+    results = {}
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
     if self.__at_joint():
       for name, direction in dirs:
-        # If the name is our beam, do a structural check instead of a joint
+        moment = self.get_moment(name)
+        # If the name is our beam, do a structural check instead of a joint check
+        if ((self.beam.name == name and moment < construction.beam['beam_limit'])
+         or moment < construction.beam['joint_limit']):
+          results[name] = direction
 
+    if results == {}:
+      pdb.set_trace()
+      
+    return results
 
   def get_direction(self):
     ''' 

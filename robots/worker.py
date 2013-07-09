@@ -95,9 +95,11 @@ class Worker(Builder):
     # Do parent class' work  
     super(Worker,self).no_available_direction()
 
-    # Construct a beam instead of moving if we have beams left
+    # Construct a beam if we're at the top
     if self.num_beams > 0 and self.__at_top():
       self.start_construction = True
+    else:
+      self.start_repair()
 
   def basic_rules(self):
     '''
@@ -132,6 +134,7 @@ class Worker(Builder):
     travel in and stores it within the robot's memory, then tells it to climb
     down in a specific direction if necessary.
     '''
+    pass
 
   def local_rules(self):
     '''
