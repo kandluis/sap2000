@@ -3,10 +3,11 @@ This file establishes the structure and keeps track of all beam elements added
 to it. This is done for the sake of efficiency, as we only want to query the 
 SAP program when absolutely necessary. The following functions are all helpful
 '''
-from beams import Beam
-from errors import OutofBox
+from helpers import helpers
+from helpers.errors import OutofBox
+from structure.beams import Beam
 from visual import *
-import construction, helpers, math, sys, variables, pdb
+import construction, math, pdb, sys, variables
 
 class Structure:
   def __init__(self, visualization):
@@ -28,6 +29,9 @@ class Structure:
 
     # Keeps track of how many tubes we have in the structure
     self.tubes = 0
+
+    # Keeps track of whether the decesion to start it has occured
+    self.started = False
 
     # Maximum height of the strucutre
     self.height = 0

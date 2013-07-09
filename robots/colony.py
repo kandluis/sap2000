@@ -1,6 +1,7 @@
+from helpers import helpers
+from robots.worker import Worker
 from visual import *
-from worker import Worker
-import construction, helpers, vectors
+import construction
 
 class Swarm:
   def __init__(self,size, structure, program):
@@ -22,7 +23,7 @@ class Swarm:
       name = "worker_" + str(i)
 
       # workers start at home
-      location = vectors.sum_vectors(self.home,(i,0,0)) 
+      location = helpers.sum_vectors(self.home,(i,0,0)) 
       self.workers[name] = Worker(structure,location,program)
 
     # Keeps track of visualization data
@@ -85,7 +86,7 @@ class ReactiveSwarm(Swarm):
     self.workers = {}
     for i in range(self.original_size):
       name = "worker_" + str(i)
-      location = vectors.sum_vectors(self.home,(i,0,0)) 
+      location = helpers.sum_vectors(self.home,(i,0,0)) 
       self.workers[name] = Worker(self.structure,location,self.model)
 
   def need_data(self):
@@ -117,7 +118,7 @@ class ReactiveSwarm(Swarm):
     '''
     for i in range(self.num_created, self.num_created + num):
       name = "worker_" + str(i)
-      location = vectors.sum_vectors(self.home,(i - num, 0, 0))
+      location = helpers.sum_vectors(self.home,(i - num, 0, 0))
       self.workers[name] = Worker(self.structure,location,self.model)
 
     self.size += num

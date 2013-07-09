@@ -1,20 +1,7 @@
+from helpers import helpers
+from robots.automaton import Automaton
 from sap2000.constants import EOBJECT_TYPES
-import construction, helpers, pdb, random, variables
-
-# Basic class for any automatic object that needs access to the SAP program
-class Automaton:
-  def __init__(self,program):
-    # Accesss to the SapModel from SAP 2000
-    self.model = program.sap_com_object.SapModel
-
-    # Access to the SAP 2000 Program
-    self.program = program
-
-    # Storage of the sphere model
-    self.simulation_model = None
-
-  def current_state(self):
-    return {}
+import construction, pdb, random, variables
 
 # Class of objects that can move around (on the ground and on the structure)
 class Movable(Automaton):
@@ -114,6 +101,8 @@ class Movable(Automaton):
       # dists, loads
       data = self.model.FrameObj.GetLoadPoint(self.beam.name)
       assert data[0] == 0 # Making sure everything went okay
+      if data[1] == 0:
+        return;
 
       # Find location of load
       i, j = self.beam.endpoints
@@ -125,14 +114,16 @@ class Movable(Automaton):
       indeces = []
       index = 0
       for ab_dist in data[8]:  # this provides acces to the absolute_distance 
-        if (helpers.compare(ab_dist,curr_dist) or variables.robot_load_case != 
-          data[3][index]):
+        if ((helpers.compare(ab_dist,curr_dist) and variables.robot_load_case == 
+          data[3][index]) or data[3][index] != variables.robot_load_case):
           indeces.append(index)
         index += 1
 
-      # Delete the previous loads
-      ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
-        variables.robot_load_case,1,10,.5,0)
+      # Delete the previous loads from our load patter
+      ret = self.model.FrameObj.DeleteLoadPoint(self.beam.name,
+        variables.robot_load_case)
+      #ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
+      # variables.robot_load_case,1,10,.5,0)
       assert ret == 0
 
       # add the loads we want back to the frame (automatically deletes all 

@@ -1,4 +1,4 @@
-from inout import io
+from helpers.inout import io
 import getopt, sys
 
 def run(input = "", output = ""):

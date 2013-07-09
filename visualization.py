@@ -1,5 +1,6 @@
+from helpers import helpers
 from visual import *
-import construction, helpers, time, re, variables
+import construction, time, re, variables
 
 class Visualization:
   def __init__(self,outputfolder):
@@ -113,5 +114,4 @@ class Visualization:
               construction.construction_location,scene.range))
 
         time.sleep(inverse_speed)
-        print("{},".format(str(timestep)),end="\r")
         timestep += 1

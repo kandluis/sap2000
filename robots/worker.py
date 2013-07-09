@@ -1,5 +1,6 @@
-from builder import Builder
-import helpers,variables, pdb
+from helpers import helpers
+from robots.builder import Builder
+import pdb, variables
 
 class Worker(Builder):
   def __init__(self,structure,location,program):
@@ -13,22 +14,13 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
-  def __at_joint(self):
-    if self.beam is not None:
-      for joint in self.beam.joints:
-        # If we're at a joint
-        if helpers.compare(helpers.distance(self.location,joint),0):
-          return joint
-
-    return False
-
   def at_top(self):
     '''
     Returns if we really are at the top, in which case build
     '''
     if self.beam is not None:
       for endpoint in self.beam.endpoints:
-        if helpers.compare(self.location,endpoint):
+        if helpers.compare(helpers.distance(self.location,endpoint),0):
           return True
 
     return False
@@ -100,7 +92,7 @@ class Worker(Builder):
     super(Worker,self).no_available_direction()
 
     # Construct a beam instead of moving if we have beams left
-    if self.num_beams > 0 and at_top():
+    if self.num_beams > 0 and self.at_top():
       self.start_construction = True
 
   def basic_rules(self):
@@ -118,10 +110,11 @@ class Worker(Builder):
     3.  Still carrying construction material
     '''
 
-    if (((self.at_site() and self.structure.tubes == 0)) and not 
+    if (((self.at_site() and not self.structure.started)) and not 
       self.memory['built'] and 
       self.num_beams > 0):
 
+      self.structure.started = True
       self.memory['built'] = True
       self.memory['construct'] += 1
       return True

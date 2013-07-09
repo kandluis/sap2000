@@ -1,6 +1,6 @@
 from sap2000 import sap2000
 from sap2000.constants import UNITS
-from helpers import path_exists
+from helpers.helpers import path_exists
 import os, variables
 
 # temp
@@ -8,9 +8,10 @@ import os, variables
 
 def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """
-  Opens the specified inputfile and outputfile. By default, it creates a new model
-  if no inputfile is specified and saves it as the specified outputfile. If no outputfile
-  is specified, the default location is "C:\SAP 2000\output.sdb". Returns the program and model.
+  Opens the specified inputfile and outputfile. By default, it creates a new 
+  model if no inputfile is specified and saves it as the specified outputfile. 
+  If no outputfile is specified, the default location is "C:\SAP 2000\output.sdb". 
+  Returns the program and model.
   """
   # start program
   program = sap2000.Sap2000()

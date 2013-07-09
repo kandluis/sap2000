@@ -1,5 +1,5 @@
 from sap2000.constants import LOAD_PATTERN_TYPES
-from vectors import *
+from helpers.vectors import *
 import errno, math, os, pdb, variables
 
 def check(return_value, message):

@@ -1,11 +1,12 @@
-from colony import ReactiveSwarm
-from structure import Structure
+from helpers import commandline, helpers
+from robots.colony import ReactiveSwarm
+from structure.structure import Structure
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
 from visual import *
 from visualization import Visualization
 from xlsxwriter.workbook import Workbook
-import commandline, construction, helpers, os, sys, variables
+import construction, os, sys, variables
 
 class Simulation:
   def __init__(self):
@@ -14,6 +15,8 @@ class Simulation:
     self.Structure = None
     self.Swarm = None
     self.started = False
+    self.folder = None
+    self.run = False
 
     # Keeps track of the excel data since we can only write it in one go
     self.excel = {}
@@ -239,14 +242,19 @@ class Simulation:
       self.Structure.reset()
       self.Swarm.reset()
 
-      return outputfolder
+      self.folder = outputfolder
+      self.run = False
 
     else:
       print("The simulation is not started. Cannot reset.")
 
-  def start(self, visualization = False, robots = 10, comment = ""):
+  def start(self, visualization = False, robots = 10, comment = "", model=""):
     '''
-    This starts up the SAP 2000 Program and hides it.
+    This starts up the SAP 2000 Program and hides it. 
+      visualization = should we display the simulation as it occurs?
+      robots = number of robots in simulation
+      comment = a comment attached to the name of the folder
+      model = location of a file which contains a starting model
     '''
     if self.started:
       print("Simulation has already been started")
@@ -254,7 +262,7 @@ class Simulation:
       outputfolder = ('C:\SAP 2000\\' +strftime("%b-%d") + "\\" + 
         strftime("%H_%M_%S") + comment + "\\")
       outputfilename = "tower.sdb"
-      self.SapProgram, self.SapModel = commandline.run("",
+      self.SapProgram, self.SapModel = commandline.run(model,
         outputfolder + outputfilename)
       self.SapProgram.hide()
       self.started = True
@@ -263,7 +271,12 @@ class Simulation:
     self.Structure = Structure(visualization)
     self.Swarm = ReactiveSwarm(robots, self.Structure, self.SapProgram)
 
-    return outputfolder
+    # If we started with a previous model, we have to add all of the beams 
+    # to our own model in python
+    if model != "":
+
+
+    self.folder = outputfolder
 
   def stop(self):
     '''
@@ -273,6 +286,8 @@ class Simulation:
       ret = self.SapProgram.exit()
       assert ret == 0
       self.started = False
+      self.run = False
+      self.folder = None
     else:
       print("No simulation started. Use Simulation.Start() to begin.")
 
@@ -284,19 +299,32 @@ class Simulation:
     outputfolder = ""
     if not self.started:
       outputfolder = self.start(visualization,robots,comment)
-    self.run_simulation(visualization,timesteps,debug,comment,outputfolder)
+    self.folder = outputfolder
+    self.run_simulation(visualization,timesteps,debug,comment)
     self.stop()
 
-    # Show the visualization
-    window = Visualization(outputfolder)
-    window.load_data('swarm_visualization.txt','structure_visualization.txt')
-    window.run()
+    # Run visualization
+    self.run_visualization()
+
+  def run_visualization(self,fullscreen=True,inverse_speed=.25):
+    '''
+    Displays the visualization if an outputfolder exist and the simulation has
+    been run.
+    '''
+    if self.run:
+      window = Visualization(self.folder)
+      window.load_data('swarm_visualization.txt','structure_visualization.txt')
+      window.run(fullscreen,inverse_speed)
+    else:
+      print("The visualization has not been started.")
 
   def run_simulation(self,visualization = False, timesteps = 10, debug = True,
-    comment = "", outputfolder=""):
+    comment = ""):
     '''
     Runs the simulation according to the variables passed in.
     '''
+    outputfolder = self.folder
+
     start_time = strftime("%H:%M:%S")
     # Make sure the simulation has been started. If not, exit.
     if not self.started:
@@ -388,8 +416,6 @@ class Simulation:
         print("Finished timestep {}\r".format(str(i + 1))),
 
       # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
-      # Move to next line
-      print
 
       # Finish up run_data (add ending time and maximum height)
       run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + ".\n\n Total beams"
@@ -407,3 +433,5 @@ class Simulation:
       with open(outputfolder + 'swarm_visualization.txt', 'w+') as v_swarm, open(outputfolder + 'structure_visualization.txt','w+') as v_struct:
         v_swarm.write(self.Swarm.visualization_data)
         v_struct.write(self.Structure.visualization_data)
+
+      self.run = True

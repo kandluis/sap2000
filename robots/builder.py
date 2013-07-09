@@ -1,5 +1,6 @@
-from robots import Movable
-import construction, helpers, math, operator, pdb, random, variables
+from helpers import helpers
+from robots.movable import Movable
+import construction, math, operator, pdb, random, variables
 
 class Builder(Movable):
   def __init__(self,structure,location,program):
@@ -23,6 +24,21 @@ class Builder(Movable):
     # Starting defaults
     self.memory['built'] = False
     self.memory['construct'] = 0
+
+    # Keeps track of the direction we last moved in.
+    self.memory['previous_direction'] = None
+
+  def __at_joint(self):
+    '''
+    Returns whether or not the robot is at a joint
+    '''
+    if self.beam is not None:
+      for joint in self.beam.joints:
+        # If we're at a joint
+        if helpers.compare(helpers.distance(self.location,joint),0):
+          return joint
+
+    return False
 
   def current_state(self):
     state = super(Builder, self).current_state()
@@ -176,10 +192,49 @@ class Builder(Movable):
     '''
     Takes the filtered directions and elects the appropriate one
     '''
-    beam_name = random.choice(list(directions.keys()))
-    direction = directions[beam_name]
-    
-    return (beam_name, direction)
+    def pick_random(dictionary):
+      '''
+      Picks a random direction for a set of directions that is not empty.
+      Returns (name,direction). Also stores this direction in memory.
+      '''
+      beam_name = random.choice(list(directions.keys()))
+      direction = directions[beam_name]
+
+      self.memory['previous_direction'] = beam_name, direction
+
+      return beam_name, direction
+
+    def next_dict(item,dictionary):
+      '''
+      Returns whether or the value (a direction vector) is found inside of 
+      dictionary (ie, looks for parallel directions)
+      '''
+      key, value = item
+      temp = {}
+      for test_key,test_value in dictionary.items():
+        # Keys are the same, vectors are parallel, and point in the same direction
+        if (key == test_key and helpers.parallel(value,test_value) and 
+          helpers.dot(value,test_value) > 0):
+          temp[test_key] = test_value
+      
+      # No values are parallel, so return None
+      if temp == {}:
+        return None
+
+      # Pick a direction randomly from those that are parallel
+      else:
+        pick_random(temp)
+
+    # We are not at a joint and we have a previous direction
+    if not self.__at_joint() and self.memory['previous_direction'] is not None:
+      # Pull a direction parallel to our current from the set of directions
+      direction_info = next_dict(self.memory['previous_direction'],directions)
+      if direction_info is not None:
+        return direction_info
+
+    # If we get to this point, either we are at a joint, we don't have a previous
+    # direction, or that previous direction is no longer acceptable
+    return pick_random(directions)
 
   def get_direction(self):
     ''' 
