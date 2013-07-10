@@ -161,7 +161,7 @@ class Movable(Automaton):
 
     self.location = new_location
 
-  def __get_walkable_directions(self,box):
+  def get_walkable_directions(self,box):
     '''
     Finds all of the beams in box which intersect the robots location or 
     to which the robot can walk onto. Returns delta x, delta y, and delta z
@@ -205,6 +205,7 @@ class Movable(Automaton):
     b_v1 = not helpers.compare(helpers.length(v1),0)
     b_v2 = not helpers.compare(helpers.length(v2),0)
     if self.beam.name not in crawlable:
+      #crawlable[self.beam.name] = [v1,v2]
       if b_v1 and b_v2:
         crawlable[self.beam.name] = [v1,v2]
       elif b_v1:
@@ -400,7 +401,7 @@ class Movable(Automaton):
       pdb.set_trace()
 
     # Find the beams and directions (ie, where can he walk?)
-    directions_info = self.__get_walkable_directions(box)
+    directions_info = self.get_walkable_directions(box)
 
     return {  'box'         : box,
               'directions'  : directions_info }

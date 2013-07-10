@@ -76,12 +76,16 @@ class Worker(Builder):
     Overwritting to pick the direction of steepest descent when climbing down
     instead of just picking a direction randomly
     '''
+    def min_dir(vs):
+      unit_list = [helpers.make_unit(v) for v in vs]
+      min_val = min(unit_list,key=lambda t : t[2])
+      index = unit_list.index(min_val)
+      return index,min_val
     # Pick the largest pos_z if moving down
     if not self.memory['pos_z']:
-      beam, direction = min([(n, min([helpers.make_unit(v) for v in vs],
-        key=lambda t : t[2])) for n,vs in directions.items()],
-        key=lambda t : t[1][2])
-      return (beam, direction)
+      beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
+        key=lambda t : t[1][1][2])
+      return (beam, directions[beam][index])
 
     # Randomly moving about along whatever directions are available
     else:

@@ -188,10 +188,22 @@ class Structure:
         print("Could not add the beam {} at the points {}-{}. Maybe those \
           points are out of bounds?".format(name,str(e1),str(e2)))
 
+  def find_beam(self,beam):
+    '''
+    Cycles through the structure, looking for the beam specified by name
+    '''
+    for wall in self.model:
+      for column in wall:
+        for cell in column:
+          if beam in cell:
+            return cell[beam]
+
+    return None
+
   def get_endpoints(self,beam_name,location):
     '''
     Returns the endpoints of the beam. It uses location to facilitate the 
-    search. Returns None if the beam is not found
+    search. If not found, it looks for the beam the old fashion way. 
     '''
     box = self.get_box(location)
 
@@ -199,7 +211,18 @@ class Structure:
       if name == beam.name:
         return beam.endpoints
 
-    return None
+    if self.find_beam(self,name) is not None:
+      return find_beam(name).endpoints
+    else:
+      return None
+
+  def get_beam(name,location):
+    '''
+    Returns the beam object with the specified name. Uses location to quickly
+    find the box that contains it. If it is not found in that box, None is 
+    returned. This doesn't mean the beam doesn't exists, just that the location
+    specified a box which does not contain the beam\
+    '''
 
   def get_box(self,point):
     '''

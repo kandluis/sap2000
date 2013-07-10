@@ -318,6 +318,12 @@ class Builder(Movable):
     moment = self.get_moment(self.beam.name)
     if moment < construction.beam['beam_limit']:
       results = dirs
+    # Add the beam to the broken
+    else:
+      self.memory['broken'].append(self.beam)
+
+    if dirs == {}:
+      pdb.set_trace()
 
     return results
 
@@ -601,7 +607,6 @@ class Builder(Movable):
         endpoint = helpers.sum_vectors(pivot,helpers.scale(
           variables.beam_length,unit_direction))
         return self.addbeam(pivot,endpoint)
-
       # Beam exist, so pass it
       else:
         pass

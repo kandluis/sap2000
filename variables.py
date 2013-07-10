@@ -66,4 +66,4 @@ beam_limit = steel_yield * moment_of_intertia / (outside_diameter / 2)
 
 
 # The number of timesteps before an analysis model is saved.
-analysis_timesteps = 40
+analysis_timesteps = 100
