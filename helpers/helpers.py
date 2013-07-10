@@ -11,7 +11,7 @@ def check(return_value, robot, error, **data):
     message = "Error occured when {}.".format(error)
     for name, item in data.items():
       message = "\n{}::{}".format(name,str(item))
-    robot.error_data += data
+    robot.error_data += message
 
 def path_exists(path):
   '''
