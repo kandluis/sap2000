@@ -8,9 +8,12 @@ def check(return_value, robot, error, **data):
   nice failure in case it's not.
   '''
   if return_value != 0:
-    message = "Error occured when {}.".format(error)
+    if error == "getting loads":
+      message = "Warning. Was not able to retrieve loads."
+    else:
+      message = "Error occured when {}.".format(error)
     for name, item in data.items():
-      message = "\n{}::{}".format(name,str(item))
+      message += "\n{}::{}".format(name,str(item))
     robot.error_data += message
 
 def path_exists(path):
@@ -83,8 +86,9 @@ def check_location(p):
   restricted coordinates
   '''
   x,y,z = p
-  return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or compare(z,0)) 
-    and x < variables.dim_x and y < variables.dim_y and z < variables.dim_z))
+  return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or 
+    compare(z,0)) and x < variables.dim_x and y < variables.dim_y and (z < 
+    variables.dim_z)))
 
 def on_line(l1,l2,point,segment = True):
   '''

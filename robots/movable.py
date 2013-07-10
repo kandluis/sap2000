@@ -107,7 +107,7 @@ class Movable(Automaton):
       assert data[0] == 0 # Making sure everything went okay
       if data[1] == 0:
         helpers.check(1,self,"getting loads",beam=self.beam.name,
-          state=self.current_state())
+          return_data=data,state=self.current_state())
         return;
 
       # Find location of load

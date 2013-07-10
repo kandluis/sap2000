@@ -16,7 +16,8 @@ class Sap2000(object):
     sap_com_object = win32.Dispatch("SAP2000v15.sapobject")
     self.sap_com_object = sap_com_object
 
-    # Each of the following attributes represents an object of the SAP2000 type library.
+    # Each of the following attributes represents an object of the SAP2000 type 
+    # library.
     # Each attribute is an instance of a subclass of SapBase.
     self.model = None
     self.groups = SapGroups(sap_com_object)
@@ -90,17 +91,18 @@ class Sap2000(object):
 
   def save(self, filename=""):
     """
-    If a file name is specified, it should have an .sdb extension. If no file name is specified,
-    the file is saved using its current name. If there is no current name for the file (the file
-    has not been saved previously) and this function is called with no file name specified, an
-    error will be returned.
+    If a file name is specified, it should have an .sdb extension. If no file 
+    name is specified the file is saved using its current name. If there is no 
+    current name for the file (the file has not been saved previously) and this 
+    function is called with no file name specified, an error will be returned.
     """
     return_value = self.sap_com_object.SapModel.File.Save(filename)
     assert return_value == 0        # Ensure that everything went as expected
 
   def initializeModel(self, units = "kip_in_F"):
     """
-    This functions initializes a new SapModel and returns a way to directly access it
+    This functions initializes a new SapModel and returns a way to directly 
+    access it
     """
     model = self.sap_com_object.SapModel
     units = UNITS[units]

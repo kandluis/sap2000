@@ -29,4 +29,5 @@ class SapPropertiesBase(SapBase):
 
 class SapAreaProperties(SapPropertiesBase):
   def __init__(self, sap_com_object):
-    super(SapAreaProperties, self).__init__(sap_com_object, sap_com_object.SapModel.PropArea)
+    super(SapAreaProperties, self).__init__(sap_com_object,
+      sap_com_object.SapModel.PropArea)

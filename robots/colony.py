@@ -99,9 +99,9 @@ class ReactiveSwarm(Swarm):
 
   def need_data(self):
     '''
-    Returns whether or not the robots will need to data in order to make decisions.
-    This basically checks to see if they are moving down. If so, then they don't need
-    data.
+    Returns whether or not the robots will need to data in order to make 
+    decisions. This basically checks to see if they are moving down. If so, then
+    they don't need data.
     '''
     for name, worker in self.workers.items():
       if worker.memory['pos_z'] == True or worker.memory['pos_z'] == None:

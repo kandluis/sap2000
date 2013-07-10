@@ -197,7 +197,9 @@ class Builder(Movable):
 
   def pick_direction(self,directions):
     '''
-    Functions to pick a new direction once it is determined that we either have no previous direction, we are at a joint, or the previous direction is unacceptable)
+    Functions to pick a new direction once it is determined that we either have 
+    no previous direction, we are at a joint, or the previous direction is 
+    unacceptable)
     '''
     beam_name = random.choice(list(directions.keys()))
     direction = random.choice(directions[beam_name])
@@ -219,7 +221,7 @@ class Builder(Movable):
       key, value = item
       temp = {}
       for test_key,test_values in dictionary.items():
-        # Keys are the same, vectors are parallel, and point in the same direction
+        # Keys are the same, vectors are parallel (point in same dir too)
         if key == test_key:
           for test_value in test_values:
             if (helpers.parallel(value,test_value) and 
@@ -246,8 +248,8 @@ class Builder(Movable):
       if direction_info is not None:
         return direction_info
 
-    # If we get to this point, either we are at a joint, we don't have a previous
-    # direction, or that previous direction is no longer acceptable
+    # If we get to this point, either we are at a joint, we don't have a 
+    # previous direction, or that previous direction is no longer acceptable
     return self.pick_direction(directions)
 
   def get_moment(self,name):
@@ -272,7 +274,8 @@ class Builder(Movable):
       # Get beam endpoints to calculate global position of moment
       i_end,j_end = self.structure.get_endpoints(name,self.location)
       beam_direction = helpers.make_unit(helpers.make_vector(i_end,j_end))
-      point = helpers.sum_vectors(i_end,helpers.scale(i_distance,beam_direction))
+      point = helpers.sum_vectors(i_end,helpers.scale(i_distance,
+        beam_direction))
       distance = helpers.distance(self.location,point)
 
       # If closer than the current closes point, update information
@@ -306,8 +309,9 @@ class Builder(Movable):
       for name, directions in dirs.items():
         moment = self.get_moment(name)
         # If the name is our beam, do a structural check instead of a joint check
-        if ((self.beam.name == name and moment < construction.beam['beam_limit'])
-         or moment < construction.beam['joint_limit']):
+        if ((self.beam.name == name and 
+          moment < construction.beam['beam_limit']) or (moment < 
+          construction.beam['joint_limit'])):
           results[name] = directions
 
     # Not at joint, so check own beam
@@ -604,8 +608,8 @@ class Builder(Movable):
 
     # If we get to this point, we have already built all possible ratios, so 
     # just stick something up
-    disturbance = helpers.make_unit((random.uniform(-12,12),random.uniform(-12,12),
-      random.uniform(-12,12)))
+    disturbance = helpers.make_unit((random.uniform(-12,12),
+      random.uniform(-12,12),random.uniform(-12,12)))
     default_endpoint = default_endpoint if random.randint(0,10) == 1 else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)

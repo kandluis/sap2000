@@ -60,7 +60,8 @@ class Visualization:
       scene = display(title="Robot Simulation",background=(1,1,1))
       scene.autocenter = True
       scene.fullscreen = fullscreen
-      scene.range = (variables.beam_length,variables.beam_length,variables.beam_length)
+      scene.range = (variables.beam_length,variables.beam_length,
+        variables.beam_length)
       scene.center = helpers.scale(.5,helpers.sum_vectors(
         construction.construction_location,scene.range))
       scene.forward = (1,0,0)

@@ -10,8 +10,8 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """
   Opens the specified inputfile and outputfile. By default, it creates a new 
   model if no inputfile is specified and saves it as the specified outputfile. 
-  If no outputfile is specified, the default location is "C:\SAP 2000\output.sdb". 
-  Returns the program and model.
+  If no outputfile is specified, the default location is 
+  "C:\SAP 2000\output.sdb". Returns the program and model.
   """
   # start program
   program = sap2000.Sap2000()

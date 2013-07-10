@@ -179,7 +179,8 @@ class Structure:
 
     # Cycle through names
     for name in names:
-      # Get name of the endpoints for each beam, then the coordiantes of those points
+      # Get name of the endpoints for each beam, then the coordiantes of those 
+      # points
       p1,p2 = frames.get_points(name)
       e1,e2 = points.get_cartesian(p1),points.get_cartesian(p2)
       # Add the beam to the structure
@@ -189,8 +190,8 @@ class Structure:
 
   def get_endpoints(self,beam_name,location):
     '''
-    Returns the endpoints of the beam. It uses location to facilitate the search.
-    Returns None if the beam is not found
+    Returns the endpoints of the beam. It uses location to facilitate the 
+    search. Returns None if the beam is not found
     '''
     box = self.get_box(location)
 

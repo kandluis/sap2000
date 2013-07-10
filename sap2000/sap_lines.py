@@ -21,4 +21,5 @@ class SapLinesBase(SapBase):
 
 class SapLineElements(SapLinesBase):
   def __init__(self, sap_com_object):
-    super(SapLineElements, self).__init__(sap_com_object, sap_com_object.SapModel.LineElm)
+    super(SapLineElements, self).__init__(sap_com_object,
+      sap_com_object.SapModel.LineElm)
