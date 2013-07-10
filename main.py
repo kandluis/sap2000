@@ -347,7 +347,7 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
+    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data,open(outputfolder + 'swarm_visualization.txt', 'w+') as v_swarm, open(outputfolder + 'structure_visualization.txt','w+') as v_struct:
       loc_text.write("This file contains information on the robots at each" +
         " timestep if debugging.\n\n")
       sap_failures.write("This file contains messages created when SAP 2000 does"
@@ -413,14 +413,27 @@ class Simulation:
         # Change the model based on decisions made (act on your decisions)
         self.Swarm.act()
 
+        # Write out visualization data and reset
+        v_swarm.write(self.Swarm.visualization_data)
+        v_struct.write(self.Structure.visualization_data)
+        self.Swarm.visualization_data = ''
+        self.Structure.visualization_data = ''
+
+        # Write out errors on movements
+        errors = self.Swarm.get_errors()
+        if errors != '':
+          sap_failures.write("Errors that occurred in timestep {}. {}\n\n".format(
+            str(i+1),errors))
+
         # Give a status update if necessary
         print("Finished timestep {}\r".format(str(i + 1))),
 
       # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
 
       # Finish up run_data (add ending time and maximum height)
-      run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + ".\n\n Total beams"
-       + " on structure: " + str(self.Structure.tubes) + ".")
+      run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + 
+        ".\n\n Total beams" + " on structure: " + str(self.Structure.tubes) 
+        + ".")
       run_data += "\n\n Maximum height of structure : " +  str(
         self.Structure.height) + "."
 
@@ -429,10 +442,5 @@ class Simulation:
 
       # Write out locations
       self.__push_excel(outputfolder + "locations.xlsx")
-
-      # Write out visualization data
-      with open(outputfolder + 'swarm_visualization.txt', 'w+') as v_swarm, open(outputfolder + 'structure_visualization.txt','w+') as v_struct:
-        v_swarm.write(self.Swarm.visualization_data)
-        v_struct.write(self.Structure.visualization_data)
 
       self.run = True

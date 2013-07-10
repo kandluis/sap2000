@@ -3,8 +3,8 @@ from robots.builder import Builder
 import pdb, variables
 
 class Worker(Builder):
-  def __init__(self,structure,location,program):
-    super(Worker,self).__init__(structure,location,program)
+  def __init__(self,name,structure,location,program):
+    super(Worker,self).__init__(name,structure,location,program)
     # The number of beams the robot is carrying (picked up at home now)
     self.num_beams = 0
 

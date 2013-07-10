@@ -24,7 +24,7 @@ class Swarm:
 
       # workers start at home
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.workers[name] = Worker(structure,location,program)
+      self.workers[name] = Worker(name,structure,location,program)
 
     # Keeps track of visualization data
     self.visualization_data = ''
@@ -53,6 +53,14 @@ class Swarm:
       information[name] = worker.current_state()
 
     return information
+
+  def get_errors(self):
+    data = ''
+    for name,worker in self.workers.items():
+      if worker.error_data != '':
+        data += "{}\n".format(worker.error_data)
+        worker.error_data = ''
+    return data
 
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,program):
@@ -87,7 +95,7 @@ class ReactiveSwarm(Swarm):
     for i in range(self.original_size):
       name = "worker_" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.workers[name] = Worker(self.structure,location,self.model)
+      self.workers[name] = Worker(name,self.structure,location,self.model)
 
   def need_data(self):
     '''
@@ -119,7 +127,7 @@ class ReactiveSwarm(Swarm):
     for i in range(self.num_created, self.num_created + num):
       name = "worker_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
-      self.workers[name] = Worker(self.structure,location,self.model)
+      self.workers[name] = Worker(name,self.structure,location,self.model)
 
     self.size += num
     self.num_created += num

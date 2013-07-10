@@ -1,6 +1,6 @@
 # Basic class for any automatic object that needs access to the SAP program
 class Automaton:
-  def __init__(self,program):
+  def __init__(self,name,program):
     # Accesss to the SapModel from SAP 2000
     self.model = program.sap_com_object.SapModel
 
@@ -10,5 +10,8 @@ class Automaton:
     # Storage of the sphere model
     self.simulation_model = None
 
+    # Robot name
+    self.name = name
+
   def current_state(self):
-    return {}
+    return {  'name'  : self.name }

@@ -5,11 +5,11 @@ program_units = "kip_in_F"
 
 # Radius of "locality" (how far can a robot obtain information about 
 # the structure from where it is located. In units specified by program_units
-local_radius = 12 # 1 ft
+local_radius = 17 # 1 ft
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 12 # 1 ft
+step_length = 17 # 1 ft
 
 # Length of each beam (in the units specified by program_units)
 beam_length = 120 # 10ft

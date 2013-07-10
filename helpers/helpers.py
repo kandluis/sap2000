@@ -2,16 +2,16 @@ from sap2000.constants import LOAD_PATTERN_TYPES
 from helpers.vectors import *
 import errno, math, os, pdb, variables
 
-def check(return_value, message):
+def check(return_value, robot, error, **data):
   '''
   Used to check that the return value of the SAP2000 functions is zero. Provides
   nice failure in case it's not.
   '''
-  if return_value == 0:
-    pass
-  else:
-    print(message)
-    assert return_value == 0
+  if return_value != 0:
+    message = "Error occured when {}.".format(error)
+    for name, item in data.items():
+      message = "\n{}::{}".format(name,str(item))
+    robot.error_data += data
 
 def path_exists(path):
   '''
@@ -21,7 +21,7 @@ def path_exists(path):
     os.makedirs(path)
   except OSError as exception:
     if exception.errno != errno.EEXIST:
-      raise
+      raise 
 
 def distance_to_line(l1,l2,p):
   '''

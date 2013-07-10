@@ -3,8 +3,8 @@ from robots.movable import Movable
 import construction, math, operator, pdb, random, variables
 
 class Builder(Movable):
-  def __init__(self,structure,location,program):
-    super(Builder,self).__init__(structure,location,program)
+  def __init__(self,name,structure,location,program):
+    super(Builder,self).__init__(name,structure,location,program)
     # The number of beams the robot is carrying
     self.num_beams = variables.beam_capacity
 
@@ -213,7 +213,7 @@ class Builder(Movable):
     '''
     def next_dict(item,dictionary):
       '''
-      Returns whether or the value (a direction vector) is found inside of 
+      Returns whether or not the value (a direction vector) is found inside of 
       dictionary (ie, looks for parallel directions)
       '''
       key, value = item
@@ -235,7 +235,7 @@ class Builder(Movable):
 
       # Pick a direction randomly from those that are parallel
       else:
-        pick_direction(temp)
+        self.pick_direction(temp)
 
     # We are not at a joint and we have a previous direction
     if not self.__at_joint() and self.memory['previous_direction'] is not None:
@@ -259,7 +259,10 @@ class Builder(Movable):
     # load_cases[4], step_types[5], step_nums[6], Ps[7], V2s[8], V3s[9], 
     # Ts[10], M2s[11], M3s[12]
     results = self.model.Results.FrameForce(name,0)
-    assert results[0] == 0
+    if results[0] != 0:
+      helpers.check(ret,self,"getting frame forces",results=results,
+        state=self.current_state())
+      return 0
 
     # Find index of closest data_point
     close_index, i = 0, 0
@@ -524,7 +527,7 @@ class Builder(Movable):
                 # Check to see if in the dictionary. If it is, associate point 
                 # with ratio
                 if e2 in dictionary:
-                  assert hlpers.compare(dictionary[e2],ratio)
+                  assert helpers.compare(dictionary[e2],ratio)
                 else:
                   dictionary[e2] = ratio
 

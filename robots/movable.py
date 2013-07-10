@@ -5,8 +5,8 @@ import construction, pdb, random, variables
 
 # Class of objects that can move around (on the ground and on the structure)
 class Movable(Automaton):
-  def __init__(self,structure,location,program):
-    super(Movable, self).__init__(program)
+  def __init__(self,name,structure,location,program):
+    super(Movable, self).__init__(name,program)
     # Access to my Python structure
     self.structure = structure
 
@@ -28,6 +28,9 @@ class Movable(Automaton):
 
     # The direction in which we should move
     self.next_direction_info = None
+
+    # Contains Errors from SAP 2000
+    self.error_data = ''
 
   def current_state(self):
     '''
@@ -54,9 +57,8 @@ class Movable(Automaton):
     distance = helpers.distance(beam.endpoints.i,location)
     ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
       1,10,distance,value,"Global", False, True,0)
-    if ret != 0:
-      print("Error occured when adding load. beam: {}, distance: {}, location {}.".format(
-        beam.name,str(distance),str(self.location)))
+    helpers.check(ret,self,"adding new load",beam=beam.name,distance=distance,
+      value=value,state=self.current_state())
 
   def change_location_local(self,new_location, first_beam = None):
     '''
@@ -104,6 +106,8 @@ class Movable(Automaton):
       data = self.model.FrameObj.GetLoadPoint(self.beam.name)
       assert data[0] == 0 # Making sure everything went okay
       if data[1] == 0:
+        helpers.check(1,self,"getting loads",beam=self.beam.name,
+          state=self.current_state())
         return;
 
       # Find location of load
@@ -121,14 +125,12 @@ class Movable(Automaton):
           indeces.append(index)
         index += 1
 
-      # Delete the previous loads from our load pattern
+      # Delete the loads off the beam
       ret = self.model.FrameObj.DeleteLoadPoint(self.beam.name,
         variables.robot_load_case)
-      #ret = self.model.FrameObj.SetLoadPoint(self.beam.name,
-      # variables.robot_load_case,1,10,.5,0)
-      if ret != 0:
-        print("Error occured when deleting loads. beam: {}, distance: {}, location {}.".format(
-          self.beam.name,str(curr_dist),str(self.location)))
+      helpers.check(ret,self,"deleting loads",return_val=ret,
+        beam=self.beam.name,distance=curr_dist,previous_loads=data,
+        state=self.current_state())
 
       # add the loads we want back to the frame (automatically deletes all 
       # previous loads)
@@ -137,7 +139,10 @@ class Movable(Automaton):
           ret = self.model.FrameObj.SetLoadPoint(self.beam.name, 
             data[3][i], data[4][i], data[6][i], data[7][i], data[9][i],"Global",
             True,False)
-          assert ret == 0
+          helpers.check(ret,self,"adding back loads",return_val=ret,
+            beam=self.beam.name,load_pat=data[3][i],type=data[4][i],
+            direction=data[6][i],rel_dist=data[7][i],load_val=data[9][i],
+            state=self.current_state())
 
     # Move the load off the current location and to the new one (if still on 
     # beam), then change the locations
