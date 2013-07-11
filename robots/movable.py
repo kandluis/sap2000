@@ -437,6 +437,20 @@ class Movable(Automaton):
     '''
     self.step = variables.step_length
 
+  def movable_decide(self):
+    '''
+    Later classes need direct access to this method
+    '''
+    # If we're not on a beam, then we will wander on the ground
+    if self.beam == None:
+      # reset steps
+      self.next_direction_info = None
+
+    # Otherwise, we are not on the ground and we decided not to build, so pick 
+    # a direction and store that
+    else:
+      self.next_direction_info = self.get_direction()
+      
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
     '''
@@ -447,16 +461,7 @@ class Movable(Automaton):
     based on that information once the model has been unlocked. 
     '''
     self.pre_decision()
-
-    # If we're not on a beam, then we will wander on the ground
-    if self.beam == None:
-      # reset steps
-      self.next_direction_info = None
-
-    # Otherwise, we are not on the ground and we decided not to build, so pick 
-    # a direction and store that
-    else:
-      self.next_direction_info = self.get_direction()
+    self.movable_decide()
 
   def do_action(self):
     '''

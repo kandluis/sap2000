@@ -39,7 +39,9 @@ class Builder(Movable):
     # Stores direction of support beam (basically 2d)
     self.memory['repair_beam_direction'] = None
 
-  def __at_joint(self):
+    self.repair_mode = False
+
+  def at_joint(self):
     '''
     Returns whether or not the robot is at a joint
     '''
@@ -131,7 +133,7 @@ class Builder(Movable):
     # Movement decisions
     else:
       super(Builder,self).decide()
-      
+
   # Model needs to be unlocked before running this function! 
   def do_action(self):
     '''
@@ -170,7 +172,8 @@ class Builder(Movable):
         # Apply each function to the correct coordinates
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
-        if coord_bool:
+        if (coord_bool and not (self.repair_mode and self.at_joint() and 
+          self.beam.name == beam)):
           if beam not in new_dirs:
             new_dirs[beam] = [vector]
           else:
@@ -189,13 +192,13 @@ class Builder(Movable):
         priorities[index] = -1
         comp_functions[index] = lambda a : True
 
-      if max_val == 0:
+      if max_val <= 0:
         return new_dirs
       else:
         return self.filter_dict(dirs,new_dirs,comp_functions,priorities)
 
     else:
-      return self.filter_dict(dirs,new_dirs,)
+      return new_dirs
 
   def filter_directions(self,dirs):
     '''
@@ -224,18 +227,21 @@ class Builder(Movable):
     '''
     pass
 
-  def pick_direction(self,directions):
-    '''
-    Functions to pick a new direction once it is determined that we either have 
-    no previous direction, we are at a joint, or the previous direction is 
-    unacceptable)
-    '''
+  def random_direction(self,directions):
     beam_name = random.choice(list(directions.keys()))
     direction = random.choice(directions[beam_name])
 
     self.memory['previous_direction'] = beam_name, direction
 
     return beam_name, direction
+
+  def pick_direction(self,directions):
+    '''
+    Functions to pick a new direction once it is determined that we either have 
+    no previous direction, we are at a joint, or the previous direction is 
+    unacceptable)
+    '''
+    return self.random_direction(directions)
 
   def elect_direction(self,directions):
     '''
@@ -269,7 +275,7 @@ class Builder(Movable):
         self.pick_direction(temp)
 
     # We are not at a joint and we have a previous direction
-    if not self.__at_joint() and self.memory['previous_direction'] is not None:
+    if not self.at_joint() and self.memory['previous_direction'] is not None:
 
       # Pull a direction parallel to our current from the set of directions
       direction_info = next_dict(self.memory['previous_direction'],directions)
@@ -338,7 +344,7 @@ class Builder(Movable):
     results = {}
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
-    if self.__at_joint():
+    if self.at_joint():
       for name, directions in dirs.items():
         moment = self.get_moment(name)
         # If the name is our beam, do a structural check instead of a joint check

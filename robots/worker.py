@@ -9,7 +9,7 @@ class Worker(Builder):
     self.num_beams = 0
 
     # Smaller number gives higher priority
-    self.memory['dir_priority'] = [1,1,0]
+    self.memory['dir_priority'] = [0,0,0]
 
     # Move further in the x-direction?
     self.memory['pos_x'] = None
@@ -50,12 +50,22 @@ class Worker(Builder):
     super(Worker,self).pickup_beams(num)
     self.memory['pos_z'] = True
 
+  def repairing(self):
+    '''
+    Place holder for later access
+    '''
+    pass
+
   def filter_directions(self,dirs):
     '''
     Filters the available directions and returns those that move us in the 
     desired direction. Overwritten to take into account the directions in
     which we want to move. When climbing down, it will take the steepest path.
     '''
+    # Change stuff up, depending on whether we are repairing or not
+    if self.repair_mode:
+      self.repairing()
+
     def bool_fun(string):
       '''
       Returns the correct funtion depending on the information stored in memory
@@ -79,12 +89,16 @@ class Worker(Builder):
     Overwritting to pick the direction of steepest descent when climbing down
     instead of just picking a direction randomly
     '''
+    # Change stuff up, depending on whether we are repairing or not
+    if self.repair_mode:
+      self.repairing()
+
     def min_dir(vs):
       unit_list = [helpers.make_unit(v) for v in vs]
       min_val = min(unit_list,key=lambda t : t[2])
       index = unit_list.index(min_val)
       return index,min_val
-    # Pick the largest pos_z if moving down
+    # Pick the smalles pos_z if moving down
     if not self.memory['pos_z']:
       beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
         key=lambda t : t[1][1][2])
@@ -94,7 +108,7 @@ class Worker(Builder):
     else:
       return super(Worker,self).pick_direction(directions)
 
-  def no_available_directions(self):
+  def no_available_direction(self):
     '''
     We construct if we truly are at the top of a beam
     '''

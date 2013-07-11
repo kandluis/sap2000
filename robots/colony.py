@@ -24,7 +24,7 @@ class Swarm:
 
       # repairers start at home
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.repairers[name] = repairer(name,structure,location,program)
+      self.repairers[name] = Repairer(name,structure,location,program)
 
     # Keeps track of visualization data
     self.visualization_data = ''
@@ -95,7 +95,7 @@ class ReactiveSwarm(Swarm):
     for i in range(self.original_size):
       name = "repairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.repairers[name] = repairer(name,self.structure,location,self.model)
+      self.repairers[name] = Repairer(name,self.structure,location,self.model)
 
   def need_data(self):
     '''
@@ -127,7 +127,7 @@ class ReactiveSwarm(Swarm):
     for i in range(self.num_created, self.num_created + num):
       name = "repairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
-      self.repairers[name] = repairer(name,self.structure,location,self.model)
+      self.repairers[name] = Repairer(name,self.structure,location,self.model)
 
     self.size += num
     self.num_created += num

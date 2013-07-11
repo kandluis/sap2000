@@ -12,8 +12,37 @@ class Repairer(Worker):
     # Stores name of beam to be reinforced (so we know when we're no longer on it)
     self.memory['broken_beam_name'] = ''
 
-    # Repair mode switch
-    self.repair_mode = False
+    # Stores the previous beam we were on
+    self.memory['previous_beam'] = None
+
+  def repairing(self):
+    '''
+    This is run when repairing, so as to set the right values when filtering and
+    when picking directions
+    '''
+    # If we are at a joint, we might move up but MUST move in right x and y
+    if self.at_joint():
+      self.memory['pos_z'] = True
+      self.memory['dir_priority'] = [1,1,1]
+    else:
+      self.memory['pos_z'] = False
+      self.memory['dir_priority'] = [1,1,0]
+
+  def find_support(self):
+    # We did not find a beam in the number of steps we wanted (go back to build
+    # mode, but with the condition to build in exactly one timestep)
+    if self.memory['new_beam_steps'] == 0:
+      self.memory['new_beam_steps'] == 1
+      self.memory['broken_beam_name'] = ''
+      self.memory['previous_beam'] = None
+      self.memory['pos_z'] = True
+      self.memory['pos_y'] = None
+      self.memory['pos_x'] = None
+      self.memory['dir_priority'] = [1,1,0]
+      self.memory['construct_support'] = True
+
+    self.memory['new_beam_steps'] -= 1
+
 
   def decide(self):
     '''
@@ -22,10 +51,29 @@ class Repairer(Worker):
     # Repair Mode
     if self.repair_mode:
       self.pre_decision()
-      # We've moved off the beam, so run the 
-      if self.memory['broken_beam_name'] != self.beam.name:
 
-    super(Repairer,self).decide()
+      # We've moved off the beam, so run the search support routine
+      if self.memory['broken_beam_name'] != self.beam.name:
+        if self.memory['previous_beam'] is None:
+          self.memory['previous_beam'] == self.beam.name
+        self.find_support()
+
+        # Move (don't check construction)
+        self.movable_decide()
+
+      # We have finished running the repair routine, so call our super instead  
+      elif self.memory['new_beam_steps'] == 0:
+        self.repair_mode = False
+        self.memory['broken'] = []
+        super(Repairer,self).decide()
+
+      # We are still on the broken beam, so just move
+      else:
+        self.movable_decide()
+
+    # Build Mode
+    else:
+      super(Repairer,self).decide()
 
   def no_available_direction(self):
     '''
@@ -86,3 +134,18 @@ class Repairer(Worker):
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
 
     self.repair_mode = True
+
+  def local_rules(self):
+    '''
+    Overriding so we can build support beam
+    '''
+    # If the program is not locked, there are no analysis results so True
+    if not self.model.GetModelIsLocked():
+      return False
+
+    # Analysis results available
+    elif self.memory['new_beam_steps'] == 0 and self.memory['construct_support']:
+      self.memory['construct_support'] = False
+      return True
+    
+    return False
