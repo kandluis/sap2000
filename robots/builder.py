@@ -20,6 +20,7 @@ class Builder(Movable):
 
     # Climbing up or down
     self.memory['pos_z'] = None
+    self.memory['dir_priority'] = [0]
 
     # Starting defaults
     self.memory['built'] = False
@@ -30,6 +31,13 @@ class Builder(Movable):
 
     # Stores information on beams that need repairing
     self.memory['broken'] = []
+
+    # Stores whether or not we are constructing vertically or at an angle (for 
+    # support)
+    self.memory['construct_support'] = False
+
+    # Stores direction of support beam (basically 2d)
+    self.memory['repair_beam_direction'] = None
 
   def __at_joint(self):
     '''
@@ -96,6 +104,14 @@ class Builder(Movable):
     return helpers.within(construction.construction_location, 
       construction.construction_size, self.location)
 
+  def pre_decision(self):
+    '''
+    Takes care of resetting appropriate values
+    '''
+    # We build almost never.
+    self.start_construction = False
+    self.step = variables.step_length
+
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
     '''
@@ -105,25 +121,17 @@ class Builder(Movable):
     and then stores that information in the robot. The robot will then act 
     based on that information once the model has been unlocked. 
     '''
-    # We build almost never.
-    self.start_construction = False
-    self.step = variables.step_length
+    self.pre_decision()
 
     # If we decide to construct, then we store that fact in a bool so action 
     # knows to wiggle the beam
     if self.construct():
       self.start_construction = True
 
-    # Otherwise, if we're not on a beam, then we will wander on the ground
-    elif self.beam == None:
-      # reset steps
-      self.next_direction_info = None
-
-    # Otherwise, we are not on the ground and we decided not to build, so pick 
-    # a direction and store that
+    # Movement decisions
     else:
-      self.next_direction_info = self.get_direction()
-
+      super(Builder,self).decide()
+      
   # Model needs to be unlocked before running this function! 
   def do_action(self):
     '''
@@ -138,23 +146,21 @@ class Builder(Movable):
       self.build()
       self.start_construction = False
 
-    # Otherwise, we're on a beam but decided not to build, so get direction we 
-    # decided to move in, and move.
-    elif self.beam is not None:
-      assert self.next_direction_info != None
-      assert (self.beam is not None)
-      self.move(self.next_direction_info['direction'],
-        self.next_direction_info['beam'])
-      self.next_direction_info = None
-
-    # We have climbed off, so wander about (set the step to 12)
+    # Move around
     else:
-      self.wander()
+      super(Builder,self).do_action()
 
-  def filter_dict(self,dirs,new_dirs,comp_functions):
+  def filter_dict(self,dirs,new_dirs,comp_functions,priorities = []):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
-    correct directions based on the list of comp_functions (x,y,z)
+    correct directions based on the list of comp_functions (x,y,z).
+
+    Edit: Now also filters on priority. If a direction has priority of 0, then
+    it MUST be in that direction. The only way that it will ever return an empty
+    dictionary is if none of the directions match the direction we want to move
+    in for each coordinate with priority zero. Otherwise, we match as many low
+    priorty numbers as possible. Same priorities must be matched at the same
+    level.
     '''
     # Access items
     for beam, vectors in dirs.items():
@@ -169,13 +175,33 @@ class Builder(Movable):
             new_dirs[beam] = [vector]
           else:
             new_dirs[beam].append(vector)
-    return new_dirs
+
+    # Case is not matched, so obtain keys of max values and remove those
+    # restraints if the value is not 0
+    if new_dirs == {}:
+      if priorities == []:
+        priorities = self.memory['dir_priority']
+      
+      max_val = max(priorities)
+      max_indeces = [priorities.index(x) for x in priorities if x == max_val]
+      # Set to -1 so we don't use them next time, and set comp_funs to True
+      for index in max_indeces:
+        priorities[index] = -1
+        comp_functions[index] = lambda a : True
+
+      if max_val == 0:
+        return new_dirs
+      else:
+        return self.filter_dict(dirs,new_dirs,comp_functions,priorities)
+
+    else:
+      return self.filter_dict(dirs,new_dirs,)
 
   def filter_directions(self,dirs):
     '''
     Filters the available directions and returns those that move us in the 
     desired direction. Should be overwritten to provide more robost 
-    functionality
+    functionality.
     '''
     directions = {}
     base = [lambda x : True, lambda y : True]
@@ -366,7 +392,14 @@ class Builder(Movable):
       # No direction takes us exactly in the way we want to go, so check if we
       # might need to construct up or might want to repair
       self.no_available_direction()
-      beam_name, direction = self.elect_direction(feasable_directions)
+
+      # Feasable is empty when our own beam is the one that doesn't support us
+      if feasable_directions != {}:
+        beam_name, direction = self.elect_direction(feasable_directions)
+      # Refilter original directions (to travel down)
+      else:
+        beam_name,direction = self.elect_direction(self.filter_directions(
+          info['directions']))
 
     # Otherwise we do have a set of directions taking us in the right place, so 
     # randomly pick any of them. We will change this later based on the analysis
@@ -624,10 +657,54 @@ class Builder(Movable):
       else:
         pass
 
+    def support_beam_endpoint():
+      '''
+      Returns the endpoint for construction a support beam_limit
+      '''
+      def non_zero_xydirection():
+        '''
+        Returns a non_zero list of random floats with zero z component
+        '''
+        tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
+          random.uniform(-1,1)])
+        if all(tuple_list):
+          tuple_list[2] = 0
+          return tuple(tuple_list)
+        else:
+          return non_zero_xydirection()
+      # Sanity check
+      assert self.memory['repair_beam_direction'] is not None
+
+      # Add beam_directions plus vertical change based on angle ratio (tan)
+      ratio = math.tan(math.radians(construction.beam['support_angle']))
+      vertical = helpers.scale(ratio,(0,0,1))
+
+      # Check to see if direction is vertical
+      if helpers.paralle(self.memory['repair_beam_direction'],vertical):
+        xy_dir = non_zero_xydirection()
+      else:
+        xy_dir = self.memory['repair_beam_direction']
+
+      # Obtain construction direction
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical_point))
+
+      # Calculate endpoints
+      endpoint = helpers.sum_vectors(self.location,helpers.scale(
+        construction.beam['length'],direction))
+
+      return endpoint
+
     # If we get to this point, we have already built all possible ratios, so 
-    # just stick something up
+    # just stick something 
+    # Create disturbance
     disturbance = helpers.make_unit((random.uniform(-12,12),
       random.uniform(-12,12),random.uniform(-12,12)))
+    # The default endpoint is either vertical or we calculate one at an angle 
+    # (if there is one stored in memory because we are constructing a support)
+    default_endpoint = (default_endpoint if not self.memory['construct_support'] 
+      else support_beam_endpoint())
+
+    # We add a bit of disturbance every onece in a while
     default_endpoint = default_endpoint if random.randint(0,10) == 1 else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)

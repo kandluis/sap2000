@@ -420,7 +420,11 @@ class Simulation:
             str(i+1),errors))
 
         # Give a status update if necessary
-        print("Finished timestep {}\r".format(str(i + 1))),
+        print("Finished timestep {}\r".format(str(i + 1)))
+
+        # Check height of structure and break out if we will reach maximum
+        if self.Structure.height > variables.dim_z - construction.beam['length']:
+          break
 
       # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
 

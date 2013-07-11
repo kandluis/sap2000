@@ -1,5 +1,5 @@
 from helpers import helpers
-from robots.worker import Worker
+from robots.repairer import Repairer
 from visual import *
 import construction
 
@@ -11,55 +11,55 @@ class Swarm:
     # The location of the swarm.
     self.home = construction.home
 
-    # Access to the structure, so we can create workers
+    # Access to the structure, so we can create repairers
     self.structure = structure
 
     # Access to the program
     self.model = program
 
-    # create workers
-    self.workers = {}
+    # create repairers
+    self.repairers = {}
     for i in range(size):
-      name = "worker_" + str(i)
+      name = "repairer_" + str(i)
 
-      # workers start at home
+      # repairers start at home
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.workers[name] = Worker(name,structure,location,program)
+      self.repairers[name] = repairer(name,structure,location,program)
 
     # Keeps track of visualization data
     self.visualization_data = ''
 
   def decide(self):
     # Tell each robot to make the decion
-    for worker in self.workers:
-      self.workers[worker].decide()
+    for repairer in self.repairers:
+      self.repairers[repairer].decide()
 
       # Add location data
-      loc = self.workers[worker].location
+      loc = self.repairers[repairer].location
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
 
-      self.visualization_data += "{}:{}<>".format(worker,str(location))
+      self.visualization_data += "{}:{}<>".format(repairer,str(location))
 
     self.visualization_data += "\n"
 
   def act(self):
     # Tell each robot to act
-    for worker in self.workers:
-      self.workers[worker].do_action()
+    for repairer in self.repairers:
+      self.repairers[repairer].do_action()
 
   def get_information(self):
     information = {}
-    for name, worker in self.workers.items():
-      information[name] = worker.current_state()
+    for name, repairer in self.repairers.items():
+      information[name] = repairer.current_state()
 
     return information
 
   def get_errors(self):
     data = ''
-    for name,worker in self.workers.items():
-      if worker.error_data != '':
-        data += "{}\n".format(worker.error_data)
-        worker.error_data = ''
+    for name,repairer in self.repairers.items():
+      if repairer.error_data != '':
+        data += "{}\n".format(repairer.error_data)
+        repairer.error_data = ''
     return data
 
 class ReactiveSwarm(Swarm):
@@ -75,27 +75,27 @@ class ReactiveSwarm(Swarm):
     Renders the colony in 3D. Each time this function is called, the colony is
     rendered.
     '''
-    # Cycle through workers
-    for worker_name, worker in self.workers.items():
+    # Cycle through repairers
+    for repairer_name, repairer in self.repairers.items():
       # If model exists, move it to new location
-      if worker.simulation_model is not None:
-        worker.simulation_model.pos = worker.location
+      if repairer.simulation_model is not None:
+        repairer.simulation_model.pos = repairer.location
     
       # Otherwise create a new model for the robot at the current location
       else:
-        worker.simulation_model = sphere(pos=self.location,
+        repairer.simulation_model = sphere(pos=self.location,
           radius=variables.local_radius,make_trail=False)
-        worker.simulation_model.color = (1,0,1)
+        repairer.simulation_model.color = (1,0,1)
 
   def reset(self):
     '''
-    Create a spanking new army of workers the size of the original army!
+    Create a spanking new army of repairers the size of the original army!
     '''
-    self.workers = {}
+    self.repairers = {}
     for i in range(self.original_size):
-      name = "worker_" + str(i)
+      name = "repairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.workers[name] = Worker(name,self.structure,location,self.model)
+      self.repairers[name] = repairer(name,self.structure,location,self.model)
 
   def need_data(self):
     '''
@@ -103,8 +103,8 @@ class ReactiveSwarm(Swarm):
     decisions. This basically checks to see if they are moving down. If so, then
     they don't need data.
     '''
-    for name, worker in self.workers.items():
-      if worker.memory['pos_z'] == True or worker.memory['pos_z'] == None:
+    for name, repairer in self.repairers.items():
+      if repairer.memory['pos_z'] == True or repairer.memory['pos_z'] == None:
         return False
 
     return True
@@ -113,8 +113,8 @@ class ReactiveSwarm(Swarm):
     Returns whether or not all of the swarm is on the ground. If it is,
     no need to analyze the structure this time
     '''
-    for worker in self.workers:
-      if self.workers[worker].beam != None:
+    for repairer in self.repairers:
+      if self.repairers[repairer].beam != None:
         return False
 
     return True
@@ -125,9 +125,9 @@ class ReactiveSwarm(Swarm):
     x-axis. The names are a continuation of the size of the swarm.
     '''
     for i in range(self.num_created, self.num_created + num):
-      name = "worker_" + str(i)
+      name = "repairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
-      self.workers[name] = Worker(name,self.structure,location,self.model)
+      self.repairers[name] = repairer(name,self.structure,location,self.model)
 
     self.size += num
     self.num_created += num
@@ -136,9 +136,9 @@ class ReactiveSwarm(Swarm):
     '''
     Deletes the specified robot from the swarm if it exists
     '''
-    if name in self.workers:
-      self.workers[worker_name].change_location(construction.home, None)
-      del(self.workers[worker_name])
+    if name in self.repairers:
+      self.repairers[repairer_name].change_location(construction.home, None)
+      del(self.repairers[repairer_name])
       self.size -= 1
       return True
     else:
@@ -148,11 +148,11 @@ class ReactiveSwarm(Swarm):
     '''
     Deletes a random robot from the swarm.
     '''
-    # Pick a random worker
+    # Pick a random repairer
     from random import choice
-    worker_name = choice(self.workers.keys())
+    repairer_name = choice(self.repairers.keys())
 
-    return self.delete_robot(worker_name)
+    return self.delete_robot(repairer_name)
 
   def delete_random_robots(self,num = 1):
     '''

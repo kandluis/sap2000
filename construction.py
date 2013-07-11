@@ -18,5 +18,6 @@ beam = {
   'vertical_dir_set'  : (0,0,1),
   'joint_limit'       : variables.joint_limit,
   'beam_limit'        : variables.beam_limit,
-  'structure_check'   : variables.structure_check
+  'structure_check'   : variables.structure_check,
+  'support_angle'     : 60
 }

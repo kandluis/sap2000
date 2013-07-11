@@ -15,3 +15,9 @@ class Automaton:
 
   def current_state(self):
     return {  'name'  : self.name }
+
+  def decide(self):
+    pass
+
+  def do_action(self):
+    pass

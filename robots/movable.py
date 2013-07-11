@@ -431,14 +431,45 @@ class Movable(Automaton):
     '''
     return not self.beam == None
 
+  def pre_decision(self):
+    '''
+    Takes care of resetting appropriate values
+    '''
+    self.step = variables.step_length
+
+  # Model needs to have been analyzed before calling THIS function
+  def decide(self):
+    '''
+    This functions decides what is going to be done next based on the analysis 
+    results of the program. Therefore, this function should be the one that 
+    decides whether how to move, based on the local conditions
+    and then stores that information in the robot. The robot will then act 
+    based on that information once the model has been unlocked. 
+    '''
+    self.pre_decision()
+
+    # If we're not on a beam, then we will wander on the ground
+    if self.beam == None:
+      # reset steps
+      self.next_direction_info = None
+
+    # Otherwise, we are not on the ground and we decided not to build, so pick 
+    # a direction and store that
+    else:
+      self.next_direction_info = self.get_direction()
+
   def do_action(self):
     '''
     In movable, simply moves the robot to another location.
     '''
-    # We are not on a beam, so wander about aimlessly
-    if self.beam == None:
-      beam = self.wander()
+    # We're on a beam but decided not to build, so get direction we 
+    # decided to move in, and move.
+    if self.beam is not None:
+      assert self.next_direction_info != None
+      self.move(self.next_direction_info['direction'],
+        self.next_direction_info['beam'])
+      self.next_direction_info = None
 
+    # We have climbed off, so wander about 
     else:
-      move_info = self.get_direction()
-      self.move(move_info['direction'], move_info['beam'])
+      self.wander()

@@ -1,12 +1,15 @@
 from helpers import helpers
 from robots.builder import Builder
-import pdb, variables
+import construction, math, pdb,variables
 
 class Worker(Builder):
   def __init__(self,name,structure,location,program):
     super(Worker,self).__init__(name,structure,location,program)
     # The number of beams the robot is carrying (picked up at home now)
     self.num_beams = 0
+
+    # Smaller number gives higher priority
+    self.memory['dir_priority'] = [1,1,0]
 
     # Move further in the x-direction?
     self.memory['pos_x'] = None
@@ -62,7 +65,7 @@ class Worker(Builder):
       elif self.memory[string] is not None:
         return (lambda a : a < 0)
       else:
-        return (lambda a: True)
+        return (lambda a : True)
 
     # direction functions
     funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
@@ -91,26 +94,13 @@ class Worker(Builder):
     else:
       return super(Worker,self).pick_direction(directions)
 
-  def no_available_direction(self):
+  def no_available_directions(self):
     '''
-    No direction takes us where we want to go, so check to see if we need to 
-      a) Construct
-      b) Repair
+    We construct if we truly are at the top of a beam
     '''
-    # Do parent class' work  
-    super(Worker,self).no_available_direction()
-
-    # Construct a beam if we're at the top
     if self.num_beams > 0 and self.__at_top():
       self.start_construction = True
       self.memory['broken'] = []
-
-    # Initialize repair mode if there are broken beams
-    elif self.memory['broken'] != []:
-      beam, moment = max(self.memory['broken'],key=lambda t : t[1])
-      print("{} is starting repair of {} which has moment {} at {}".format(
-        self.name,beam.name,str(moment),str(self.location)))
-      self.start_repair(beam)
 
   def basic_rules(self):
     '''
@@ -138,18 +128,6 @@ class Worker(Builder):
       self.memory['built'] = False
       return False
 
-  def start_repair(self,beam):
-    '''
-    Initializes the repair of the specified beam. Figures out which direction to
-    travel in and stores it within the robot's memory, then tells it to climb
-    down in a specific direction if necessary.
-    '''
-    # Calculate direction of repair
-    #j = beam.endpoints.j
-    #self.memory['repair_beam_direction'] = helpers.make_unit(
-    #  helpers.make_vector(self.location,(j[0],[1],self.location[2])))
-    pass
-
   def local_rules(self):
     '''
     Uses the information from SAP2000 to decide what needs to be done. This 
@@ -158,18 +136,14 @@ class Worker(Builder):
     '''
     # If the program is not locked, there are no analysis results so True
     if not self.model.GetModelIsLocked():
-      return True
+      return False
 
     # Analysis results available
     else:
-      return True
+      return False
 
   def construct(self):
     '''
     Decides whether the robot should construct or not based on some local rules.
     '''
-    return self.basic_rules() and self.local_rules()
-
-class Repairer(Worker):
-  def __init__(self,structure,location,program):
-    super(Repairer,self).__init__(structure,location,program)
+    return self.basic_rules() or self.local_rules()
