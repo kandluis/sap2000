@@ -103,8 +103,14 @@ class Worker(Builder):
     # Construct a beam if we're at the top
     if self.num_beams > 0 and self.__at_top():
       self.start_construction = True
-    else:
-      self.start_repair()
+      self.memory['broken'] = []
+
+    # Initialize repair mode if there are broken beams
+    elif self.memory['broken'] != []:
+      beam, moment = max(self.memory['broken'],key=lambda t : t[1])
+      print("{} is starting repair of {} which has moment {} at {}".format(
+        self.name,beam.name,str(moment),str(self.location)))
+      self.start_repair(beam)
 
   def basic_rules(self):
     '''
@@ -127,18 +133,21 @@ class Worker(Builder):
 
       self.structure.started = True
       self.memory['built'] = True
-      self.memory['construct'] += 1
       return True
     else:
       self.memory['built'] = False
       return False
 
-  def start_repair(self):
+  def start_repair(self,beam):
     '''
     Initializes the repair of the specified beam. Figures out which direction to
     travel in and stores it within the robot's memory, then tells it to climb
     down in a specific direction if necessary.
     '''
+    # Calculate direction of repair
+    #j = beam.endpoints.j
+    #self.memory['repair_beam_direction'] = helpers.make_unit(
+    #  helpers.make_vector(self.location,(j[0],[1],self.location[2])))
     pass
 
   def local_rules(self):

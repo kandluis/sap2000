@@ -23,10 +23,13 @@ class Builder(Movable):
 
     # Starting defaults
     self.memory['built'] = False
-    self.memory['construct'] = 0
+    self.memory['constructed'] = 0
 
     # Keeps track of the direction we last moved in.
     self.memory['previous_direction'] = None
+
+    # Stores information on beams that need repairing
+    self.memory['broken'] = []
 
   def __at_joint(self):
     '''
@@ -298,6 +301,10 @@ class Builder(Movable):
     + beam load if the robot were to walk in the specified direction to the
     very tip of the beam.
     This function is only ever called if an analysis model exists.
+
+    Additionally, this function stores information on the beams that need to be 
+    repaired. This is stored in self.memory['broken'], which is originally set
+    to none.
     '''
     # Sanity check
     assert self.model.GetModelIsLocked()
@@ -313,6 +320,11 @@ class Builder(Movable):
           moment < construction.beam['beam_limit']) or (moment < 
           construction.beam['joint_limit'])):
           results[name] = directions
+        # Add beam to broken
+        else:
+          beam = self.structure.get_beam(name,self.location)
+          self.memory['broken'].append((beam,moment))
+
 
     # Not at joint, so check own beam
     moment = self.get_moment(self.beam.name)
@@ -320,8 +332,9 @@ class Builder(Movable):
       results = dirs
     # Add the beam to the broken
     else:
-      self.memory['broken'].append(self.beam)
+      self.memory['broken'].append((self.beam,moment))
 
+    # For debugging purpose
     if dirs == {}:
       pdb.set_trace()
 
@@ -628,7 +641,7 @@ class Builder(Movable):
     if ((self.at_site()) and not self.memory['built'] and 
       self.num_beams > 0):
       self.memory['built'] = True
-      self.memory['construct'] += 1
+      self.memory['constructed'] += 1
       return True
     else:
       self.memory['built'] = False

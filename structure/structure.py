@@ -205,24 +205,29 @@ class Structure:
     Returns the endpoints of the beam. It uses location to facilitate the 
     search. If not found, it looks for the beam the old fashion way. 
     '''
-    box = self.get_box(location)
-
-    for name,beam in box.items():
-      if name == beam.name:
-        return beam.endpoints
-
-    if self.find_beam(self,name) is not None:
-      return find_beam(name).endpoints
+    beam = self.get_beam(beam_name,location)
+    if beam is not None:
+      return beam.endpoints
     else:
       return None
 
-  def get_beam(name,location):
+  def get_beam(self,name,location):
     '''
     Returns the beam object with the specified name. Uses location to quickly
     find the box that contains it. If it is not found in that box, None is 
     returned. This doesn't mean the beam doesn't exists, just that the location
     specified a box which does not contain the beam\
     '''
+    box = self.get_box(location)
+
+    for name,beam in box.items():
+      if name == beam.name:
+        return beam
+
+    if self.find_beam(self,name) is not None:
+      return find_beam(name)
+    else:
+      return None
 
   def get_box(self,point):
     '''
