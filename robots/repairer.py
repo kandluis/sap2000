@@ -28,18 +28,38 @@ class Repairer(Worker):
       self.memory['pos_z'] = False
       self.memory['dir_priority'] = [1,1,0]
 
+  def add_support_mode(self):
+    '''
+    Sets up the construction of a support beam
+    '''
+    self.memory['new_beam_steps'] == 1
+    self.memory['broken_beam_name'] = ''
+    self.memory['previous_beam'] = None
+    self.memory['pos_z'] = True
+    self.memory['pos_y'] = None
+    self.memory['pos_x'] = None
+    self.memory['dir_priority'] = [1,1,0]
+    self.memory['construct_support'] = True
+
+
+  def ground_support(self):
+    '''
+    Looks for a support from the ground
+    '''
+    if self.memory['num_beam_steps'] == 0:
+      self.add_support_mode(self)
+      self.ground_direction = helpers.scale(-1,self.ground_direction)
+
+    self.memory['new_beam_steps'] -= 1
+
   def find_support(self):
+    '''
+    Looks for a support beam on the structure
+    '''
     # We did not find a beam in the number of steps we wanted (go back to build
     # mode, but with the condition to build in exactly one timestep)
     if self.memory['new_beam_steps'] == 0:
-      self.memory['new_beam_steps'] == 1
-      self.memory['broken_beam_name'] = ''
-      self.memory['previous_beam'] = None
-      self.memory['pos_z'] = True
-      self.memory['pos_y'] = None
-      self.memory['pos_x'] = None
-      self.memory['dir_priority'] = [1,1,0]
-      self.memory['construct_support'] = True
+      self.add_support_mode()
 
     self.memory['new_beam_steps'] -= 1
 
@@ -50,10 +70,15 @@ class Repairer(Worker):
     '''
     # Repair Mode
     if self.repair_mode:
+      pdb.set_trace()
       self.pre_decision()
 
+      # We have moved off the structure entirely, so wander
+      if self.beam is None:
+        self.ground_support()
+
       # We've moved off the beam, so run the search support routine
-      if self.memory['broken_beam_name'] != self.beam.name:
+      elif self.memory['broken_beam_name'] != self.beam.name:
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] == self.beam.name
         self.find_support()
@@ -115,9 +140,12 @@ class Repairer(Worker):
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
     j = beam.endpoints.j
-    direction = helpers.make_vector(self.location,j[0])
-    self.memory['repair_beam_direction'] = helpers.make_unit(
-      helpers.make_vector(self.location,(j[0],j[1],self.location[2])))
+    direction = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
+    non_zero = not helpers.compare(helpers.length(direction),0)
+    self.memory['repair_beam_direction'] = (helpers.make_unit(
+      helpers.make_vector(self.location,(j[0],j[1],self.location[2]))) if non_zero 
+      else (0,0,0))
+    self.ground_direction = direction if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible
     set_dir('pos_x',direction[0])
@@ -130,7 +158,7 @@ class Repairer(Worker):
     # Number of steps to search once we find a new beam that is close to
     # parallel to the beam we are repairing (going down, ie NOT support beam)
     length = construction.beam['length'] * math.cos(
-      construction.beam['support_angle'])
+      math.radians(construction.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
 
     self.repair_mode = True

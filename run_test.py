@@ -6,7 +6,7 @@ view = False
 
 # Run the Simulation
 sim = Simulation()
-sim.start(view,20)
+sim.start(view,1)
 sim.run_simulation(view,1000)
 
 # Display the simulation

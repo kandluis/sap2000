@@ -143,6 +143,8 @@ class Builder(Movable):
     is suitable. This is also to store the decion made based on the analysis 
     results, so that THEN the model can be unlocked and changed.
     '''
+    if self.repair_mode:
+      pdb.set_trace()
     # Check to see if the robot decided to construct based on analysys results
     if self.start_construction:
       self.build()
@@ -183,7 +185,8 @@ class Builder(Movable):
     # restraints if the value is not 0
     if new_dirs == {}:
       if priorities == []:
-        priorities = self.memory['dir_priority']
+        # COPY the LIST
+        priorities = list(self.memory['dir_priority'])
       
       max_val = max(priorities)
       max_indeces = [priorities.index(x) for x in priorities if x == max_val]
@@ -293,8 +296,8 @@ class Builder(Movable):
     to the robot itself
     '''
     # Format (ret[0], number_results[1], obj_names[2], i_end distances[3], 
-    # load_cases[4], step_types[5], step_nums[6], Ps[7], V2s[8], V3s[9], 
-    # Ts[10], M2s[11], M3s[12]
+    # elm_names[4], elm_dist[5], load_cases[6], step_types[7], step_nums[8],
+    # Ps[9], V2s[10], V3s[11], Ts[12], M2s[13], M3s[14]
     results = self.model.Results.FrameForce(name,0)
     if results[0] != 0:
       pdb.set_trace()
@@ -325,8 +328,8 @@ class Builder(Movable):
     assert close_index < results[1]
 
     # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
-    m22 = results[11][close_index]
-    m33 = results[12][close_index]
+    m22 = results[13][close_index]
+    m33 = results[14][close_index]
     total = math.sqrt(m22**2 + m33**2)
 
     if total > construction.beam['joint_limit']:
@@ -362,17 +365,18 @@ class Builder(Movable):
           results[name] = directions
         # Add beam to broken
         else:
-          beam = self.structure.get_beam(name,self.location)
+          beam = self.structure.get_beam(name)
           self.memory['broken'].append((beam,moment))
 
 
     # Not at joint, so check own beam
-    moment = self.get_moment(self.beam.name)
-    if moment < construction.beam['beam_limit']:
-      results = dirs
-    # Add the beam to the broken
     else:
-      self.memory['broken'].append((self.beam,moment))
+      moment = self.get_moment(self.beam.name)
+      if moment < construction.beam['beam_limit']:
+        results = dirs
+      # Add the beam to the broken
+      else:
+        self.memory['broken'].append((self.beam,moment))
 
     # For debugging purpose
     if dirs == {}:
@@ -445,7 +449,7 @@ class Builder(Movable):
 
     # Find nearby beams to climb on
     result = self.ground()
-    if result == None:
+    if result == None or self.repair_mode:
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))

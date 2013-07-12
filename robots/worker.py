@@ -102,6 +102,9 @@ class Worker(Builder):
     if not self.memory['pos_z']:
       beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
         key=lambda t : t[1][1][2])
+
+      # We want to return the original direction vector since it contains both
+      # information on direction and on distance
       return (beam, directions[beam][index])
 
     # Randomly moving about along whatever directions are available

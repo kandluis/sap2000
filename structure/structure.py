@@ -463,12 +463,34 @@ class Structure:
     # Reset the tubes
     self.tubes = 0
 
-  def structure_failed(self,program):
+  def failed(self,program):
     '''
     Checks the entire SAP2000 structure for any possible structural errors.
     '''
+    def get_max_moment(beam):
+      '''
+      Returns the largest moment along a beam
+      '''
+      results = program.model.Results.FrameForce(name,0)
+      if results[0] != 0:
+        pdb.set_trace()
+        return 0
+
+      def total(index):
+        '''
+        Calculates the total moment for a specified index
+        '''
+        m22 = results[13][index]
+        m33 = results[14][index]
+        return math.sqrt(m22**2 + m33**2)
+
+      moments = [total(i) for i in range(results[1])]
+      return max(moments)
+
+      # Find largest moment
     def pass_check(beam):
-      pass
+      return get_max_moment(beam) <= construction.beam['structure_check']
+
     bool_data = False
     data = ''
     for wall in self.model:

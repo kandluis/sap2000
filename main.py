@@ -397,12 +397,19 @@ class Simulation:
           ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(
             variables.robot_load_case)
 
+          # Check the structure for stability
+          failed = self.Structure.failed(self.SapProgram)
+          if failed:
+            print(failed)
+            break
+
         # Make the decision based on analysis results
         try:
           self.Swarm.decide()
         except:
           print("Simulation ended at decision.")
-          break
+          self.exit()
+          raise
 
         # Make sure that the model has been unlocked, and if not, unlock it
         if self.SapModel.GetModelIsLocked():
@@ -421,7 +428,8 @@ class Simulation:
           self.Swarm.act()
         except:
           print("Simulation ended at act.")
-          break
+          self.exit()
+          raise
 
         # Write out errors on movements
         errors = self.Swarm.get_errors()

@@ -61,9 +61,8 @@ moment_of_intertia = math.pi * ((outside_diameter/2)**4 - (outside_diameter / 2 
 
 # Calculating limits
 joint_limit = beam_length * beam_load / 2
-structure_check = joint_limit + (beam_load + robot_load)*beam_length
-beam_limit = steel_yield * moment_of_intertia / (outside_diameter / 2)
-
+structure_check = steel_yield * moment_of_intertia / (outside_diameter / 2)
+beam_limit = joint_limit + (beam_load + robot_load)*beam_length
 
 # The number of timesteps before an analysis model is saved.
 analysis_timesteps = 100

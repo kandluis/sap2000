@@ -6,7 +6,7 @@ Coord = namedtuple("Coordinates", ["x", "y", "z"])
 EndPoints = namedtuple("Endpoints", ["i","j"])
 
 class Beam:
-  def __init__(self, name, endpoints):
+  def __init__(self, name, endpoints,visual_model = None):
     # Each beam has two endpoints (i and j)
     self.endpoints = EndPoints(i=endpoints[0], j=endpoints[1])
 
@@ -19,6 +19,8 @@ class Beam:
 
     # This is how much each beam weighs
     self.weight = variables.beam_load
+
+    self.visual_model = visual_model
 
   def current_state(self):
     '''

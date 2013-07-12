@@ -28,7 +28,7 @@ class Visualization:
         for item_data in re.split("<>",timestep):
 
           # We skip the new line character
-          if item_data != '\n':
+          if item_data != '\n' and item_data != '':
 
             # Now we split the item into the two data (there is a : between them)
             data_1,data_2 = re.split(":",item_data)
