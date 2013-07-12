@@ -41,7 +41,7 @@ robot_load = 0.035 # kip
 beam_load = 0.027 # kip
 
 # Name of the load case for the robots
-robot_load_case = "ROBOTS"
+robot_load_case = "DEAD"
 
 # Name of the material property defined for the beams
 frame_property_name = "Scaffold Tube"

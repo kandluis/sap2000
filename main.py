@@ -33,6 +33,7 @@ class Simulation:
       return False
 
     # add load patterns HERE, which by default also defines a Load Case
+    '''
     if not helpers.addloadpattern(self.SapModel, variables.robot_load_case, 
       'LTYPE_DEAD'):
       print ("Failure when adding the loadpattern {}".format(
@@ -43,6 +44,7 @@ class Simulation:
       print ("Failure when setting-up load case {}.".format(
         variables.robot_load_case))
       return False
+    '''
     if not self.__setup_case("DEAD"):
       print("Failure setting up DEAD case.")
       return False
@@ -396,7 +398,11 @@ class Simulation:
             variables.robot_load_case)
 
         # Make the decision based on analysis results
-        self.Swarm.decide()
+        try:
+          self.Swarm.decide()
+        except:
+          print("Simulation ended at decision.")
+          break
 
         # Make sure that the model has been unlocked, and if not, unlock it
         if self.SapModel.GetModelIsLocked():
@@ -411,7 +417,11 @@ class Simulation:
           self.__push_data(beam_data,struct_data,i+1)
           
         # Change the model based on decisions made (act on your decisions)
-        self.Swarm.act()
+        try:
+          self.Swarm.act()
+        except:
+          print("Simulation ended at act.")
+          break
 
         # Write out errors on movements
         errors = self.Swarm.get_errors()
@@ -426,8 +436,9 @@ class Simulation:
         if self.Structure.height > variables.dim_z - 2* construction.beam['length']:
           break
 
-      # SIMULATION HAS ENDED (OUTSIDE OF FORLOOP)
+        # END OF LOOOP
 
+      # Clean up
       # Finish up run_data (add ending time and maximum height)
       run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + 
         ".\n\n Total beams" + " on structure: " + str(self.Structure.tubes) 
@@ -437,13 +448,17 @@ class Simulation:
 
       # Write out simulation data
       run_text.write(run_data)
+      self.exit()
 
-      # Write out locations
-      self.__push_excel(outputfolder + "locations.xlsx")
+  def exit(self):
 
-      # Write out visualization data
-      with open(outputfolder + 'swarm_visualization.txt', 'w+') as v_swarm, open(outputfolder + 'structure_visualization.txt','w+') as v_struct:
-        v_swarm.write(self.Swarm.visualization_data)
-        v_struct.write(self.Structure.visualization_data)
+    # Write out locations
+    self.__push_excel(self.folder + "locations.xlsx")
 
-      self.run = True
+    # Write out visualization data
+    with open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
+      v_swarm.write(self.Swarm.visualization_data)
+      v_struct.write(self.Structure.visualization_data)
+
+    self.run = True
+

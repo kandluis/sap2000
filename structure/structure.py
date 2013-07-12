@@ -11,6 +11,7 @@ import construction, math, pdb, sys, variables
 
 class Structure:
   def __init__(self, visualization):
+
     # number of boxes
     self.num = variables.num_x, variables.num_y, variables.num_z
 
@@ -461,3 +462,24 @@ class Structure:
 
     # Reset the tubes
     self.tubes = 0
+
+  def structure_failed(self,program):
+    '''
+    Checks the entire SAP2000 structure for any possible structural errors.
+    '''
+    def pass_check(beam):
+      pass
+    bool_data = False
+    data = ''
+    for wall in self.model:
+      for column in wall:
+        for cell in column:
+          for name,beam in cell.items():
+            if not pass_check(beam):
+              data += "Beam {} is structurally unstable.\n".format(name)
+              bool_data = True
+
+    if not bool_data:
+      return bool_data
+    else:
+      return data

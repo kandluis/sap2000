@@ -297,7 +297,8 @@ class Builder(Movable):
     # Ts[10], M2s[11], M3s[12]
     results = self.model.Results.FrameForce(name,0)
     if results[0] != 0:
-      helpers.check(ret,self,"getting frame forces",results=results,
+      pdb.set_trace()
+      helpers.check(results[0],self,"getting frame forces",results=results,
         state=self.current_state())
       return 0
 
@@ -324,7 +325,14 @@ class Builder(Movable):
     assert close_index < results[1]
 
     # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
-    return math.sqrt(results[11][close_index]**2 + results[12][close_index]**2)
+    m22 = results[11][close_index]
+    m33 = results[12][close_index]
+    total = math.sqrt(m22**2 + m33**2)
+
+    if total > construction.beam['joint_limit']:
+      pdb.set_trace()
+
+    return total
 
 
   def filter_feasable(self,dirs):
@@ -703,8 +711,9 @@ class Builder(Movable):
     # If we get to this point, we have already built all possible ratios, so 
     # just stick something 
     # Create disturbance
-    disturbance = helpers.make_unit((random.uniform(-12,12),
-      random.uniform(-12,12),random.uniform(-12,12)))
+    change = variables.step_length
+    disturbance = helpers.make_unit((random.uniform(-change,change),
+      random.uniform(-change,change),0))
     # The default endpoint is either vertical or we calculate one at an angle 
     # (if there is one stored in memory because we are constructing a support)
     default_endpoint = (default_endpoint if not self.memory['construct_support'] 
