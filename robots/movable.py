@@ -376,9 +376,6 @@ class Movable(Automaton):
       new_location = helpers.sum_vectors(self.location, movement)
       self.change_location(new_location, beam)
 
-      # update the step back to the default
-      self.step = variables.step_length
-
   def get_directions_info(self):
     '''
     Returns a list of triplets with delta x, delta y, and delta z of the 
@@ -450,7 +447,7 @@ class Movable(Automaton):
     # a direction and store that
     else:
       self.next_direction_info = self.get_direction()
-      
+
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
     '''

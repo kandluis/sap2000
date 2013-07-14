@@ -47,7 +47,7 @@ class Repairer(Worker):
     Looks for a support from the ground
     '''
     if self.memory['num_beam_steps'] == 0:
-      self.add_support_mode(self)
+      self.add_support_mode()
       self.ground_direction = helpers.scale(-1,self.ground_direction)
 
     self.memory['new_beam_steps'] -= 1
@@ -78,7 +78,8 @@ class Repairer(Worker):
         self.ground_support()
 
       # We've moved off the beam, so run the search support routine
-      elif self.memory['broken_beam_name'] != self.beam.name:
+      elif (self.memory['broken_beam_name'] != '' and 
+        self.memory['broken_beam_name'] != self.beam.name):
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] == self.beam.name
         self.find_support()
@@ -87,7 +88,7 @@ class Repairer(Worker):
         self.movable_decide()
 
       # We have finished running the repair routine, so call our super instead  
-      elif self.memory['new_beam_steps'] == 0:
+      elif self.memory['new_beam_steps'] <= 0:
         self.repair_mode = False
         self.memory['broken'] = []
         super(Repairer,self).decide()

@@ -28,13 +28,6 @@ class Worker(Builder):
 
     return False
 
-  def current_state(self):
-    '''
-    Returns current state of robot
-    '''
-    state = super(Worker,self).current_state()
-    return state
-
   def discard_beams(self,num = 1):
     '''
     Adding ability to change memory

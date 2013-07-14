@@ -43,6 +43,8 @@ class Structure:
     # Keeps track of the visualization data
     self.visualization_data = ''
 
+    self.color_data = ''
+
   def __feasable_point(self,p):
     '''
     Checks whether or not a point lies within the defined limits of the 

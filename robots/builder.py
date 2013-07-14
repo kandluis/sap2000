@@ -58,17 +58,19 @@ class Builder(Movable):
     state.update({  'num_beams'           : self.num_beams,
                     'start_construction'  : self.start_construction,
                     'next_direction_info' : self.next_direction_info,
-                    'memory'              : self.memory})
+                    'memory'              : self.memory,
+                    'repair_mode'         : self.repair_mode})
     
     return state
 
   def climb_off(self,loc):
-    if helpers.compare(loc[2],0) and self.num_beams == 0:
+    if helpers.compare(loc[2],0) and (self.num_beams == 0 or self.repair_mode):
       self.ground_direction = helpers.make_vector(self.location,
         construction.home)
       return True
     else:
-      self.ground_direction = None
+      self.ground_direction = (None if not self.repair_mode else 
+        self.ground_direction)
       return False
 
   def pickup_beams(self,num = variables.beam_capacity):
