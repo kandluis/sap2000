@@ -182,8 +182,20 @@ class Movable(Automaton):
           # support
           try:
             e1, e2 = beam.endpoints
-            crawlable[beam.name] = ([helpers.make_vector(self.location,e1), 
-              helpers.make_vector(self.location,e2)])
+            v1, v2 = helpers.make_vector(self.location,e1), helpers.make_vector(
+              self.location,e2)
+            # We don't want to include zero-vectors
+            bool_v1,bool_v2 = (not helpers.compare(helpers.length(v1),0),
+              not helpers.compare(helpers.length(v2),0))
+            if bool_v1 and bool_v2:
+              crawlable[beam.name] = ([helpers.make_vector(self.location,e1), 
+                helpers.make_vector(self.location,e2)])
+            elif bool_v1:
+              crawlable[beam.name] = [helpers.make_vector(self.location,e1)]
+            elif bool_v2:
+              crawlable[beam.name] = [helpers.make_vector(self.location,e2)]
+            else:
+              raise Exception("All distances from beam were zero-length.")
           except IndexError:
             print ("The beam {} seems to have a joint with {}, but it is not in\
               the box?".format(name,self.beam.name))
@@ -196,6 +208,9 @@ class Movable(Automaton):
             joint))
         else:
           crawlable[self.beam.name] = [helpers.make_vector(self.location,joint)]
+      # The joint is too far, so no point in considering it as a walkable direction
+      else:
+        pass
 
     # There are no joints nearby. This means we are either on a joint OR far 
     # from one. Therefore, we add the directions to the endpoint of our current 
