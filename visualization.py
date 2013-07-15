@@ -7,11 +7,13 @@ class Visualization:
     self.data = []
     self.folder = outputfolder
 
-  def load_data(self,swarm,structure):
+  def load_data(self,swarm='swarm_visualization.txt',
+    structure='structure_visualization.txt',color_swarm='swarm_color_data.txt',
+    color_structure='structure_color_data.txt'):
     '''
     Loads the data from the files specified
     '''
-    def load_file(file_obj,both=True):
+    def load_file(file_obj,two=True):
       '''
       Loads the date from one file. If the bool both is true, then it loads two
       parts of data as tuples. If it is not, then it loads data_1 as text and 
@@ -34,24 +36,33 @@ class Visualization:
             data_1,data_2 = re.split(":",item_data)
 
             # Read a float tuple if both, else set it as a string (leave a alone)
-            data_1 = (tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
-              data_1)) if both else data_1)
-
-            # Read float tuple
-            data_2 = tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
-              data_2))
+            #data_1 = (tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
+            #  data_1)) if both else data_1)
+            if not two:
+              # Read float tuple for color or location if not endpoints
+              coords = [tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
+                data_2))]
+            else:
+              coords = []
+              for coord in  re.split("-",data_2):
+                coord.apped(tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
+                  data_2)))
 
             # Add data to timestep
-            timestep_data.append((data_1,data_2))
+            timestep_data.append((data_1,coords))
 
         # Add timestep to data
         timesteps.append(timestep_data)
 
       return timesteps
 
-    with open(self.folder + swarm, 'r') as s_file, open(self.folder + structure, 'r') as st_file:
-      self.data = zip(load_file(s_file,False),load_file(sc_file,False),
-        load_file(st_file,True))
+    # Open the files and load the data. Zip it up so that all the data is accessible in one timestep
+    with open(self.folder + color_swarm, 'r') as sc_file, open(self.folder + color_structure, 'r') as stc_file, open(self.folder + swarm, 'r') as s_file, open(self.folder + structure, 'r') as st_file:
+      swarm_loc = load_file(s_file,False)
+      swarm_colors = load_file (sc_file,False)
+      struct_loc = load_file(st_file,True)
+      struct_color = load_file(stc_file,False)
+      self.data = zip(swarm_loc,swarm_colors,struct_loc,struct_color)
 
   def run(self,fullscreen = True, inverse_speed=.25):
     if self.data == []:
@@ -93,25 +104,25 @@ class Visualization:
       workers = {}
       beams = {}
       timestep = 1
-      for swarm_step, swarm_color, structure_step in self.data:
-        for name, location in swarm_step:
+      for swarm_step, swarm_color,structure_step,struct_color in self.data:
+        for name, locations in swarm_step:
           # Create the object
           if name not in workers:
-            workers[name] = sphere(pos=location,radius=variables.local_radius/2,
-              make_trail=False)
+            workers[name] = sphere(pos=locations[0],
+              radius=variables.local_radius/2,make_trail=False)
             workers[name].color = (1,0,1)
           # Change the objects position
           else:
-            workers[name].pos = location
+            workers[name].pos = locations[0]
 
         # Set the color
-        for name, color in swarm_color:
-          workers[name].color = color
+        for name, colors in swarm_color:
+          workers[name].color = colors[0]
 
-        for i,j in structure_step:
-          temp = cylinder(pos=i,axis=helpers.make_vector(i,j),
-            radius=variables.outside_diameter)
-          temp.color = (.5,1,.1)
+        # Add beams if any
+        for name,coords in structure_step:
+          beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
+            coords[1]),radius=variables.outside_diameter)
 
           # Update window dimensions
           limit = max(j)
@@ -119,6 +130,13 @@ class Visualization:
             scene.range = (limit,limit,limit)
             scene.center = helpers.scale(.5,helpers.sum_vectors(
               construction.construction_location,scene.range))
+
+        # Change the color of the beams
+        for name,colors in struct_color:
+          try:
+            beams[names].color = colors[0]
+          except IndexError:
+            print("A nonexistant beam is beam is to be recolored!")
 
         time.sleep(inverse_speed)
         timestep += 1

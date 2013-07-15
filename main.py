@@ -316,10 +316,10 @@ class Simulation:
     '''
     if self.run:
       window = Visualization(self.folder)
-      window.load_data('swarm_visualization.txt','structure_visualization.txt')
+      window.load_data()
       window.run(fullscreen,inverse_speed)
     else:
-      print("The visualization has not been started.")
+      print("The visualization cannot be started becase simulation has not run.")
 
   def run_simulation(self,visualization = False, timesteps = 10, debug = True,
     comment = ""):
@@ -372,6 +372,7 @@ class Simulation:
 
         # Add number and new line to structure visualization data
         self.Structure.visualization_data += "\n"
+        self.Structure.color_data += '\n'
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
@@ -464,10 +465,14 @@ class Simulation:
     self.__push_excel(self.folder + "locations.xlsx")
 
     # Write out visualization data
-    with open(self.folder + 'swarm_color_data.txt', 'w+') as c_swarm, open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
+    with open(self.folder + 'structure_color_data.txt','w+') as c_struct, open(self.folder + 'swarm_color_data.txt', 'w+') as c_swarm, open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
       v_swarm.write(self.Swarm.visualization_data)
       c_swarm.write(self.Swarm.color_data)
       v_struct.write(self.Structure.visualization_data)
+      c_struct.write(self.Structure.color_data)
+
+    with open(self.folder + 'structure_physics.txt',"w+") as struct_phys:
+      struct_phys.write(self.Structure.structure_data)
 
     self.run = True
 

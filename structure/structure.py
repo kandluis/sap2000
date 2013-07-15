@@ -45,6 +45,8 @@ class Structure:
 
     self.color_data = ''
 
+    self.structure_data = ''
+
   def __feasable_point(self,p):
     '''
     Checks whether or not a point lies within the defined limits of the 
@@ -346,7 +348,8 @@ class Structure:
       temp.color = (0,1,1)
 
     # Safe visualization data
-    self.visualization_data += "{}:{}<>".format(str(p1),str(p2)) 
+    self.visualization_data += "{}:{}-{}<>".format(str(new_beam.name),str(p1),
+      str(p2))
 
     # Add a beam to the structure count and increase height if necessary
     self.tubes += 1
@@ -498,7 +501,7 @@ class Structure:
       '''
       Returns the largest moment along a beam
       '''
-      results = program.model.Results.FrameForce(name,0)
+      results = program.model.Results.FrameForce(beam.name,0)
       if results[0] != 0:
         pdb.set_trace()
         return 0
@@ -512,7 +515,11 @@ class Structure:
         return math.sqrt(m22**2 + m33**2)
 
       moments = [total(i) for i in range(results[1])]
-      return max(moments)
+      max_val = max(moments)
+      self.structure_data += "{},{},".format(beam.name,str(max_val))
+      color = (0,1,max_val)
+      self.color_data += "{}:{}<>".format(beam.name,str(color)) 
+      return max_val
 
       # Find largest moment
     def pass_check(beam):
@@ -527,6 +534,8 @@ class Structure:
             if not pass_check(beam):
               data += "Beam {} is structurally unstable.\n".format(name)
               bool_data = True
+
+    self.structure_data += '\n'
 
     if not bool_data:
       return bool_data

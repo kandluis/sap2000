@@ -304,11 +304,8 @@ def closest_points(l1,l2, segment = True):
       dist = distance(point,endpoint)
       if between(line2[0],line2[1],point) and dist != 0:
         points.append(((point,endpoint),dist))
-    if segment:
-      return None
 
-    else:
-      return min(points,key=lambda t : t[1])
+    return min(points,key=lambda t : t[1])
 
   def intersection_shift(line1,line2,shift,normal):
     '''
@@ -323,7 +320,7 @@ def closest_points(l1,l2, segment = True):
       sum_vectors(line2[1],vn_shift))
 
     # Get intersection points
-    point1,point2 = intersetion(line1,(shift_i,shift_j)),intersetion(line1,(
+    point1,point2 = intersection(line1,(shift_i,shift_j)),intersection(line1,(
       nshift_j,nshift_j))
     if point1 is not None and point2 is not None:
       raise Exception("Shifting created two intersections!?")
@@ -351,10 +348,10 @@ def closest_points(l1,l2, segment = True):
     return None
 
   # Find the distance between the two lines
-  distance = distance_between_lines(l1,l2)
+  travel = distance_between_lines(l1,l2)
 
   # Shift until we find an interesection point (coplanar)
-  intersection_point = intersection_shift((i1,j1),(i2,j2),distance,normal)
+  intersection_point = intersection_shift((i1,j1),(i2,j2),travel,normal)
   if intersection_point == None:
     # This means that the two lines segments don't intersect, so return the two
     # endpoints (whichever are closests to one another)
