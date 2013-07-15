@@ -600,7 +600,7 @@ class Builder(Movable):
               if dist != 0:
                 # Change in z from vertical to one of the two poitns (we already
                 # asserted their z value to be equal)
-                delta_z = abs(e1[2] - vertical_point[2])
+                delta_z = abs(e1[2] - pivot[2])
                 ratio = dist / delta_z if delta_z != 0 else sys.float_info.max
                 # Check to see if in the dictionary. If it is, associate point 
                 # with ratio

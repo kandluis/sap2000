@@ -280,17 +280,17 @@ def closest_points(l1,l2, segment = True):
     Returns one endpoint of line1 or line2 (which ever has a feasable projection
     onto the other line)
     '''
-    point = None
+    points = []
     for endpoint in line1:
       point = correct(line2[0],line2[1],endpoint)
-      if between(line2[0],line2[1],point):
-        return point, endpoint
+      dist = helpers.distance(point,endpoint)
+      if between(line2[0],line2[1],point) and dist != 0:
+        points.append((point,endpoint),dist)
     if segment:
       return None
 
-    ## TODO
     else:
-      return point
+      return min(points,key=lambda t : t[1])
 
   # Get coordinates
   i1,j1 =  l1
