@@ -271,6 +271,24 @@ def intersection(l1, l2, segment = True):
 
   return sum_vectors(p1,scale(a,v1))
 
+def distance_between_lines(l1,l2):
+  '''
+  Calculates the distance between the lines l1 and l2
+  '''
+  # Direction vectors
+  v1,v2 = make_vector(l1[0],l1[1]), make_vector(l2[0],l2[1])
+
+  # If parallel, pick a point and return the distance to the other line
+  if parallel(v1,v2):
+    return distance_to_line(l1[0],l1[1],l2[0])
+
+  # Find normal and diagonal vector
+  normal = make_unit(cross(v1,v2))
+  diagonal = make_vector(l1[0],l2[1])
+
+  #return length of projection onto normal
+  return abs(dot(diagonal,normal))
+
 def closest_points(l1,l2, segment = True):
   '''
   Calculates the closests points between the line l1 and l2
@@ -292,6 +310,31 @@ def closest_points(l1,l2, segment = True):
     else:
       return min(points,key=lambda t : t[1])
 
+  def intersection_shift(line1,line2,shift,normal):
+    '''
+    Especialized function that shifts line2 by a set amount along the specified
+    normal and attempts to find that line's intersection with line1
+    '''
+    # Positive and negative shift
+    unit_normal = make_unit(normal)
+    v_shift,vn_shift = scale(shift,unit_normal),scale(-1*shift,unit_normal)
+    shift_i,shift_j,nshift_i,nshift_j = (sum_vectors(line2[0],v_shift),
+      sum_vectors(line2[1],v_shift),sum_vectors(line2[0],vn_shift),
+      sum_vectors(line2[1],vn_shift))
+
+    # Get intersection points
+    point1,point2 = intersetion(line1,(shift_i,shift_j)),intersetion(line1,(
+      nshift_j,nshift_j))
+    if point1 is not None and point2 is not None:
+      raise Exception("Shifting created two intersections!?")
+    elif point1 is not None:
+      return point1
+    elif point2 is not None:
+      return point2
+    else:
+      return None
+
+
   # Get coordinates
   i1,j1 =  l1
   i2,j2 = l2
@@ -307,27 +350,14 @@ def closest_points(l1,l2, segment = True):
   if length(normal) == 0:
     return None
 
-  # Our plane will contain l1 by default, so here we calculate another 
-  # perpendicular vector in the plane
-  unit1 = make_unit(v1)
-  unit2 = make_unit(cross(normal,v1))
+  # Find the distance between the two lines
+  distance = distance_between_lines(l1,l2)
 
-  # Now we project v2 onto the plane to find the new direction vector, and 
-  #project i2 to find the new initial point
-  new_v2 = sum_vectors(scale(dot(unit1,v2),unit1),scale(dot(unit2,v2),unit2))
-  i1_to_i2 = make_vector(i1,i2)
-  new_i2 = sum_vectors(i1,sum_vectors(scale(dot(unit1,i1_to_i2),unit1),scale(
-    dot(unit2,i1_to_i2),unit2)))
-  new_j2 = sum_vectors(new_i2,new_v2)
-
-  # Next, find the intersection point of the two lines (now that they have been 
-  # projected onto the same planme)
-  intersection_point = intersection((i1,j2),(new_i2,new_j2))
+  # Shift until we find an interesection point (coplanar)
+  intersection_point = intersection_shift((i1,j1),(i2,j2),distance,normal)
   if intersection_point == None:
-    # This means that the two lines are parallel, so return one of the 
-    # endpoints, and the point on the other line closest to it. Or, they might 
-    # not intersect at all, so this could also be an issue which should be taken
-    # care of by the endpoints function.
+    # This means that the two lines segments don't intersect, so return the two
+    # endpoints (whichever are closests to one another)
     return endpoints(l1,l2)
 
   # Now, find the intersection point between the original lines by moving the 
@@ -337,7 +367,7 @@ def closest_points(l1,l2, segment = True):
     intersection_point,normal)),False)
   # This means that they are parallel, which should never happen.
   if true_intersect_point == None:
-    assert 1 == 3
+    raise Exception("Finding intersection point failed.")
 
   # Do a sanity check to make sure that the point is on the line we want
   assert on_line(l2[0],l2[1],true_intersect_point)
