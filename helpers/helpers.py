@@ -304,8 +304,11 @@ def closest_points(l1,l2, segment = True):
       dist = distance(point,endpoint)
       if between(line2[0],line2[1],point) and dist != 0:
         points.append(((point,endpoint),dist))
-
-    return min(points,key=lambda t : t[1])
+    if points == []:
+      return None
+    else:
+      closest, val = min(points,key=lambda t : t[1])
+      return closest
 
   def intersection_shift(line1,line2,shift,normal):
     '''
