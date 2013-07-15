@@ -1,6 +1,6 @@
 from helpers import helpers
 from robots.movable import Movable
-import construction, math, operator, pdb, random, variables
+import construction, math, operator, pdb, random, sys,variables
 
 class Builder(Movable):
   def __init__(self,name,structure,location,program):
@@ -65,8 +65,12 @@ class Builder(Movable):
 
   def climb_off(self,loc):
     if helpers.compare(loc[2],0) and (self.num_beams == 0 or self.repair_mode):
-      self.ground_direction = helpers.make_vector(self.location,
-        construction.home)
+      direction = helpers.make_vector(self.location,construction.home)
+      self.ground_direction = (direction if direction[2] == 0 else 
+        self.ground_direction)
+      # Reset the number of steps if we are repairing
+      self.memory['new_beam_steps'] = (math.floor((construction.beam['length'] 
+        / 2) / variables.step_length) if self.repair_mode else 0)
       return True
     else:
       self.ground_direction = (None if not self.repair_mode else 
@@ -145,8 +149,6 @@ class Builder(Movable):
     is suitable. This is also to store the decion made based on the analysis 
     results, so that THEN the model can be unlocked and changed.
     '''
-    if self.repair_mode:
-      pdb.set_trace()
     # Check to see if the robot decided to construct based on analysys results
     if self.start_construction:
       self.build()
@@ -334,9 +336,6 @@ class Builder(Movable):
     m33 = results[14][close_index]
     total = math.sqrt(m22**2 + m33**2)
 
-    if total > construction.beam['joint_limit']:
-      pdb.set_trace()
-
     return total
 
 
@@ -444,7 +443,7 @@ class Builder(Movable):
     if self.at_home() and self.num_beams == 0 :
       self.pickup_beams()
 
-    # If we have no beams, set the ground direction to home
+    # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.num_beams == 0:
       self.ground_direction = helpers.make_vector(self.location,
         construction.home)
@@ -511,6 +510,9 @@ class Builder(Movable):
 
     # Get rid of one beam
     self.discard_beams()
+
+    # Set to false if we were constructing support
+    self.memory['construct_support'] = False
 
     # Successfully added to at least one box
     if self.structure.add_beam(p1,p2,name) > 0:
@@ -586,7 +588,7 @@ class Builder(Movable):
           # Get the closest points between the vertical and the beam
           points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
           if points != None:
-            # Endpoints
+            # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
             e1,e2 = points
             # Let's do a sanity check. The shortest distance should have no 
             # change in z
@@ -599,7 +601,7 @@ class Builder(Movable):
                 # Change in z from vertical to one of the two poitns (we already
                 # asserted their z value to be equal)
                 delta_z = abs(e1[2] - vertical_point[2])
-                ratio = dist / delta_z
+                ratio = dist / delta_z if delta_z != 0 else sys.float_info.max
                 # Check to see if in the dictionary. If it is, associate point 
                 # with ratio
                 if e2 in dictionary:
@@ -633,13 +635,28 @@ class Builder(Movable):
 
       return dictionary
 
+    def get_ratio(string):
+      '''
+      Returns the appropriate ratios for support beam construction
+      '''
+      angle = construction.beam[string]
+      angle = 90 - angle if self.beam is None else angle
+      return helpers.ratio(angle)
+
+    def get_ratios():
+      mini,maxi = ((get_ratio('support_angle_min'), get_ratio('support_angle_max'))
+        if self.beam is not None else (get_ratio('support_angle_max'),
+        get_ratio('support_angle_min')))
+      return mini,maxi
+
     # get all beams nearby (ie, all the beams in the current box and possible 
     # those further above)
-    local_box = self.structure.get_box(self.location)
-    top_box = self.structure.get_box(vertical_point)
-    constraining_ratio = math.tan(math.radians(
-      construction.beam['angle_constraint']))
+    boxes = self.structure.get_boxes(self.location)
+    constraining_ratio = helpers.ratio(construction.beam['angle_constraint'])
+    min_support_ratio, max_support_ratio = get_ratios()
     ratios = {}
+    if self.memory['construct_support']:
+      pdb.set_trace()
 
     '''
     Ratios contains the ratio dist / delta_z where dist is the shortest distance
@@ -649,7 +666,8 @@ class Builder(Movable):
     with the sphere. The dictionary is indexed by the point, and each point is 
     associated with one ratio
     '''
-    ratios = add_ratios(local_box,add_ratios(top_box,ratios))
+    for box in boxes:
+      ratios = add_ratios(box,ratios)
     default_endpoint = helpers.sum_vectors(pivot,helpers.scale(
       variables.beam_length,
       helpers.make_unit(construction.beam['vertical_dir_set'])))
@@ -661,9 +679,14 @@ class Builder(Movable):
     # constructed or we run out of suitable ones.
     for coord, ratio in sorted_ratios:
 
+      # If building a support beam, we don't want it too vertical or horizontal
+      if self.memory['construct_support'] and (ratio < min_support_ratio or
+        ratio > max_support_ratio):
+        pass
+
       # If the smallest ratio is larger than what we've specified as the limit, 
-      # then build as the default endpoint
-      if ratio > constraining_ratio:
+      # but larger than our tolerence, then build
+      elif ratio > constraining_ratio:
         i,j = check(pivot, coord)
         return self.addbeam(i,j)
 
@@ -673,13 +696,14 @@ class Builder(Movable):
         endpoint = helpers.sum_vectors(pivot,helpers.scale(
           variables.beam_length,unit_direction))
         return self.addbeam(pivot,endpoint)
+
       # Beam exist, so pass it
       else:
         pass
 
     def support_beam_endpoint():
       '''
-      Returns the endpoint for construction a support beam_limit
+      Returns the endpoint for construction a support beam
       '''
       def non_zero_xydirection():
         '''
@@ -696,17 +720,18 @@ class Builder(Movable):
       assert self.memory['repair_beam_direction'] is not None
 
       # Add beam_directions plus vertical change based on angle ratio (tan)
-      ratio = math.tan(math.radians(construction.beam['support_angle']))
-      vertical = helpers.scale(ratio,(0,0,1))
+      ratio = get_ratio('support_angle')
+      vertical = helpers.scale(1/ratio,(0,0,1))
 
       # Check to see if direction is vertical
-      if helpers.paralle(self.memory['repair_beam_direction'],vertical):
+      if helpers.parallel(self.memory['repair_beam_direction'],vertical):
         xy_dir = non_zero_xydirection()
       else:
         xy_dir = self.memory['repair_beam_direction']
+      xy_dir = helpers.make_unit(xy_dir)
 
       # Obtain construction direction
-      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical_point))
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
 
       # Calculate endpoints
       endpoint = helpers.sum_vectors(self.location,helpers.scale(

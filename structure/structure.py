@@ -227,7 +227,7 @@ class Structure:
       if name == beam.name:
         return beam
 
-    if self.find_beam(self,name) is not None:
+    if self.find_beam(name) is not None:
       return find_beam(name)
     else:
       return None
@@ -248,6 +248,31 @@ class Structure:
       print ("The coordinate, {}, is not in the structure and should never have\
         been. Please check the add function in structure.py".format(point))
       return False
+
+  def get_boxes(self,location,radius=variables.beam_length):
+    '''
+    Returns all of the boxes that are within the sphere specified by location
+    and radius
+    '''
+    def index_range(index):
+      dim = self.box_size[index]
+      num = math.ceil(radius/dim)
+      ret = num / 2 if index != 2 else num
+      return math.ceil(ret)
+
+    boxes = []
+    x,y,z = index_range(0),index_range(1),index_range(2)
+    xi,yi,zi = self.__get_indeces(location)
+    for i in range(-x,x+1):
+      for j in range(-y,y+1):
+        for k in range(0,z+1):
+          ix,iy,iz = xi+i,yi+j,zi+k
+          try:
+            boxes.append(self.model[ix][iy][iz])
+          except IndexError:
+            pass
+
+    return boxes
 
   def add_beam(self,p1,p2,name):
     ''' 

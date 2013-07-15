@@ -32,7 +32,7 @@ class Repairer(Worker):
     '''
     Sets up the construction of a support beam
     '''
-    self.memory['new_beam_steps'] == 1
+    self.memory['new_beam_steps'] = 1
     self.memory['broken_beam_name'] = ''
     self.memory['previous_beam'] = None
     self.memory['pos_z'] = True
@@ -41,12 +41,14 @@ class Repairer(Worker):
     self.memory['dir_priority'] = [1,1,0]
     self.memory['construct_support'] = True
 
+    # Turn off repair mode
+    self.repair_mode = False
 
   def ground_support(self):
     '''
     Looks for a support from the ground
     '''
-    if self.memory['num_beam_steps'] == 0:
+    if self.memory['new_beam_steps'] == 0:
       self.add_support_mode()
       self.ground_direction = helpers.scale(-1,self.ground_direction)
 
@@ -70,7 +72,6 @@ class Repairer(Worker):
     '''
     # Repair Mode
     if self.repair_mode:
-      pdb.set_trace()
       self.pre_decision()
 
       # We have moved off the structure entirely, so wander
@@ -81,17 +82,17 @@ class Repairer(Worker):
       elif (self.memory['broken_beam_name'] != '' and 
         self.memory['broken_beam_name'] != self.beam.name):
         if self.memory['previous_beam'] is None:
-          self.memory['previous_beam'] == self.beam.name
+          self.memory['previous_beam'] = self.beam.name
         self.find_support()
 
         # Move (don't check construction)
         self.movable_decide()
 
       # We have finished running the repair routine, so call our super instead  
-      elif self.memory['new_beam_steps'] <= 0:
-        self.repair_mode = False
-        self.memory['broken'] = []
-        super(Repairer,self).decide()
+      #elif self.memory['new_beam_steps'] <= 0:
+      #  self.repair_mode = False
+      #  self.memory['broken'] = []
+      #  super(Repairer,self).decide()
 
       # We are still on the broken beam, so just move
       else:
@@ -107,8 +108,8 @@ class Repairer(Worker):
       a) Construct
       b) Repair
     '''
-    # Initialize repair mode if there are broken beams
-    if self.memory['broken'] != []:
+    # Initialize repair mode if there are broken beams (and you can fix)
+    if self.memory['broken'] != [] and self.num_beams > 0:
       beam, moment = max(self.memory['broken'],key=lambda t : t[1])
       print("{} is starting repair of {} which has moment {} at {}".format(
         self.name,beam.name,str(moment),str(self.location)))
@@ -145,7 +146,7 @@ class Repairer(Worker):
     non_zero = not helpers.compare(helpers.length(direction),0)
     self.memory['repair_beam_direction'] = (helpers.make_unit(
       helpers.make_vector(self.location,(j[0],j[1],self.location[2]))) if non_zero 
-      else (0,0,0))
+      else (0,0,1))
     self.ground_direction = direction if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible
@@ -174,7 +175,6 @@ class Repairer(Worker):
 
     # Analysis results available
     elif self.memory['new_beam_steps'] == 0 and self.memory['construct_support']:
-      self.memory['construct_support'] = False
       return True
     
     return False

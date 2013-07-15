@@ -26,9 +26,9 @@ origin = (0,0,0)
 num_x = 10
 num_y = 10
 num_z = 100
-dim_x = 1200 # 100 ft
-dim_y = 1200
-dim_z = 120000
+dim_x = 1700 # 100 ft
+dim_y = 1700
+dim_z = 170000
 
 # This defines how sensitive the program is to accepting errors within the beam 
 # structure

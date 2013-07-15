@@ -2,6 +2,9 @@ from sap2000.constants import LOAD_PATTERN_TYPES
 from helpers.vectors import *
 import errno, math, os, pdb, variables
 
+def ratio(deg):
+  return math.tan(math.radians(deg))
+
 def check(return_value, robot, error, **data):
   '''
   Used to check that the return value of the SAP2000 functions is zero. Provides

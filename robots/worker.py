@@ -55,8 +55,9 @@ class Worker(Builder):
     desired direction. Overwritten to take into account the directions in
     which we want to move. When climbing down, it will take the steepest path.
     '''
-    # Change stuff up, depending on whether we are repairing or not
-    if self.repair_mode:
+    # Change stuff up, depending on whether we are in repair mode (but not 
+    # construct support mode)
+    if self.repair_mode and not self.memory['construct_support']:
       self.repairing()
 
     def bool_fun(string):
@@ -82,8 +83,7 @@ class Worker(Builder):
     Overwritting to pick the direction of steepest descent when climbing down
     instead of just picking a direction randomly
     '''
-    # Change stuff up, depending on whether we are repairing or not
-    if self.repair_mode:
+    if self.repair_mode and not self.memory['construct_support']:
       self.repairing()
 
     def min_dir(vs):
@@ -127,9 +127,8 @@ class Worker(Builder):
     3.  Still carrying construction material
     '''
 
-    if (((self.at_site() and not self.structure.started)) and not 
-      self.memory['built'] and 
-      self.num_beams > 0):
+    if (((self.at_site() and not self.structure.started and not self.repair_mode
+      )) and not self.memory['built'] and self.num_beams > 0):
 
       self.structure.started = True
       self.memory['built'] = True

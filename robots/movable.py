@@ -146,7 +146,7 @@ class Movable(Automaton):
 
     # Move the load off the current location and to the new one (if still on 
     # beam), then change the locations
-    if self.beam != None:
+    if self.beam is not None:
       removeload(self.location)
 
     # Check to see if we will be moving off a beam and onto the ground
@@ -154,7 +154,7 @@ class Movable(Automaton):
       new_beam = None
 
     # Don't add the load if there is no beam
-    if new_beam != None:
+    if new_beam is not None:
       self.__addload(new_beam, new_location, self.weight)
     else:
       self.beam = new_beam
