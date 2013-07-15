@@ -50,7 +50,8 @@ class Visualization:
       return timesteps
 
     with open(self.folder + swarm, 'r') as s_file, open(self.folder + structure, 'r') as st_file:
-      self.data = zip(load_file(s_file,False),load_file(st_file,True))
+      self.data = zip(load_file(s_file,False),load_file(sc_file,False),
+        load_file(st_file,True))
 
   def run(self,fullscreen = True, inverse_speed=.25):
     if self.data == []:
@@ -90,8 +91,9 @@ class Visualization:
       
       # Set up worker dictionary to keep track of objects
       workers = {}
+      beams = {}
       timestep = 1
-      for swarm_step, structure_step in self.data:
+      for swarm_step, swarm_color, structure_step in self.data:
         for name, location in swarm_step:
           # Create the object
           if name not in workers:
@@ -101,6 +103,10 @@ class Visualization:
           # Change the objects position
           else:
             workers[name].pos = location
+
+        # Set the color
+        for name, color in swarm_color:
+          workers[name].color = color
 
         for i,j in structure_step:
           temp = cylinder(pos=i,axis=helpers.make_vector(i,j),

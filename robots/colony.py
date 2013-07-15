@@ -29,6 +29,9 @@ class Swarm:
     # Keeps track of visualization data
     self.visualization_data = ''
 
+    # Keeps track of the color each robot should be at each timestep
+    self.color_data = ''
+
   def decide(self):
     # Tell each robot to make the decion
     for repairer in self.repairers:
@@ -37,10 +40,14 @@ class Swarm:
       # Add location data
       loc = self.repairers[repairer].location
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
-
       self.visualization_data += "{}:{}<>".format(repairer,str(location))
 
+      # Get color data based on what the robot is doing
+      color = (1,0,1) if not self.repairers[repairer].repair_mode else (0,1,0)
+      self.color_data += "{}:{}<>".format(repairer,str(color))
+
     self.visualization_data += "\n"
+    self.color_data += "\n"
 
   def act(self):
     # Tell each robot to act

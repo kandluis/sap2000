@@ -464,8 +464,9 @@ class Simulation:
     self.__push_excel(self.folder + "locations.xlsx")
 
     # Write out visualization data
-    with open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
+    with open(self.folder + 'swarm_color_data.txt', 'w+') as c_swarm, open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
       v_swarm.write(self.Swarm.visualization_data)
+      c_swarm.write(self.Swarm.color_data)
       v_struct.write(self.Structure.visualization_data)
 
     self.run = True

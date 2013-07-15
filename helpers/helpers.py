@@ -283,9 +283,9 @@ def closest_points(l1,l2, segment = True):
     points = []
     for endpoint in line1:
       point = correct(line2[0],line2[1],endpoint)
-      dist = helpers.distance(point,endpoint)
+      dist = distance(point,endpoint)
       if between(line2[0],line2[1],point) and dist != 0:
-        points.append((point,endpoint),dist)
+        points.append(((point,endpoint),dist))
     if segment:
       return None
 
@@ -315,7 +315,9 @@ def closest_points(l1,l2, segment = True):
   # Now we project v2 onto the plane to find the new direction vector, and 
   #project i2 to find the new initial point
   new_v2 = sum_vectors(scale(dot(unit1,v2),unit1),scale(dot(unit2,v2),unit2))
-  new_i2 = sum_vectors(scale(dot(unit1,i2),unit1),scale(dot(unit2,i2),unit2))
+  i1_to_i2 = make_vector(i1,i2)
+  new_i2 = sum_vectors(i1,sum_vectors(scale(dot(unit1,i1_to_i2),unit1),scale(
+    dot(unit2,i1_to_i2),unit2)))
   new_j2 = sum_vectors(new_i2,new_v2)
 
   # Next, find the intersection point of the two lines (now that they have been 
