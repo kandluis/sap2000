@@ -360,6 +360,8 @@ class Simulation:
         " simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of"
         + " simumation: " + start_time + "\n\n")
 
+      run_text.write("Folder: {}\n\n".format(str(self.folder)))
+
       # Write variables
       self.__push_information(run_text)
 
@@ -442,8 +444,8 @@ class Simulation:
         # Write out repair information
         repair_data = self.Swarm.get_repair_data()
         if repair_data != '':
-            repair_file.write("Repairs for begun at timestep {}:\n {}\n").format(
-              str(i+1),repair_data)
+            repair_file.write("Repairs for begun at timestep {}:\n {}\n".format(
+              str(i+1),repair_data))
 
         # Give a status update if necessary
         print("Finished timestep {}\r".format(str(i + 1)))

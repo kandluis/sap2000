@@ -21,10 +21,26 @@ class Worker(Builder):
     '''
     Returns if we really are at the top, in which case build
     '''
+    def below(beams):
+      for beam in beams:
+        for endpoint in beam.endpoints:
+          # If the beam is not close to us and it is greater than our location
+          if (not helpers.comapare(helpers.distance(self.location,endpoint),0)
+            and endpoint[2] > self.location[2]):
+            return False
+
+      return True
+
     if self.beam is not None:
       for endpoint in self.beam.endpoints:
+        # If we are at the top and the joint has no beams connecting to it.
+        # Or the beams connected to the joint are all lower
         if helpers.compare(helpers.distance(self.location,endpoint),0):
-          return True
+          try:
+            beams = self.beam.joints[endpoint]
+            return below(beams)
+          except KeyError:
+            return False
 
     return False
 

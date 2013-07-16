@@ -54,6 +54,7 @@ class Repairer(Worker):
     self.memory['pos_z'] = True
     self.memory['pos_y'] = None
     self.memory['pos_x'] = None
+    self.memory['broken'] = []
     self.memory['dir_priority'] = [1,1,0]
     self.memory['construct_support'] = True
 
@@ -125,10 +126,10 @@ class Repairer(Worker):
     # Initialize repair mode if there are broken beams (and you can fix)
     if self.memory['broken'] != [] and self.num_beams > 0:
       beam, moment = max(self.memory['broken'],key=lambda t : t[1])
-      string = "{} is starting repair of {} which has moment {} at {}".format(
+      string = "{} is starting repair of beam {} which has moment {} at {}".format(
         self.name,beam.name,str(moment),str(self.location))
       print(string)
-      data = string
+      self.repair_data = string
       
       # Uncomment when ready!
       self.start_repair(beam)
@@ -171,8 +172,8 @@ class Repairer(Worker):
     # pick a direction within 180 degress of the repair beam
     disturbance = helpers.make_unit((random.randint(-10,10),random.randint(-10,
       10),0))
-    ground_dir = helpers.make_unit(helpers.sum_vector(disturbance,direction))
-    self.ground_direction = direction if non_zero else None
+    ground_dir = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
+    self.ground_direction = ground_dir if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible
     set_dir('pos_x',direction[0])

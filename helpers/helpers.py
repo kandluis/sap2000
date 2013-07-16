@@ -212,6 +212,16 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
+def round_tuple(tup,ndigits=2):
+  '''
+  Rounds every coordinate in a tuple to the specified number of digits
+  '''
+  temp = []
+  for val in tup:
+    temp.append(round(val,ndigits))
+
+  return tuple(temp)
+
 
 '''
 Helper functions pertaining to the beams (especially intersections)

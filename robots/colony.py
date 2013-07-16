@@ -40,7 +40,8 @@ class Swarm:
       # Add location data
       loc = self.repairers[repairer].location
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
-      self.visualization_data += "{}:{}<>".format(repairer,str(location))
+      self.visualization_data += "{}:{}<>".format(repairer,str(
+        helpers.round_tuple(location,3)))
 
       # Get color data based on what the robot is doing
       color = (1,0,1) if not self.repairers[repairer].repair_mode else (0,1,0)

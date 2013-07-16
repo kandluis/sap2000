@@ -350,8 +350,8 @@ class Structure:
       temp.color = (0,1,1)
 
     # Safe visualization data
-    self.visualization_data += "{}:{}-{}<>".format(str(new_beam.name),str(p1),
-      str(p2))
+    self.visualization_data += "{}:{}-{}<>".format(str(new_beam.name),str(
+      helpers.round_tuple(p1,3)),str(helpers.round_tuple(p2,3)))
 
     # Add a beam to the structure count and increase height if necessary
     self.tubes += 1
@@ -524,7 +524,7 @@ class Structure:
       self.structure_data += "{},{},".format(beam.name,str(max_val))
 
       # Calculate gradiant color and store
-      ratio = max_val/construction.beam['structure_check']
+      ratio = round(max_val/construction.beam['structure_check'],3)
       color = (ratio,max(1-ratio,0),0)
       self.color_data += "{}:{}<>".format(beam.name,str(color)) 
 

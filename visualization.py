@@ -62,44 +62,70 @@ class Visualization:
       swarm_colors = load_file (sc_file,False)
       struct_loc = load_file(st_file,True)
       struct_color = load_file(stc_file,False)
-      self.data = zip(swarm_loc,swarm_colors,struct_loc,struct_color)
+      self.data = list(zip(swarm_loc,swarm_colors,struct_loc,struct_color))
+
+  def setup_scene(self,fullscreen):
+    '''
+    Sets up the scene for the display output.
+    '''
+    # Set title and background color (white)
+    scene = display(title="Robot Simulation",background=(1,1,1))
+    # Automatically center
+    scene.autocenter = True
+    # Removing autoscale
+    scene.autoscale = 0
+    # Set whether the windows will take up entire screen or not
+    scene.fullscreen = fullscreen
+    # Size of the windows seen is the size of one beam (to begin)
+    scene.range = (variables.beam_length,variables.beam_length,
+      variables.beam_length)
+    # The center of the windows exists at the construction location
+    scene.center = helpers.scale(.5,helpers.sum_vectors(
+      construction.construction_location,scene.range))
+    # Vector from which the camera start
+    scene.forward = (1,0,0)
+    # Define up (used for lighting)
+    scene.up = (0,0,1)
+    # Defines whether or not we exit the program when we exit the screen
+    # visualization
+    scene.exit = False
+
+    return scene
+
+  def setup_base(self):
+    '''
+    Creates a visual for the ground, the construction area, and the home area
+    '''
+    # Setup the ground
+    dim = variables.dim_x,variables.dim_y,variables.epsilon/2
+    center = tuple([v/2 for v in dim])
+    temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
+    temp.color = (1,1,1)
+
+    # Setup the Home Plate
+    dim = construction.home_size
+    center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
+      zip(construction.home,dim)])
+    temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
+    temp.color = (1,0,0)
+
+    # Setup the construction plate
+    dim = construction.construction_size
+    center = tuple([c_coord + size_coord / 2 for c_coord, size_coord in
+      zip(construction.construction_location,dim)])
+    temp = box(pos=center, length=dim[0],height=dim[1],width=0.1)
+    temp.color = (0,1,0)
 
   def run(self,fullscreen = True, inverse_speed=.25):
     if self.data == []:
       print("No data has been loaded. Cannot run simulation.")
     else:
       # Setup the scene
-      scene = display(title="Robot Simulation",background=(1,1,1))
-      scene.autocenter = True
-      scene.fullscreen = fullscreen
-      scene.range = (variables.beam_length,variables.beam_length,
-        variables.beam_length)
-      scene.center = helpers.scale(.5,helpers.sum_vectors(
-        construction.construction_location,scene.range))
-      scene.forward = (1,0,0)
-      scene.up = (0,0,1)
-      scene.exit = False
+      scene = self.setup_scene(fullscreen)
 
-      # Setup the ground
-      dim = variables.dim_x,variables.dim_y,variables.epsilon/2
-      center = tuple([v/2 for v in dim])
-      temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
-      temp.color = (1,1,1)
+      # Setup basic
+      self.setup_base()
 
-      # Setup the Home Plate
-      dim = construction.home_size
-      center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
-        zip(construction.home,dim)])
-      temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
-      temp.color = (1,0,0)
-
-      # Setup the construction plate
-      dim = construction.construction_size
-      center = tuple([c_coord + size_coord / 2 for c_coord, size_coord in
-        zip(construction.construction_location,dim)])
-      temp = box(pos=center, length=dim[0],height=dim[1],width=0.1)
-      temp.color = (0,1,0)
-      
       # Set up worker dictionary to keep track of objects
       workers = {}
       beams = {}
@@ -139,5 +165,36 @@ class Visualization:
           except IndexError:
             print("A nonexistant beam is beam is to be recolored!")
 
+        # Check key_presses
+        if scene.kb.keys:
+          s = scene.kb.getkey()
+          print(s)
+          if len(s) == 1:
+            # Move faster
+            if s == 'f':
+              inverse_speed /= 2
+            # Move more slowly
+            elif s == 's':
+              inverse_speed *= 2
+            # Pause or continue
+            elif s == ' ':
+              self.pause(scene)
+            else:
+              pass
+
         time.sleep(inverse_speed)
         timestep += 1
+
+  def pause(self,scene):
+    '''
+    Pauses the program. Waits for the space_key to start it again
+    '''
+    while True:
+      if scene.kb.keys:
+        s = scene.kb.getkey()
+        if len(s) == 1:
+          # Continue execution
+          if s == ' ':
+            break
+
+      time.sleep(0.01)
