@@ -123,7 +123,7 @@ class Visualization:
         for name,coords in structure_step:
           i,j = coords
           beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
-            coords[1]),radius=variables.outside_diameter,color=(1,0,0))
+            coords[1]),radius=variables.outside_diameter,color=(0,1,0))
 
           # Update window dimensions
           limit = max(j)
