@@ -168,7 +168,6 @@ class Visualization:
         # Check key_presses
         if scene.kb.keys:
           s = scene.kb.getkey()
-          print(s)
           if len(s) == 1:
             # Move faster
             if s == 'f':
