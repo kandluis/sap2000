@@ -742,7 +742,7 @@ class Builder(Movable):
     # If we get to this point, we have already built all possible ratios, so 
     # just stick something 
     # Create disturbance
-    change = variables.step_length
+    change = variables.step_length/2
     disturbance = helpers.make_unit((random.uniform(-change,change),
       random.uniform(-change,change),0))
     # The default endpoint is either vertical or we calculate one at an angle 
@@ -751,7 +751,7 @@ class Builder(Movable):
       else support_beam_endpoint())
 
     # We add a bit of disturbance every onece in a while
-    default_endpoint = default_endpoint if random.randint(0,10) == 1 else (
+    default_endpoint = default_endpoint if random.randint(0,1) == 1 else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
 

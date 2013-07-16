@@ -1,6 +1,6 @@
 from helpers import helpers
 from robots.worker import Worker
-import construction, math, pdb,variables
+import construction, math, pdb,variables, random
 
 class Repairer(Worker):
   def __init__(self,name,structure,location,program):
@@ -14,6 +14,9 @@ class Repairer(Worker):
 
     # Stores the previous beam we were on
     self.memory['previous_beam'] = None
+
+    # Constains repair data so we can write it out to file in main.py
+    self.repair_data = ''
 
   def repairing(self):
     '''
@@ -122,8 +125,10 @@ class Repairer(Worker):
     # Initialize repair mode if there are broken beams (and you can fix)
     if self.memory['broken'] != [] and self.num_beams > 0:
       beam, moment = max(self.memory['broken'],key=lambda t : t[1])
-      print("{} is starting repair of {} which has moment {} at {}".format(
-        self.name,beam.name,str(moment),str(self.location)))
+      string = "{} is starting repair of {} which has moment {} at {}".format(
+        self.name,beam.name,str(moment),str(self.location))
+      print(string)
+      data = string
       
       # Uncomment when ready!
       self.start_repair(beam)
@@ -153,11 +158,20 @@ class Repairer(Worker):
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
     j = beam.endpoints.j
+    # This is the xy-change, basically
     direction = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
+    # Check to make sure the direction is non-zero. 
     non_zero = not helpers.compare(helpers.length(direction),0)
-    self.memory['repair_beam_direction'] = (helpers.make_unit(
-      helpers.make_vector(self.location,(j[0],j[1],self.location[2]))) if non_zero 
-      else (0,0,1))
+
+    # If it is zero-length, then store (0,0,1) as direction
+    directon = helpers.make_unit(direction) if non_zero else (0,0,1)
+    self.memory['repair_beam_direction'] = direction
+
+    # If vertical, give None so that it can choose a random direction. Otherwise,
+    # pick a direction within 180 degress of the repair beam
+    disturbance = helpers.make_unit((random.randint(-10,10),random.randint(-10,
+      10),0))
+    ground_dir = helpers.make_unit(helpers.sum_vector(disturbance,direction))
     self.ground_direction = direction if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible

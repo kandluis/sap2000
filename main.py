@@ -349,7 +349,7 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
+    with open(outputfolder + 'repair_info.txt', 'w+') as repair_file, open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
       loc_text.write("This file contains information on the robots at each" +
         " timestep if debugging.\n\n")
       sap_failures.write("This file contains messages created when SAP 2000 does"
@@ -438,6 +438,12 @@ class Simulation:
         if errors != '':
           sap_failures.write("Errors that occurred in timestep {}. {}\n\n".format(
             str(i+1),errors))
+
+        # Write out repair information
+        repair_data = self.Swarm.get_repair_data()
+        if repair_data != '':
+            repair_file.write("Repairs for begun at timestep {}:\n {}\n").format(
+              str(i+1),repair_data)
 
         # Give a status update if necessary
         print("Finished timestep {}\r".format(str(i + 1)))

@@ -69,6 +69,14 @@ class Swarm:
         repairer.error_data = ''
     return data
 
+  def get_repair_data(self):
+    data = ''
+    for name,repairer in self.repairers.items():
+      if repairer.repair_data != '':
+        data += "{},".format(repairer.repair_data)
+        repairer.repair_data = ''
+    return data
+
 class ReactiveSwarm(Swarm):
   def __init__(self,size,structure,program):
     super(ReactiveSwarm, self).__init__(size,structure,program)
@@ -115,6 +123,7 @@ class ReactiveSwarm(Swarm):
         return False
 
     return True
+
   def on_ground(self):
     '''
     Returns whether or not all of the swarm is on the ground. If it is,

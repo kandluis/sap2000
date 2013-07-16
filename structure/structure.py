@@ -43,8 +43,10 @@ class Structure:
     # Keeps track of the visualization data
     self.visualization_data = ''
 
+    # Keeps track of the colors of each beam based on its current max_moment
     self.color_data = ''
 
+    # Stores information on the beams' max moments
     self.structure_data = ''
 
   def __feasable_point(self,p):
@@ -514,12 +516,19 @@ class Structure:
         m33 = results[14][index]
         return math.sqrt(m22**2 + m33**2)
 
+      # Calculate individual moments, and from them choose maximum
       moments = [total(i) for i in range(results[1])]
       max_val = max(moments)
+
+      # Store max value along with beam name 
       self.structure_data += "{},{},".format(beam.name,str(max_val))
+
+      # Calculate gradiant color and store
       ratio = max_val/construction.beam['structure_check']
-      color = (ratio,1-ratio,0)
+      color = (ratio,max(1-ratio,0),0)
       self.color_data += "{}:{}<>".format(beam.name,str(color)) 
+
+      # Return maximum value
       return max_val
 
     bool_data = False
@@ -533,8 +542,6 @@ class Structure:
               data += "Beam {} is structurally unstable with moment {}.\n".format(
                 name,str(moment))
               bool_data = True
-
-    self.structure_data += '\n'
 
     if not bool_data:
       return bool_data
