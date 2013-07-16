@@ -40,7 +40,7 @@ class Worker(Builder):
             beams = self.beam.joints[endpoint]
             return below(beams)
           except KeyError:
-            return False
+            return True
 
     return False
 
