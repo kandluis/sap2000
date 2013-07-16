@@ -626,7 +626,7 @@ class Builder(Movable):
                 assert helpers.compare(projection[2],point[2])
 
                 dist = helpers.distance(projection,point)
-                delta_z = abs(point[2] - vertical_point[2])
+                delta_z = abs(point[2] - pivot[2])
                 ratio = dist / delta_z
                 if point in dictionary:
                   assert helpers.compare(dictionary[point],ratio)
