@@ -406,27 +406,28 @@ def sphere_intersection(line, center, radius, segment = True):
       # verify it is on the line segment
       if segment:
         if on_line(line[0],line[1],p):
-          return p
+          return [p]
         else:
           return None
       else:
-        return p
+        return [p]
     # Two solutions. We need to return only the ones in the segment
     else:
+      discriminant = math.sqrt(discriminant)
       p1 = sum_vectors(line_origin,scale(neg_b + discriminant,
         unit_line_direction))
       p2 = sum_vectors(line_origin,scale(neg_b - discriminant,
         unit_line_direction))
       if not segment:
-        return p1,p2
+        return [p1,p2]
       else:
         p1_bool, p2_bool = on_line(line[0],line[1],p1),on_line(line[0],line[1],
           p2)
         if p1_bool and p2_bool:
-          return p1,p2
+          return [p1,p2]
         elif p1_bool:
-          return p1
+          return [p1]
         elif p2_bool:
-          return p2
+          return [p2]
         else:
           return None

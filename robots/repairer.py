@@ -28,6 +28,19 @@ class Repairer(Worker):
       self.memory['pos_z'] = False
       self.memory['dir_priority'] = [1,1,0]
 
+  def construction_mode(self):
+    '''
+    Resets the robot to go back into construction mode
+    '''
+    self.memory['new_beam_steps'] = 0
+    self.memory['broken_beam_name'] = ''
+    self.memory['previous_beam'] = None
+    self.memory['pos_z'] = True
+    self.memory['pos_y'] = None
+    self.memory['pos_x'] = None
+    self.memory['dir_priority'] = [1,1,0]
+    self.repair_mode = False
+
   def add_support_mode(self):
     '''
     Sets up the construction of a support beam
@@ -83,18 +96,16 @@ class Repairer(Worker):
         self.memory['broken_beam_name'] != self.beam.name):
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] = self.beam.name
+
+        # We have found a support beam, so return to construct mode
+        if self.memory['previous_beam'] != self.beam.name:
+          self.construction_mode()
+
         self.find_support()
 
         # Move (don't check construction)
         self.movable_decide()
 
-      # We have finished running the repair routine, so call our super instead  
-      #elif self.memory['new_beam_steps'] <= 0:
-      #  self.repair_mode = False
-      #  self.memory['broken'] = []
-      #  super(Repairer,self).decide()
-
-      # We are still on the broken beam, so just move
       else:
         self.movable_decide()
 

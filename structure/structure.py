@@ -517,13 +517,10 @@ class Structure:
       moments = [total(i) for i in range(results[1])]
       max_val = max(moments)
       self.structure_data += "{},{},".format(beam.name,str(max_val))
-      color = (0,1,max_val)
+      ratio = max_val/construction.beam['structure_check']
+      color = (ratio,1-ratio,0)
       self.color_data += "{}:{}<>".format(beam.name,str(color)) 
       return max_val
-
-      # Find largest moment
-    def pass_check(beam):
-      return get_max_moment(beam) <= construction.beam['structure_check']
 
     bool_data = False
     data = ''
@@ -531,8 +528,10 @@ class Structure:
       for column in wall:
         for cell in column:
           for name,beam in cell.items():
-            if not pass_check(beam):
-              data += "Beam {} is structurally unstable.\n".format(name)
+            moment = get_max_moment(beam)
+            if moment > construction.beam['structure_check']:
+              data += "Beam {} is structurally unstable with moment {}.\n".format(
+                name,str(moment))
               bool_data = True
 
     self.structure_data += '\n'

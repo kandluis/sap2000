@@ -629,7 +629,7 @@ class Builder(Movable):
                 delta_z = abs(point[2] - vertical_point[2])
                 ratio = dist / delta_z
                 if point in dictionary:
-                  assert hlpers.compare(dictionary[point],ratio)
+                  assert helpers.compare(dictionary[point],ratio)
                 else:
                   dictionary[point] = ratio
 

@@ -1,6 +1,6 @@
 from helpers import helpers
 from visual import *
-import construction, time, re, variables
+import construction, time, re, pdb, variables
 
 class Visualization:
   def __init__(self,outputfolder):
@@ -45,8 +45,8 @@ class Visualization:
             else:
               coords = []
               for coord in  re.split("-",data_2):
-                coord.apped(tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
-                  data_2)))
+                coords.append(tuple(float(v) for v in re.findall("[-+]?[0-9]*\.?[0-9]+",
+                  coord)))
 
             # Add data to timestep
             timestep_data.append((data_1,coords))
@@ -121,8 +121,9 @@ class Visualization:
 
         # Add beams if any
         for name,coords in structure_step:
+          i,j = coords
           beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
-            coords[1]),radius=variables.outside_diameter)
+            coords[1]),radius=variables.outside_diameter,color=(1,0,0))
 
           # Update window dimensions
           limit = max(j)
@@ -134,7 +135,7 @@ class Visualization:
         # Change the color of the beams
         for name,colors in struct_color:
           try:
-            beams[names].color = colors[0]
+            beams[name].color = colors[0]
           except IndexError:
             print("A nonexistant beam is beam is to be recolored!")
 

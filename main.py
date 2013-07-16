@@ -373,6 +373,7 @@ class Simulation:
         # Add number and new line to structure visualization data
         self.Structure.visualization_data += "\n"
         self.Structure.color_data += '\n'
+        self.Structure.structure_data += '\n'
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
