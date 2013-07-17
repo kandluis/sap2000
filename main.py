@@ -382,25 +382,40 @@ class Simulation:
         # robots on it (ie, we actually need the information)
         if self.Structure.tubes > 0 and not self.Swarm.need_data():
           # Save to a different filename every now and again
-          if i % variables.analysis_timesteps == 0:
-            filename = "tower-" + str(i) + ".sdb"
-            self.SapModel.File.Save(outputfolder + filename)
+          try:
+            if i % variables.analysis_timesteps == 0:
+              filename = "tower-" + str(i) + ".sdb"
+              self.SapModel.File.Save(outputfolder + filename)
+          except:
+            print("Simulation ended when saving output.")
+            self.exit()
+            raise
 
-          ret = self.SapModel.Analyze.RunAnalysis()
-          # When ret is not 0 debug is on, write out that it failed.
-          if ret and debug:
-            sap_failures.write("RunAnalysis failed! Value returned was" + 
-              " {}".format(str(ret)))
+          try:
+            ret = self.SapModel.Analyze.RunAnalysis()
+            # When ret is not 0 debug is on, write out that it failed.
+            if ret and debug:
+              sap_failures.write("RunAnalysis failed! Value returned was" + 
+                " {}".format(str(ret)))
+          except:
+            print("Simulation ended when analyzing model.")
+            self.exit()
+            raise
 
           # Deselect all outputs
-          ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
-          if ret and debug:
-            sap_failures.write("Deselecting Cases failed! Value returned was " +
-              "{}".format(str(ret)))
+          try:
+            ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
+            if ret and debug:
+              sap_failures.write("Deselecting Cases failed! Value returned was " +
+                "{}".format(str(ret)))
 
-          # Select just the Robot Load Case for Output
-          ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(
-            variables.robot_load_case)
+            # Select just the Robot Load Case for Output
+            ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(
+              variables.robot_load_case)
+          except:
+            print("Simulation ended when setting up output cases.")
+            self.exit()
+            raise
 
           # Check the structure for stability
           failed = self.Structure.failed(self.SapProgram)

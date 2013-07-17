@@ -54,10 +54,12 @@ class Builder(Movable):
 
   def current_state(self):
     state = super(Builder, self).current_state()
+    memory = self.memory.copy()
+    memory['broken'] = [(beam.name,beam.endpoints) for beam in memory['broken']]
     state.update({  'num_beams'           : self.num_beams,
                     'start_construction'  : self.start_construction,
                     'next_direction_info' : self.next_direction_info,
-                    'memory'              : self.memory,
+                    'memory'              : memory,
                     'repair_mode'         : self.repair_mode})
     
     return state
@@ -170,6 +172,9 @@ class Builder(Movable):
     priorty numbers as possible. Same priorities must be matched at the same
     level.
     '''
+    # Access the list of broken beam names
+    broken = [beam.name for beam,direction in self.memory['broken']]
+
     # Access items
     for beam, vectors in dirs.items():
       # Access each directions
@@ -178,8 +183,11 @@ class Builder(Movable):
         # Apply each function to the correct coordinates
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
+
+        # When repairing, we want to switch direction onto another beam but not
+        # one that is broken
         if (coord_bool and not (self.repair_mode and self.at_joint() and 
-          self.beam.name == beam)):
+          self.beam.name == beam and beam in broken)):
           if beam not in new_dirs:
             new_dirs[beam] = [vector]
           else:

@@ -107,7 +107,8 @@ class Worker(Builder):
       min_val = min(unit_list,key=lambda t : t[2])
       index = unit_list.index(min_val)
       return index,min_val
-    # Pick the smalles pos_z whether moving up or down
+
+    # Pick the smalles pos_z whether moving up or down (modification)
     #if not self.memory['pos_z']:
     beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
       key=lambda t : t[1][1][2])

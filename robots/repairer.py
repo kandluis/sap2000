@@ -164,16 +164,17 @@ class Repairer(Worker):
     # Check to make sure the direction is non-zero. 
     non_zero = not helpers.compare(helpers.length(direction),0)
 
-    # If it is zero-length, then store (0,0,1) as direction
-    directon = helpers.make_unit(direction) if non_zero else (0,0,1)
+    # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
+    # 180 degree approace
+    direction = helpers.make_unit(direction) if non_zero else (0,0,1)
+    disturbance = helpers.make_unit((random.randint(-10,10),random.randint(-10,
+      10),0))
+    direction = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
     self.memory['repair_beam_direction'] = direction
 
     # If vertical, give None so that it can choose a random direction. Otherwise,
-    # pick a direction within 180 degress of the repair beam
-    disturbance = helpers.make_unit((random.randint(-10,10),random.randint(-10,
-      10),0))
-    ground_dir = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
-    self.ground_direction = ground_dir if non_zero else None
+    # pick a direction which within 180 degrees of the beam
+    self.ground_direction = direction if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible
     set_dir('pos_x',direction[0])
