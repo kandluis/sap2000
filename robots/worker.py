@@ -107,18 +107,18 @@ class Worker(Builder):
       min_val = min(unit_list,key=lambda t : t[2])
       index = unit_list.index(min_val)
       return index,min_val
-    # Pick the smalles pos_z if moving down
-    if not self.memory['pos_z']:
-      beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
-        key=lambda t : t[1][1][2])
+    # Pick the smalles pos_z whether moving up or down
+    #if not self.memory['pos_z']:
+    beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
+      key=lambda t : t[1][1][2])
 
       # We want to return the original direction vector since it contains both
       # information on direction and on distance
-      return (beam, directions[beam][index])
+    return (beam, directions[beam][index])
 
     # Randomly moving about along whatever directions are available
-    else:
-      return super(Worker,self).pick_direction(directions)
+    #else:
+    #  return super(Worker,self).pick_direction(directions)
 
   def no_available_direction(self):
     '''

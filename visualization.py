@@ -6,6 +6,8 @@ class Visualization:
   def __init__(self,outputfolder):
     self.data = []
     self.folder = outputfolder
+    self.workers = {}
+    self.beams = {}
 
   def load_data(self,swarm='swarm_visualization.txt',
     structure='structure_visualization.txt',color_swarm='swarm_color_data.txt',
@@ -127,28 +129,26 @@ class Visualization:
       self.setup_base()
 
       # Set up worker dictionary to keep track of objects
-      workers = {}
-      beams = {}
       timestep = 1
       for swarm_step, swarm_color,structure_step,struct_color in self.data:
         for name, locations in swarm_step:
           # Create the object
-          if name not in workers:
-            workers[name] = sphere(pos=locations[0],
+          if name not in self.workers:
+            self.workers[name] = sphere(pos=locations[0],
               radius=variables.local_radius/2,make_trail=False)
-            workers[name].color = (1,0,1)
+            self.workers[name].color = (1,0,1)
           # Change the objects position
           else:
-            workers[name].pos = locations[0]
+            self.workers[name].pos = locations[0]
 
         # Set the color
         for name, colors in swarm_color:
-          workers[name].color = colors[0]
+          self.workers[name].color = colors[0]
 
         # Add beams if any
         for name,coords in structure_step:
           i,j = coords
-          beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
+          self.beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
             coords[1]),radius=variables.outside_diameter,color=(0,1,0))
 
           # Update window dimensions
@@ -161,7 +161,7 @@ class Visualization:
         # Change the color of the beams
         for name,colors in struct_color:
           try:
-            beams[name].color = colors[0]
+            self.beams[name].color = colors[0]
           except IndexError:
             print("A nonexistant beam is beam is to be recolored!")
 

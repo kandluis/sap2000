@@ -12,7 +12,7 @@ local_radius = 17 # 1 ft
 step_length = 17 # 1 ft
 
 # Length of each beam (in the units specified by program_units)
-beam_length = 120 # 10ft
+beam_length = 60 # 10ft
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)
@@ -35,10 +35,10 @@ dim_z = 170000
 epsilon = 0.0001
 
 # This defines the mass of each robot in the units specified by program_units
-robot_load = 0.035 # kip
+robot_load = 0.025 # kip
 
 # This defines the load of each beam carried by the robots
-beam_load = 0.027 # kip
+beam_load = 0.012 # kip
 
 # Name of the load case for the robots
 robot_load_case = "DEAD"

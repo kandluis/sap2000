@@ -175,12 +175,6 @@ def correct(l1,l2,point):
 
   return point
 
-def compare(x,y):
-  '''
-  Compares two int/floats by taking into account "epsilon"
-  '''
-  return (abs(x - y) < variables.epsilon)
-
 def compare_tuple(v1,v2):
   '''
   Comapres two floats using our compare function
@@ -377,6 +371,9 @@ def closest_points(l1,l2, segment = True):
     intersection_point,normal)),False)
   # This means that they are parallel, which should never happen.
   if true_intersect_point == None:
+    pdb.set_trace()
+    intersection((i2,j2),(intersection_point,sum_vectors(
+    intersection_point,normal)),False)
     raise Exception("Finding intersection point failed.")
 
   # Do a sanity check to make sure that the point is on the line we want

@@ -2,7 +2,13 @@
 Helper functions for vector operations when keeping track of the structure in 
 Python
 '''
-import math
+import math, variables
+
+def compare(x,y,e=variables.epsilon):
+  '''
+  Compares two int/floats by taking into account "epsilon"
+  '''
+  return (abs(x - y) < e)
 
 def distance(p1,p2):
   '''
@@ -55,7 +61,7 @@ def make_unit(v):
   Returns a unit vector in the same direction as v
   '''
   dist = length(v)
-  assert dist != 0
+  assert not compare(dist,0)
   return tuple(x / dist for x in v)
 
 def sub_vectors(v1,v2):
@@ -80,4 +86,4 @@ def parallel(v1,v2):
   '''
   Returns whether or not two vectors are parallel
   '''
-  return length(cross(v1,v2)) == 0
+  return compare(length(cross(v1,v2)),0,0.01)

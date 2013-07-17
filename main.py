@@ -258,6 +258,7 @@ class Simulation:
       comment = a comment attached to the name of the folder
       model = location of a file which contains a starting model
     '''
+    outputfolder = ''
     if self.started:
       print("Simulation has already been started")
     else:

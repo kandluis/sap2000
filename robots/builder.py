@@ -67,8 +67,9 @@ class Builder(Movable):
       direction = helpers.make_vector(self.location,construction.home)
       self.ground_direction = (direction if direction[2] == 0 else 
         self.ground_direction)
+
       # Reset the number of steps if we are repairing
-      self.memory['new_beam_steps'] = (math.floor((construction.beam['length'] 
+      self.memory['new_beam_steps'] = (math.ceil((construction.beam['length'] 
         / 2) / variables.step_length) if self.repair_mode else 0)
       return True
     else:
