@@ -15,7 +15,7 @@ step_length = 12 # .5 ft
 beam_length = 120 # 10ft
 
 # This dictates the maximum randomness when setting a new beam
-random = beam_length / 10
+random = beam_length / 20
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)

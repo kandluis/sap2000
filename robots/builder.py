@@ -555,7 +555,7 @@ class Builder(Movable):
 
     return mini,maxi
 
-  def support_beam_endpoint():
+  def support_beam_endpoint(self):
     '''
     Returns the endpoint for construction a support beam
     '''
@@ -746,7 +746,6 @@ class Builder(Movable):
         break
 
     # Create disturbance
-    pdb.set_trace()
     disturbance = self.get_disturbance()
 
     # Obtain the default endpoints
