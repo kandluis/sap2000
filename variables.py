@@ -11,8 +11,11 @@ local_radius = 12 # 1 ft
 # program units.
 step_length = 6 # .5 ft
 
+# This dictates the maximum randomness when setting a new beam
+random = beam_length / 40
+
 # Length of each beam (in the units specified by program_units)
-beam_length = 60 # 10ft
+beam_length = 120 # 10ft
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)
@@ -35,10 +38,10 @@ dim_z = 170000
 epsilon = 0.0001
 
 # This defines the mass of each robot in the units specified by program_units
-robot_load = 0.025 # kip
+robot_load = 0.035 # kip
 
 # This defines the load of each beam carried by the robots
-beam_load = 0.014 # kip
+beam_load = 0.027 # kip
 
 # Name of the load case for the robots
 robot_load_case = "DEAD"

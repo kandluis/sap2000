@@ -6,10 +6,10 @@ from time import strftime
 from visual import *
 from visualization import Visualization
 from xlsxwriter.workbook import Workbook
-import construction, os, sys, variables
+import construction, os, random,sys, variables
 
 class Simulation:
-  def __init__(self):
+  def __init__(self,seed = None):
     self.SapProgram = None
     self.SapModel = None
     self.Structure = None
@@ -22,6 +22,10 @@ class Simulation:
     self.excel = {}
     self.excel['headers'] = []
     self.excel['data'] = [[]]
+
+    # Seed the simulation
+    self.seed = seed
+    random.seed(seed)
 
   def __setup_general(self):
     '''
@@ -359,7 +363,7 @@ class Simulation:
         " structure.\n\n")
       run_text.write("This file contains the variables used in the run of the" +
         " simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of"
-        + " simumation: " + start_time + "\n\n")
+        + " simumation: " + start_time + "\nSeed:" + str(self.seed) + "\n\n")
 
       run_text.write("Folder: {}\n\n".format(str(self.folder)))
 

@@ -2,7 +2,7 @@ from helpers import helpers
 from robots.worker import Worker
 import construction, math, pdb,variables, random
 
-class Repairer(Worker):
+class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
     super(Repairer,self).__init__(name,structure,location,program)
     # Number of steps we spend searching for a support beam once we encounter a
@@ -17,6 +17,13 @@ class Repairer(Worker):
 
     # Constains repair data so we can write it out to file in main.py
     self.repair_data = ''
+
+    # We are searching for a support beam (done and done)
+    self.search_mode = True
+
+  def current_state(self):
+    state = super(DumbRepairer,self).current_state()
+    state.update({  'search_mode' : self.search_modoe})
 
   def repairing(self):
     '''
@@ -33,33 +40,29 @@ class Repairer(Worker):
 
   def construction_mode(self):
     '''
-    Resets the robot to go back into construction mode
+    Resets the robot to go back into construction mode (leaves some variables
+     - such as the repair_beam_direction and the broken_beam_name available)
     '''
     self.memory['new_beam_steps'] = 0
-    self.memory['broken_beam_name'] = ''
     self.memory['previous_beam'] = None
     self.memory['pos_z'] = True
     self.memory['pos_y'] = None
     self.memory['pos_x'] = None
     self.memory['dir_priority'] = [1,1,0]
     self.repair_mode = False
+    self.search_mode = False
 
   def add_support_mode(self):
     '''
     Sets up the construction of a support beam
     '''
-    self.memory['new_beam_steps'] = 1
-    self.memory['broken_beam_name'] = ''
-    self.memory['previous_beam'] = None
-    self.memory['pos_z'] = True
-    self.memory['pos_y'] = None
-    self.memory['pos_x'] = None
-    self.memory['broken'] = []
-    self.memory['dir_priority'] = [1,1,0]
-    self.memory['construct_support'] = True
+    # Return to construct mode
+    self.construction_mode()
 
-    # Turn off repair mode
-    self.repair_mode = False
+    # But specify steps, and that we need to construct a support
+    self.memory['broken'] = []
+    self.memory['new_beam_steps'] = 1
+    self.memory['construct_support'] = True
 
   def ground_support(self):
     '''
@@ -96,8 +99,8 @@ class Repairer(Worker):
         self.ground_support()
 
       # We've moved off the beam, so run the search support routine
-      elif (self.memory['broken_beam_name'] != '' and 
-        self.memory['broken_beam_name'] != self.beam.name):
+      elif (self.memory['broken_beam_name'] != self.beam.name and 
+        self.search_mode):
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] = self.beam.name
 
@@ -110,6 +113,7 @@ class Repairer(Worker):
         # Move (don't check construction)
         self.movable_decide()
 
+      # Simply move
       else:
         self.movable_decide()
 
@@ -191,6 +195,7 @@ class Repairer(Worker):
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
 
     self.repair_mode = True
+    self.search_mode = True
 
   def local_rules(self):
     '''
@@ -205,3 +210,37 @@ class Repairer(Worker):
       return True
     
     return False
+
+class Repairer(DumbRepairer):
+  def __init__(self,name,structure,location,program):
+    super(Repairer,self).__init__(name,structure,location,program)
+
+    # Robots have a tendency to return to the previous area of repair
+    self.memory['ground_tendencies'] = [None,None,None]
+
+  
+
+  def get_disturbance(self):
+    '''
+    Returns the disturbance level for adding a new beam at the tip. This is
+    modified so that the disturbance compensates for the angle at which the
+    current beam lies (using basic math)
+    '''
+    # TODO
+    super(Repairer,self).get_disturbance()
+
+  def support_beam_endpoint():
+    # If the broken beam has one endpoint on the ground
+    e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
+      self.location)
+    if helpers.compare(e1[2],0) or helpers.compare(e2[1],0):
+      # Cycle through ratios looking for one that lies on the beam we want
+      min_support_ratio, max_support_ratio = self.get_ratios()
+      ratios = self.local_ratios
+      for coord,ratio in ratios:
+        if (helpers.on_line(e1,e2,coord) and min_support_ratio < ration and 
+        ration < max_support_ratio)
+          return coord
+
+    # Otherwise, do default behaviour
+    super(Repairer,self).support_beam_endpoint()

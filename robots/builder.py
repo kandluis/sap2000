@@ -539,62 +539,74 @@ class Builder(Movable):
     else:
       return False
 
-  def build(self):
+  def get_ratio(self,string):
     '''
-    This functions sets down a beam. This means it "wiggles" it around in the 
-    air until it finds a connection (programatically, it just finds the 
-    connection which makes the smallest angle). Returns false if something went 
-    wrong, true otherwise.
+    Returns the appropriate ratios for support beam construction
     '''
-    # Sanitiy check
-    assert (self.num_beams > 0)
+    angle = construction.beam[string]
+    angle = 90 - angle if self.beam is None else angle
+    return helpers.ratio(angle)
 
-    # This is the i-end of the beam being placed. We pivot about this
-    pivot = self.location
+  def get_ratios(self):
+    mini,maxi = ((self.get_ratio('support_angle_min'), self.get_ratio(
+      'support_angle_max'))
+      if self.beam is not None else (self.get_ratio('support_angle_max'),
+      self.get_ratio('support_angle_min')))
+      return mini,maxi
 
-    # This is the j-end of the beam (if directly vertical)
-    vertical_point = helpers.sum_vectors(self.location,(0,0,
-      variables.beam_length))
-
-    def check(i,j):
+  def support_beam_endpoint():
+    '''
+    Returns the endpoint for construction a support beam
+    '''
+    def non_zero_xydirection():
       '''
-      Checks the endpoints and returns two that don't already exist in the 
-      structure. If they do already exist, then it returns two endpoints that 
-      don't. It does this by changing the j-endpoint. This function also takes 
-      into account making sure that the returned value is still within the 
-      robot's tendency to build up. (ie, it does not return a beam which would 
-      build below the limit angle_constraint)
+      Returns a non_zero list of random floats with zero z component
       '''
-      # There is already a beam here, so let's move our current beam slightly to
-      # some side
-      if not self.structure.available(i,j):
-        limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
-         construction.beam['length'] / 3)
-        return check(i,(random.uniform(-1* limit, limit),random.uniform(
-          -1 * limit,limit), j[2]))
+      tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
+        random.uniform(-1,1)])
+      if all(tuple_list):
+        tuple_list[2] = 0
+        return tuple(tuple_list)
       else:
-        # Calculate the actual endpoint of the beam (now that we now direction 
-        # vector)
-        unit_direction = helpers.make_unit(helpers.make_vector(i,j))
-        j = helpers.sum_vectors(i,helpers.scale(variables.beam_length,
-          unit_direction))
-        return i,j
+        return non_zero_xydirection()
 
+    # Sanity check
+    assert self.memory['repair_beam_direction'] is not None
 
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    ratio = self.get_ratio('support_angle')
+    vertical = helpers.scale(1/ratio,(0,0,1))
+
+    # Check to see if direction is vertical
+    if helpers.parallel(self.memory['repair_beam_direction'],vertical):
+      xy_dir = non_zero_xydirection()
+    else:
+      xy_dir = self.memory['repair_beam_direction']
+    xy_dir = helpers.make_unit(xy_dir)
+
+    # Obtain construction direction
+    direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
+
+    # Calculate endpoints
+    endpoint = helpers.sum_vectors(self.location,helpers.scale(
+      construction.beam['length'],direction))
+
+    return endpoint
+
+  def local_ratios(self,pivot,endpoint):
+    '''
+    Calculates the ratios of a beam if it were to intersect nearby beams. 
+    Utilizes the line defined by pivot -> endpoint as the base for the ratios 
+    '''
     # We place it here in order to have access to the pivot and to the vertical 
     # point
     def add_ratios(box,dictionary):
-      '''
-      Returns the 'verticality' that the beams in the box allow according to 
-      distance. It also calculates the ratio according to the intersection 
-      points of the beam with the sphere. 
-      '''
       for name in box:
         # Ignore the beam you're on.
         if self.beam == None or self.beam.name != name:
           beam = box[name]
           # Get the closest points between the vertical and the beam
-          points = helpers.closest_points(beam.endpoints,(pivot,vertical_point))
+          points = helpers.closest_points(beam.endpoints,(pivot,endpoint))
           if points != None:
             # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
             e1,e2 = points
@@ -629,7 +641,7 @@ class Builder(Movable):
             for point in sphere_points:
               # The point is higher above.This way the robot only ever builds up
               if point[2] >= pivot[2]:
-                projection = helpers.correct(pivot,vertical_point,point)
+                projection = helpers.correct(pivot,endpoint,point)
                 # Sanity check
                 assert helpers.compare(projection[2],point[2])
 
@@ -643,27 +655,9 @@ class Builder(Movable):
 
       return dictionary
 
-    def get_ratio(string):
-      '''
-      Returns the appropriate ratios for support beam construction
-      '''
-      angle = construction.beam[string]
-      angle = 90 - angle if self.beam is None else angle
-      return helpers.ratio(angle)
-
-    def get_ratios():
-      mini,maxi = ((get_ratio('support_angle_min'), get_ratio('support_angle_max'))
-        if self.beam is not None else (get_ratio('support_angle_max'),
-        get_ratio('support_angle_min')))
-      return mini,maxi
-
     # get all beams nearby (ie, all the beams in the current box and possible 
     # those further above)
     boxes = self.structure.get_boxes(self.location)
-    constraining_ratio = helpers.ratio(construction.beam['angle_constraint'])
-    min_support_ratio, max_support_ratio = get_ratios()
-    ratios = {}
-
     '''
     Ratios contains the ratio dist / delta_z where dist is the shortest distance
     from the vertical beam segment to a beam nearby and delta_z is the 
@@ -672,17 +666,64 @@ class Builder(Movable):
     with the sphere. The dictionary is indexed by the point, and each point is 
     associated with one ratio
     '''
+    ratios = {}
     for box in boxes:
       ratios = add_ratios(box,ratios)
-    default_endpoint = helpers.sum_vectors(pivot,helpers.scale(
+
+    return sorted(ratios.items(), key = operator.itemgetter(1))
+
+  def build(self):
+    '''
+    This functions sets down a beam. This means it "wiggles" it around in the 
+    air until it finds a connection (programatically, it just finds the 
+    connection which makes the smallest angle). Returns false if something went 
+    wrong, true otherwise.
+    '''
+    def check(i,j):
+      '''
+      Checks the endpoints and returns two that don't already exist in the 
+      structure. If they do already exist, then it returns two endpoints that 
+      don't. It does this by changing the j-endpoint. This function also takes 
+      into account making sure that the returned value is still within the 
+      robot's tendency to build up. (ie, it does not return a beam which would 
+      build below the limit angle_constraint)
+      '''
+      # There is already a beam here, so let's move our current beam slightly to
+      # some side
+      if not self.structure.available(i,j):
+        limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
+         construction.beam['length'] / 3)
+        return check(i,(random.uniform(-1* limit, limit),random.uniform(
+          -1 * limit,limit), j[2]))
+      else:
+        # Calculate the actual endpoint of the beam (now that we now direction 
+        # vector)
+        unit_direction = helpers.make_unit(helpers.make_vector(i,j))
+        j = helpers.sum_vectors(i,helpers.scale(variables.beam_length,
+          unit_direction))
+        return i,j
+
+    # Sanitiy check
+    assert (self.num_beams > 0)
+
+    # This is the i-end of the beam being placed. We pivot about this
+    pivot = self.location
+
+    # Default vertical endpoint (the ratios are measured from the line created 
+    # by pivot -> vertical_endpoint)
+    vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
       variables.beam_length,
       helpers.make_unit(construction.beam['vertical_dir_set'])))
 
-    # Sort the ratios we have so we can cycle through them
-    sorted_ratios = sorted(ratios.items(), key = operator.itemgetter(1))
+    # Get the ratios
+    sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
 
-    # Cycle through the sorted ratios until we find one which we haven't 
-    # constructed or we run out of suitable ones.
+    # Limits
+    constraining_ratio = helpers.ratio(construction.beam['angle_constraint'])
+    min_support_ratio, max_support_ratio = self.get_ratios()
+
+    # Cycle through the sorted ratios until we find the right coordinate to build
+    final_coord = None
     for coord, ratio in sorted_ratios:
 
       # If building a support beam, we don't want it too vertical or horizontal
@@ -693,75 +734,59 @@ class Builder(Movable):
       # If the smallest ratio is larger than what we've specified as the limit, 
       # but larger than our tolerence, then build
       elif ratio > constraining_ratio:
-        i,j = check(pivot, coord)
-        return self.addbeam(i,j)
+        final_coord = coord
+        break
 
       # The beam doesn't exist, so build it
       elif self.structure.available(pivot,coord):
         unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
-        endpoint = helpers.sum_vectors(pivot,helpers.scale(
+        coord = helpers.sum_vectors(pivot,helpers.scale(
           variables.beam_length,unit_direction))
-        return self.addbeam(pivot,endpoint)
+        break
 
-      # Beam exist, so pass it
-      else:
-        pass
-
-    def support_beam_endpoint():
-      '''
-      Returns the endpoint for construction a support beam
-      '''
-      def non_zero_xydirection():
-        '''
-        Returns a non_zero list of random floats with zero z component
-        '''
-        tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
-          random.uniform(-1,1)])
-        if all(tuple_list):
-          tuple_list[2] = 0
-          return tuple(tuple_list)
-        else:
-          return non_zero_xydirection()
-      # Sanity check
-      assert self.memory['repair_beam_direction'] is not None
-
-      # Add beam_directions plus vertical change based on angle ratio (tan)
-      ratio = get_ratio('support_angle')
-      vertical = helpers.scale(1/ratio,(0,0,1))
-
-      # Check to see if direction is vertical
-      if helpers.parallel(self.memory['repair_beam_direction'],vertical):
-        xy_dir = non_zero_xydirection()
-      else:
-        xy_dir = self.memory['repair_beam_direction']
-      xy_dir = helpers.make_unit(xy_dir)
-
-      # Obtain construction direction
-      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
-
-      # Calculate endpoints
-      endpoint = helpers.sum_vectors(self.location,helpers.scale(
-        construction.beam['length'],direction))
-
-      return endpoint
-
-    # If we get to this point, we have already built all possible ratios, so 
-    # just stick something 
     # Create disturbance
-    change = variables.step_length - 5
-    disturbance = helpers.make_unit((random.uniform(-change,change),
-      random.uniform(-change,change),0))
-    # The default endpoint is either vertical or we calculate one at an angle 
-    # (if there is one stored in memory because we are constructing a support)
-    default_endpoint = (default_endpoint if not self.memory['construct_support'] 
-      else support_beam_endpoint())
+    disturbance = self.get_disturbance()
+
+    # Obtain the default endpoints
+    default_endpoint = self.get_default(final_coord,vertical_endpoint)
 
     # We add a bit of disturbance every onece in a while
-    default_endpoint = default_endpoint if random.randint(0,4) == 1 else (
+    default_endpoint = default_endpoint if self.default_probability else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
 
     return self.addbeam(i,j)
+
+  def get_default(self,ratio_coord,vertical_coord):
+    '''
+    Returns the coordinate onto which the j-point of the beam to construct 
+    should lie
+    '''
+    if self.memory['construct_support']:
+      return self.support_beam_endpoint()
+    elif ratio_coord is not None:
+      return ratio_coord
+    else:
+      return vertical_coord
+
+  def get_disturbance(self):
+    '''
+    Returns the disturbance level for adding a new beam at the tip (in this
+    class, the disturbance is random at a level set in variables.random)
+    '''
+    change = variables.random
+    return helpers.make_unit((random.uniform(-change,change),
+      random.uniform(-change,change),0))
+
+  def default_probability(self):
+    '''
+    Returns whether or not the disturbance should be applied to the current 
+    contruction. Realistically, this should be a probabilistic function.
+
+    True means that the disturbance is NOT applied
+    False means that the disturbance is
+    '''
+    return random.randint(0,4 == 1)
 
   def construct(self):
     '''

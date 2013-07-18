@@ -112,7 +112,7 @@ def on_line(l1,l2,point,segment = True):
   v1 = (lx2 - lx1), (ly2 - ly1), (lz2 - lz1)
   v2 = (x - lx1), (y - ly1), (z - lz1)
 
-  return (compare(length(cross(v1,v2)),0) and (between(lx1,lx2,x) and 
+  return (compare(length(cross(v1,v2)),0,variables.epsilon * 2) and (between(lx1,lx2,x) and 
     between(ly1,ly2,y) and between(lz1, lz2, z) or not segment))
 
 def between_points(p1,p2,p3, inclusive = True):
