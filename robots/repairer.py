@@ -230,7 +230,7 @@ class Repairer(DumbRepairer):
     # TODO
     return super(Repairer,self).get_disturbance()
 
-  def support_beam_endpoint():
+  def support_beam_endpoint(self):
     # If the broken beam has one endpoint on the ground
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
