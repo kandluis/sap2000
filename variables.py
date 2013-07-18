@@ -9,13 +9,13 @@ local_radius = 12 # 1 ft
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 6 # .5 ft
-
-# This dictates the maximum randomness when setting a new beam
-random = beam_length / 40
+step_length = 12 # .5 ft
 
 # Length of each beam (in the units specified by program_units)
 beam_length = 120 # 10ft
+
+# This dictates the maximum randomness when setting a new beam
+random = beam_length / 10
 
 # The number of beams that each robot carries (ie, how many elements can
 # construct before travelling off the structure)

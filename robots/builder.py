@@ -552,7 +552,8 @@ class Builder(Movable):
       'support_angle_max'))
       if self.beam is not None else (self.get_ratio('support_angle_max'),
       self.get_ratio('support_angle_min')))
-      return mini,maxi
+
+    return mini,maxi
 
   def support_beam_endpoint():
     '''
@@ -745,13 +746,14 @@ class Builder(Movable):
         break
 
     # Create disturbance
+    pdb.set_trace()
     disturbance = self.get_disturbance()
 
     # Obtain the default endpoints
     default_endpoint = self.get_default(final_coord,vertical_endpoint)
 
     # We add a bit of disturbance every onece in a while
-    default_endpoint = default_endpoint if self.default_probability else (
+    default_endpoint = default_endpoint if self.default_probability() else (
       helpers.sum_vectors(default_endpoint,disturbance))
     i, j = check(pivot, default_endpoint)
 
@@ -786,7 +788,7 @@ class Builder(Movable):
     True means that the disturbance is NOT applied
     False means that the disturbance is
     '''
-    return random.randint(0,4 == 1)
+    return (random.randint(0,4) == 1)
 
   def construct(self):
     '''

@@ -120,21 +120,11 @@ class ReactiveSwarm(Swarm):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if repairer.memory['pos_z'] == True or repairer.memory['pos_z'] == None:
-        return False
+      if (repairer.memory['pos_z'] == True or repairer.memory['pos_z'] == None
+        or repairer.beam is not None):
+        return True
 
-    return True
-
-  def on_ground(self):
-    '''
-    Returns whether or not all of the swarm is on the ground. If it is,
-    no need to analyze the structure this time
-    '''
-    for repairer in self.repairers:
-      if self.repairers[repairer].beam != None:
-        return False
-
-    return True
+    return False
 
   def new_robots(self, num = 1):
     '''

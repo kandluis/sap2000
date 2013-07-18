@@ -4,7 +4,7 @@ import construction, math, pdb,variables, random
 
 class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
-    super(Repairer,self).__init__(name,structure,location,program)
+    super(DumbRepairer,self).__init__(name,structure,location,program)
     # Number of steps we spend searching for a support beam once we encounter a
     # new beam
     self.memory['new_beam_steps'] = 0
@@ -23,7 +23,8 @@ class DumbRepairer(Worker):
 
   def current_state(self):
     state = super(DumbRepairer,self).current_state()
-    state.update({  'search_mode' : self.search_modoe})
+    state.update({  'search_mode' : self.search_mode})
+    return state
 
   def repairing(self):
     '''
@@ -119,7 +120,7 @@ class DumbRepairer(Worker):
 
     # Build Mode
     else:
-      super(Repairer,self).decide()
+      super(DumbRepairer,self).decide()
 
   def no_available_direction(self):
     '''
@@ -140,7 +141,7 @@ class DumbRepairer(Worker):
 
     else:
       # Do parent's work
-      super(Repairer,self).no_available_direction()
+      super(DumbRepairer,self).no_available_direction()
 
   def start_repair(self,beam):
     '''
@@ -227,7 +228,7 @@ class Repairer(DumbRepairer):
     current beam lies (using basic math)
     '''
     # TODO
-    super(Repairer,self).get_disturbance()
+    return super(Repairer,self).get_disturbance()
 
   def support_beam_endpoint():
     # If the broken beam has one endpoint on the ground
@@ -238,8 +239,8 @@ class Repairer(DumbRepairer):
       min_support_ratio, max_support_ratio = self.get_ratios()
       ratios = self.local_ratios
       for coord,ratio in ratios:
-        if (helpers.on_line(e1,e2,coord) and min_support_ratio < ration and 
-        ration < max_support_ratio)
+        if (helpers.on_line(e1,e2,coord) and min_support_ratio < ratio and 
+        ration < max_support_ratio):
           return coord
 
     # Otherwise, do default behaviour
