@@ -237,7 +237,11 @@ class Repairer(DumbRepairer):
     if helpers.compare(e1[2],0) or helpers.compare(e2[1],0):
       # Cycle through ratios looking for one that lies on the beam we want
       min_support_ratio, max_support_ratio = self.get_ratios()
-      ratios = self.local_ratios
+      pivot = self.location
+      vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
+        variables.beam_length,
+        helpers.make_unit(construction.beam['vertical_dir_set'])))
+      ratios = self.local_ratios(pivot,vertical_endpoint)
       for coord,ratio in ratios:
         if (helpers.on_line(e1,e2,coord) and min_support_ratio < ratio and 
         ration < max_support_ratio):
