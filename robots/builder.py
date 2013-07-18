@@ -55,7 +55,7 @@ class Builder(Movable):
   def current_state(self):
     state = super(Builder, self).current_state()
     memory = self.memory.copy()
-    memory['broken'] = [(beam.name,beam.endpoints) for beam in memory['broken']]
+    memory['broken'] = [(beam.name,beam.endpoints) for beam,direction in memory['broken']]
     state.update({  'num_beams'           : self.num_beams,
                     'start_construction'  : self.start_construction,
                     'next_direction_info' : self.next_direction_info,
