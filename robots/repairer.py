@@ -248,4 +248,4 @@ class Repairer(DumbRepairer):
           return coord
 
     # Otherwise, do default behaviour
-    super(Repairer,self).support_beam_endpoint()
+    return super(Repairer,self).support_beam_endpoint()
