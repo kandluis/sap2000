@@ -615,7 +615,7 @@ class Builder(Movable):
     # point
     if helpers.compare(pivot[0],816.1657) or helpers.compare(pivot[1],878.8637):
       pdb.set_trace()
-      
+
     def add_ratios(box,dictionary):
       for name in box:
         # Ignore the beam you're on.
@@ -756,8 +756,8 @@ class Builder(Movable):
     for coord, ratio in sorted_ratios:
 
       # If building a support beam, we don't want it too vertical or horizontal
-      if self.memory['construct_support'] and (ratio < min_support_ratio or
-        ratio > max_support_ratio):
+      if (self.memory['construct_support'] and (ratio < min_support_ratio or
+        ratio > max_support_ratio)) or helpers.compare(ratio,0):
         pass
 
       # If the smallest ratio is larger than what we've specified as the limit, 

@@ -184,9 +184,11 @@ class Simulation:
       # Add names to headers if not already there
       if name not in self.excel['headers']:
         self.excel['headers'].append(name)
+        self.excel['headers'].append("{}-height".format(name))
 
       # Add the location to a list
       timestep.append(state['location'])
+      timsptep.append(state['location'][2])
 
     # Add the location list to a list of rows
     self.excel['data'].append(timestep)
@@ -384,7 +386,7 @@ class Simulation:
 
         # Save to a different filename every now and again
         try:
-          if i % variables.analysis_timesteps == 0:
+          if i % variables.analysis_timesteps == 0 and i != 0:
             filename = "tower-" + str(i) + ".sdb"
             self.SapModel.File.Save(outputfolder + filename)
         except:
