@@ -105,7 +105,7 @@ def on_line(l1,l2,point,segment = True):
   dist1, dist2 = distance(l1,l2), distance(l1,point)
   
   # Taking care of the point being an endpoint
-  if dist2 == 0:
+  if compare(dist2,0):
     return True
 
   # creating two vectors
@@ -129,12 +129,12 @@ def between(c1,c2,c3, inclusive = True):
   '''
   Returns whether or not c3 is between c1 and c2, inclusive.
   '''
-  compare = (lambda x,y: x <= y) if inclusive else (
+  loc_compare = (lambda x,y: compare(x,y) or x < y) if inclusive else (
     lambda x,y : x < y)
   if c1 < c2:
-    return compare(c1,c3) and compare(c3,c2)
+    return loc_compare(c1,c3) and loc_compare(c3,c2)
   else:
-    return compare(c2,c3) and compare(c3,c1)
+    return loc_compare(c2,c3) and loc_compare(c3,c1)
 
 def within(origin,size,point):
   '''
@@ -142,7 +142,8 @@ def within(origin,size,point):
   '''
   value = True
   for i in range(3):
-    value = value and origin[i] <= point[i] and origin[i] + size[i] >= point[i] 
+    value = value and (compare(origin[i],point[i]) or origin[i] < point[i]) and (
+      compare(origin[i] + size[i],point[i]) or origin[i] + size[i] > point[i]) 
  
   return value
 
@@ -306,7 +307,7 @@ def closest_points(l1,l2, segment = True):
     for endpoint in line1:
       point = correct(line2[0],line2[1],endpoint)
       dist = distance(point,endpoint)
-      if between(line2[0],line2[1],point) and dist != 0:
+      if between_points(line2[0],line2[1],point) and dist != 0:
         points.append(((point,endpoint),dist))
     if points == []:
       return None

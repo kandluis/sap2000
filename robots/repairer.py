@@ -231,21 +231,30 @@ class Repairer(DumbRepairer):
     return super(Repairer,self).get_disturbance()
 
   def support_beam_endpoint(self):
-    # If the broken beam has one endpoint on the ground
+    # Get broken beam
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
-    if helpers.compare(e1[2],0) or helpers.compare(e2[1],0):
-      # Cycle through ratios looking for one that lies on the beam we want
-      min_support_ratio, max_support_ratio = self.get_ratios()
+
+    # Reset the broken beam name
+    self.memory['broken_beam_name'] = ''
+
+    if (helpers.compare(e1[2],0) or helpers.compare(e2[1],0) and 
+      helpers.compare(self.location[2],0)):
       pivot = self.location
       vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
         variables.beam_length,
         helpers.make_unit(construction.beam['vertical_dir_set'])))
-      ratios = self.local_ratios(pivot,vertical_endpoint)
-      for coord,ratio in ratios:
-        if (helpers.on_line(e1,e2,coord) and min_support_ratio < ratio and 
-        ration < max_support_ratio):
+      sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
+      # Cycle through ratios looking for one that lies on the beam we want
+      for coord,ratio in sorted_ratios:
+        if helpers.on_line(e1,e2,coord):
           return coord
+
+      # We didn't find an appropriate one, so return default enpoint
+      self.memory['construct_support'] = False
+      ratio = self.find_nearby_beam_coord(sorted_ratios,pivot)
+      return self.get_default(ratio,vertical_endpoint)
+      
 
     # Otherwise, do default behaviour
     return super(Repairer,self).support_beam_endpoint()

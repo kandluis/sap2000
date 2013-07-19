@@ -47,7 +47,7 @@ class Structure:
     self.color_data = ''
 
     # Stores information on the beams' max moments
-    self.structure_data = ''
+    self.structure_data = []
 
   def __feasable_point(self,p):
     '''
@@ -218,7 +218,7 @@ class Structure:
     else:
       return None
 
-  def get_beam(self,name,location):
+  def get_beam(self,beam_name,location):
     '''
     Returns the beam object with the specified name. Uses location to quickly
     find the box that contains it. If it is not found in that box, None is 
@@ -228,11 +228,11 @@ class Structure:
     box = self.get_box(location)
 
     for name,beam in box.items():
-      if name == beam.name:
+      if beam_name == name:
         return beam
 
-    if self.find_beam(name) is not None:
-      return find_beam(name)
+    if self.find_beam(beam_name) is not None:
+      return self.find_beam(beam_name)
     else:
       return None
 
@@ -521,7 +521,8 @@ class Structure:
       max_val = max(moments)
 
       # Store max value along with beam name 
-      self.structure_data += "{},{},".format(beam.name,str(max_val))
+      if (beam.name,max_val) not in self.structure_data[-1]:
+        self.structure_data[-1].append((beam.name,max_val))
 
       # Calculate gradiant color and store
       ratio = round(max_val/construction.beam['structure_check'],3)

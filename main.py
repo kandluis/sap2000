@@ -380,21 +380,21 @@ class Simulation:
         # Add number and new line to structure visualization data
         self.Structure.visualization_data += "\n"
         self.Structure.color_data += '\n'
-        self.Structure.structure_data += '\n'
+        self.Structure.structure_data.append([])
+
+        # Save to a different filename every now and again
+        try:
+          if i % variables.analysis_timesteps == 0:
+            filename = "tower-" + str(i) + ".sdb"
+            self.SapModel.File.Save(outputfolder + filename)
+        except:
+          print("Simulation ended when saving output.")
+          self.exit(run_text)
+          raise
 
         # Run the analysis if there is a structure to analyze and there are \
         # robots on it (ie, we actually need the information)
         if self.Structure.tubes > 0 and self.Swarm.need_data():
-          # Save to a different filename every now and again
-          try:
-            if i % variables.analysis_timesteps == 0:
-              filename = "tower-" + str(i) + ".sdb"
-              self.SapModel.File.Save(outputfolder + filename)
-          except:
-            print("Simulation ended when saving output.")
-            self.exit()
-            raise
-
           try:
             ret = self.SapModel.Analyze.RunAnalysis()
             # When ret is not 0 debug is on, write out that it failed.
@@ -403,7 +403,7 @@ class Simulation:
                 " {}".format(str(ret)))
           except:
             print("Simulation ended when analyzing model.")
-            self.exit()
+            self.exit(run_text)
             raise
 
           # Deselect all outputs
@@ -418,7 +418,7 @@ class Simulation:
               variables.robot_load_case)
           except:
             print("Simulation ended when setting up output cases.")
-            self.exit()
+            self.exit(run_text)
             raise
 
           # Check the structure for stability
@@ -432,7 +432,7 @@ class Simulation:
           self.Swarm.decide()
         except:
           print("Simulation ended at decision.")
-          self.exit()
+          self.s(run_text)
           raise
 
         # Make sure that the model has been unlocked, and if not, unlock it
@@ -452,7 +452,7 @@ class Simulation:
           self.Swarm.act()
         except:
           print("Simulation ended at act.")
-          self.exit()
+          self.exit(run_text)
           raise
 
         # Write out errors on movements
@@ -470,25 +470,33 @@ class Simulation:
         # Give a status update if necessary
         print("Finished timestep {}\r".format(str(i + 1)))
 
+        # Sort beam data
+        if self.Structure.structure_data[-1] != []:
+          self.Structure.structure_data[-1].sort(key=lambda t: t[0])
+
         # Check height of structure and break out if we will reach maximum
         if self.Structure.height > variables.dim_z - 2* construction.beam['length']:
           break
 
+        with open(self.folder + 'random_seed_results.txt', 'a') as rand_tex:
+          rand_tex.write("{},".format(str(random.randint(0,i+1))))
+
         # END OF LOOOP
 
       # Clean up
-      # Finish up run_data (add ending time and maximum height)
-      run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + 
-        ".\n\n Total beams" + " on structure: " + str(self.Structure.tubes) 
-        + ".")
-      run_data += "\n\n Maximum height of structure : " +  str(
-        self.Structure.height) + "."
+      self.exit(run_text)
 
-      # Write out simulation data
-      run_text.write(run_data)
-      self.exit()
+  def exit(self,run_text):
 
-  def exit(self):
+    # Finish up run_data (add ending time and maximum height)
+    run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + 
+      ".\n\n Total beams" + " on structure: " + str(self.Structure.tubes) 
+      + ".")
+    run_data += "\n\n Maximum height of structure : " +  str(
+      self.Structure.height) + "."
+
+    # Write out simulation data
+    run_text.write(run_data)
 
     # Write out locations
     self.__push_excel(self.folder + "locations.xlsx")
@@ -501,7 +509,10 @@ class Simulation:
       c_struct.write(self.Structure.color_data)
 
     with open(self.folder + 'structure_physics.txt',"w+") as struct_phys:
-      struct_phys.write(self.Structure.structure_data)
+      for timestep in self.Structure.structure_data:
+        for beam,moment in timestep:
+          struct_phys.write("{},{},".format(beam,str(moment)))
+      struct_phys.write("\n")
 
     self.run = True
 

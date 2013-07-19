@@ -48,7 +48,7 @@ class Builder(Movable):
       for joint in self.beam.joints:
         # If we're at a joint
         if helpers.compare(helpers.distance(self.location,joint),0):
-          return joint
+          return True
 
     return False
 
@@ -372,24 +372,36 @@ class Builder(Movable):
           moment < construction.beam['beam_limit']) or (moment < 
           construction.beam['joint_limit'])):
           results[name] = directions
-        # Add beam to broken
         else:
-          beam = self.structure.get_beam(name)
-          self.memory['broken'].append((beam,moment))
+          # Keep only the directions that take us down
+          new_directions = ([direction for direction in directions if 
+            helpers.compare(direction[2],0) or direction[2] < 0])
+          if len(new_directions) > 0:
+            results[name] = new_directions
+
+          # Add beam to broken
+          beam = self.structure.get_beam(name,self.location)
+          if not any(beam in broken for broken in self.memory['broken']):
+            self.memory['broken'].append((beam,moment))
 
 
     # Not at joint, so check own beam
     else:
+      assert len(dirs) == 1
       moment = self.get_moment(self.beam.name)
       if moment < construction.beam['beam_limit']:
         results = dirs
       # Add the beam to the broken
       else:
-        self.memory['broken'].append((self.beam,moment))
+        # Keep only the directions that take us down
+        for name,directions in dirs.items():
+          new_directions = ([direction for direction in directions if 
+            helpers.compare(direction[2],0) or direction[2] < 0])
+          if len(new_directions) > 0:
+            results[name] = new_directions
 
-    # For debugging purpose
-    if dirs == {}:
-      pdb.set_trace()
+        if not any(self.beam in broken for broken in self.memory['broken']):
+          self.memory['broken'].append((self.beam,moment))
 
     return results
 
@@ -601,6 +613,9 @@ class Builder(Movable):
     '''
     # We place it here in order to have access to the pivot and to the vertical 
     # point
+    if helpers.compare(pivot[0],816.1657) or helpers.compare(pivot[1],878.8637):
+      pdb.set_trace()
+      
     def add_ratios(box,dictionary):
       for name in box:
         # Ignore the beam you're on.
@@ -719,12 +734,25 @@ class Builder(Movable):
     # Get the ratios
     sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
 
+    # Find the most vertical position
+    final_coord = self.find_nearby_beam_coord(sorted_ratios,pivot)
+
+    # Obtain the default endpoints
+    default_endpoint = self.get_default(final_coord,vertical_endpoint)
+    i, j = check(pivot, default_endpoint)
+
+    return self.addbeam(i,j)
+
+  def find_nearby_beam_coord(self,sorted_ratios,pivot):
+    '''
+    Returns the coordinate of a nearby, reachable beam which results in the
+    angle of construction with the most verticality
+    '''
     # Limits
     constraining_ratio = helpers.ratio(construction.beam['angle_constraint'])
-    min_support_ratio, max_support_ratio = self.get_ratios()
+    min_support_ratio,max_support_ratio = self.get_ratios()
 
     # Cycle through the sorted ratios until we find the right coordinate to build
-    final_coord = None
     for coord, ratio in sorted_ratios:
 
       # If building a support beam, we don't want it too vertical or horizontal
@@ -734,29 +762,17 @@ class Builder(Movable):
 
       # If the smallest ratio is larger than what we've specified as the limit, 
       # but larger than our tolerence, then build
-      elif ratio > constraining_ratio:
-        final_coord = coord
-        break
+      if ratio > constraining_ratio:
+        return coord
 
       # The beam doesn't exist, so build it
       elif self.structure.available(pivot,coord):
         unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
         coord = helpers.sum_vectors(pivot,helpers.scale(
           variables.beam_length,unit_direction))
-        break
+        return coord
 
-    # Create disturbance
-    disturbance = self.get_disturbance()
-
-    # Obtain the default endpoints
-    default_endpoint = self.get_default(final_coord,vertical_endpoint)
-
-    # We add a bit of disturbance every onece in a while
-    default_endpoint = default_endpoint if self.default_probability() else (
-      helpers.sum_vectors(default_endpoint,disturbance))
-    i, j = check(pivot, default_endpoint)
-
-    return self.addbeam(i,j)
+    return None
 
   def get_default(self,ratio_coord,vertical_coord):
     '''
@@ -768,7 +784,13 @@ class Builder(Movable):
     elif ratio_coord is not None:
       return ratio_coord
     else:
-      return vertical_coord
+      # Create disturbance
+      disturbance = self.get_disturbance()
+      
+      # We add a bit of disturbance every onece in a while
+      new_coord = vertical_coord if self.default_probability() else (
+      helpers.sum_vectors(vertical_coord,disturbance))
+      return new_coord
 
   def get_disturbance(self):
     '''
