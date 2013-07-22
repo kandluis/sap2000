@@ -287,9 +287,6 @@ class SmartRepairer(Repairer):
     sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
     min_support_ratio,max_support_ratio = self.get_ratios()
 
-    # Reset the broken beam name
-    self.memory['broken_beam_name'] = ''
-
     # Cycle through ratios looking for one that is above our limit (not too
     # vertical nor horizontal) that is on our broken beam
     for coord,ratio in sorted_ratios:
@@ -297,6 +294,8 @@ class SmartRepairer(Repairer):
         # We have an acceptable beam
         if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
           helpers.compare(ratio,0)):
+          # Reset the broken beam name
+          self.memory['broken_beam_name'] = ''
           return coord
       
     # Otherwise, do default behaviour
