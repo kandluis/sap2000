@@ -13,6 +13,9 @@ class Automaton:
     # Robot name
     self.name = name
 
+  def my_type(self):
+    return self.__class__.name
+
   def current_state(self):
     return {  'name'  : self.name }
 

@@ -1,5 +1,5 @@
 from helpers import commandline, helpers
-from robots.colony import ReactiveSwarm
+from robots.colony import SmartSwarm
 from structure.structure import Structure
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
@@ -188,7 +188,7 @@ class Simulation:
 
       # Add the location to a list
       timestep.append(state['location'])
-      timsptep.append(state['location'][2])
+      timestep.append(state['location'][2])
 
     # Add the location list to a list of rows
     self.excel['data'].append(timestep)
@@ -278,7 +278,7 @@ class Simulation:
 
     # Make python structure and start up the colony
     self.Structure = Structure(visualization)
-    self.Swarm = ReactiveSwarm(robots, self.Structure, self.SapProgram)
+    self.Swarm = SmartSwarm(robots, self.Structure, self.SapProgram)
 
     # If we started with a previous model, we have to add all of the beams 
     # to our own model in python
@@ -434,7 +434,7 @@ class Simulation:
           self.Swarm.decide()
         except:
           print("Simulation ended at decision.")
-          self.s(run_text)
+          self.exit(run_text)
           raise
 
         # Make sure that the model has been unlocked, and if not, unlock it
@@ -474,7 +474,7 @@ class Simulation:
 
         # Sort beam data
         if self.Structure.structure_data[-1] != []:
-          self.Structure.structure_data[-1].sort(key=lambda t: t[0])
+          self.Structure.structure_data[-1].sort(key=lambda t: int(t[0]))
 
         # Check height of structure and break out if we will reach maximum
         if self.Structure.height > variables.dim_z - 2* construction.beam['length']:
@@ -514,7 +514,7 @@ class Simulation:
       for timestep in self.Structure.structure_data:
         for beam,moment in timestep:
           struct_phys.write("{},{},".format(beam,str(moment)))
-      struct_phys.write("\n")
+        struct_phys.write("\n")
 
     self.run = True
 

@@ -101,7 +101,7 @@ class DumbRepairer(Worker):
 
       # We've moved off the beam, so run the search support routine
       elif (self.memory['broken_beam_name'] != self.beam.name and 
-        self.search_mode):
+        self.search_mode and self.memory['broken_beam_name'] != ''):
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] = self.beam.name
 
@@ -219,8 +219,6 @@ class Repairer(DumbRepairer):
     # Robots have a tendency to return to the previous area of repair
     self.memory['ground_tendencies'] = [None,None,None]
 
-  
-
   def get_disturbance(self):
     '''
     Returns the disturbance level for adding a new beam at the tip. This is
@@ -248,7 +246,11 @@ class Repairer(DumbRepairer):
       # Cycle through ratios looking for one that lies on the beam we want
       for coord,ratio in sorted_ratios:
         if helpers.on_line(e1,e2,coord):
-          return coord
+          midpoint = helpers.midpoint(e1,e2)
+          if helpers.distance(pivot,midpoint) <= construction.beam['length']:
+            return midpoint
+          else:
+            return coord
 
       # We didn't find an appropriate one, so return default enpoint
       self.memory['construct_support'] = False
@@ -258,3 +260,41 @@ class Repairer(DumbRepairer):
 
     # Otherwise, do default behaviour
     return super(Repairer,self).support_beam_endpoint()
+
+class SmartRepairer(Repairer):
+  def __init__(self,name,structure,location,program):
+    super(SmartRepairer,self).__init__(name,structure,location,program)
+
+  def beam_check(self,name):
+    moment = self.get_moment(name)
+    e1,e2 = self.structure.get_endpoints(name,self.location)
+    xy_dist = helpers.distance((e1[0],e1[1],0),(e2[0],e2[1],0))
+    limit = construction.beam['beam_limit'] + (
+      xy_dist / construction.beam['length']) * construction.beam['horizontal_beam_limit']
+
+    print(limit)
+    return (moment < limit or helpers.compare(moment,limit))
+
+class LeanRepairer(SmartRepairer):
+  def __init__(self,name,structure,location,program):
+    super(SmartRepairer,self).__init__(name,structure,location,program)
+
+  def get_default(self,ratio_coord,vertical_coord):
+    '''
+    Returns the coordinate onto which the j-point of the beam to construct 
+    should lie
+    '''
+    # No vertical coordinate this time, since we will use a leaning one
+    coord = super(LeanRepairer,self).get_default(ratio_coord,None)
+    if coord is not None:
+      return coord
+    # We need to return one that leans
+    else:
+      xy_dir = self.non_zero_xydirection()
+      scale = 1 / helpers.ratio(construction.beam['construction_angle'])
+      vertical = helpers.scale(scale,construction.beam['vertical_dir_set'])
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
+      endpoint = helpers.sum_vectors(self.location,helpers.scale(
+        construction.beam['length'],direction))
+
+      return endpoint

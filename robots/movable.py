@@ -172,7 +172,7 @@ class Movable(Automaton):
     # Remember that beams DOES NOT include the current beam, only others
     crawlable = {}
     for joint in self.beam.joints:
-      dist = helpers.distance(joint,self.location)
+      dist = helpers.distance(self.location,joint)
       
       # If we are at the joint, return the possible directions of other beams
       if helpers.compare(dist,0):
@@ -196,13 +196,27 @@ class Movable(Automaton):
               crawlable[beam.name] = [helpers.make_vector(self.location,e2)]
             else:
               raise Exception("All distances from beam were zero-length.")
+
+            # Include distances to nearby joints
+            for coord in beam.joints:
+              v = helpers.make_vector(self.location,coord)
+              length = helpers.length(v)
+              if ((length < self.step or helpers.compare(length, self.step))
+                and not helpers.compare(length,0)):
+                try:
+                  if v not in crawlable[beam.name]:
+                    crawlable[beam.name].append(v)
+                except IndexError:
+                  raise Exception("Adding nearby joints failed because \
+                    endpoints were ignored.")
+
           except IndexError:
             print ("The beam {} seems to have a joint with {}, but it is not in\
               the box?".format(name,self.beam.name))
       
       # For all joints within the timestep, return a direction that is exactly 
       # the change from current to that point
-      elif dist <= self.step and not helpers.compare(dist,0):
+      elif dist <= self.step:
         if self.beam.name in crawlable:
           crawlable[self.beam.name].append(helpers.make_vector(self.location,
             joint))
@@ -236,9 +250,9 @@ class Movable(Automaton):
           bool_v1 = False
         if helpers.parallel(direct,v2) and helpers.dot(direct,v2) > 0:
           bool_v2 = False
-      if bool_v2:
+      if bool_v2 and b_v2:
         crawlable[self.beam.name].append(v2)
-      if bool_v1:
+      if bool_v1 and b_v1:
         crawlable[self.beam.name].append(v1)
 
     return crawlable

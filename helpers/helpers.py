@@ -120,10 +120,16 @@ def between_points(p1,p2,p3, inclusive = True):
   Returns whether the point p3 is between the points p1 and p2. inclusive.
   '''
   return_value = True
+  different = False
   for i in range(3):
-    return_value = return_value and between(p1[i],p2[i],p3[i], inclusive)
+    different = different or between(p1[i],p2[i],p3[i],False)
+    return_value = return_value and between(p1[i],p2[i],p3[i])
 
-  return return_value 
+  if not inclusive:
+    return return_value and different
+
+  else:
+    return return_value 
 
 def between(c1,c2,c3, inclusive = True):
   '''
@@ -154,7 +160,7 @@ def collinear(p1,p2,p3):
   v1 = make_vector(p1,p2)
   v2 = make_vector(p1,p3)
   normal = cross(v1,v2)
-  return compare(length(normal),0)
+  return compare(length(normal),0,variables.epsilon*2)
 
 def correct(l1,l2,point):
   '''
@@ -176,11 +182,11 @@ def correct(l1,l2,point):
 
   return point
 
-def compare_tuple(v1,v2):
+def compare_tuple(v1,v2,e=variables.epsilon):
   '''
   Comapres two floats using our compare function
   '''
-  return all([compare(x,y) for x,y in zip(v1,v2)])
+  return all([compare(x,y,e) for x,y in zip(v1,v2)])
 
 '''
 Helper functions pertaining to the SAP program
@@ -217,6 +223,11 @@ def round_tuple(tup,ndigits=2):
 
   return tuple(temp)
 
+def midpoint(p1,p2):
+  '''
+  Returns the midpoint between p1,p2
+  '''
+  return tuple([c1 + c2 / 2 for c1,c2 in zip(p1,p2)])
 
 '''
 Helper functions pertaining to the beams (especially intersections)

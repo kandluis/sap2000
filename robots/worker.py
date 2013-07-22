@@ -103,7 +103,8 @@ class Worker(Builder):
       self.repairing()
 
     def min_dir(vs):
-      unit_list = [helpers.make_unit(v) for v in vs]
+      unit_list = [helpers.make_unit(v) for v in vs if not helpers.compare(
+        helpers.length(v),0)]
       min_val = min(unit_list,key=lambda t : t[2])
       index = unit_list.index(min_val)
       return index,min_val

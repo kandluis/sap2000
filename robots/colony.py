@@ -1,5 +1,5 @@
 from helpers import helpers
-from robots.repairer import Repairer
+from robots.repairer import SmartRepairer, LeanRepairer
 from visual import *
 import construction
 
@@ -20,17 +20,20 @@ class Swarm:
     # create repairers
     self.repairers = {}
     for i in range(size):
-      name = "repairer_" + str(i)
+      name = "smartrepairer_" + str(i)
 
       # repairers start at home
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.repairers[name] = Repairer(name,structure,location,program)
+      self.repairers[name] = self.create(name,structure,location,program)
 
     # Keeps track of visualization data
     self.visualization_data = ''
 
     # Keeps track of the color each robot should be at each timestep
     self.color_data = ''
+
+  def create(self,name,structure,location,program):
+    return SmartRepairer(name,structure,location,program)
 
   def decide(self):
     # Tell each robot to make the decion
@@ -92,7 +95,7 @@ class ReactiveSwarm(Swarm):
     rendered.
     '''
     # Cycle through repairers
-    for repairer_name, repairer in self.repairers.items():
+    for smartrepairer_name, repairer in self.repairers.items():
       # If model exists, move it to new location
       if repairer.simulation_model is not None:
         repairer.simulation_model.pos = repairer.location
@@ -109,9 +112,9 @@ class ReactiveSwarm(Swarm):
     '''
     self.repairers = {}
     for i in range(self.original_size):
-      name = "repairer_" + str(i)
+      name = "smartrepairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
-      self.repairers[name] = Repairer(name,self.structure,location,self.model)
+      self.repairers[name] = self.create(name,self.structure,location,self.model)
 
   def need_data(self):
     '''
@@ -132,9 +135,9 @@ class ReactiveSwarm(Swarm):
     x-axis. The names are a continuation of the size of the swarm.
     '''
     for i in range(self.num_created, self.num_created + num):
-      name = "repairer_" + str(i)
+      name = "smartrepairer_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
-      self.repairers[name] = Repairer(name,self.structure,location,self.model)
+      self.repairers[name] = self.create(name,self.structure,location,self.model)
 
     self.size += num
     self.num_created += num
@@ -144,8 +147,8 @@ class ReactiveSwarm(Swarm):
     Deletes the specified robot from the swarm if it exists
     '''
     if name in self.repairers:
-      self.repairers[repairer_name].change_location(construction.home, None)
-      del(self.repairers[repairer_name])
+      self.repairers[name].change_location(construction.home, None)
+      del(self.repairers[name])
       self.size -= 1
       return True
     else:
@@ -157,9 +160,9 @@ class ReactiveSwarm(Swarm):
     '''
     # Pick a random repairer
     from random import choice
-    repairer_name = choice(self.repairers.keys())
+    smartrepairer_name = choice(self.repairers.keys())
 
-    return self.delete_robot(repairer_name)
+    return self.delete_robot(smartrepairer_name)
 
   def delete_random_robots(self,num = 1):
     '''
@@ -185,3 +188,7 @@ class ReactiveSwarm(Swarm):
         deleted += 1
 
     return deleted
+
+class SmartSwarm(ReactiveSwarm):
+  def __init__(self,size,structure,program):
+    super(ReactiveSwarm, self).__init__(size,structure,program)

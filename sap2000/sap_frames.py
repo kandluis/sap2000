@@ -38,7 +38,8 @@ class SapFrameObjects(SapFramesBase):
     otherwise it returns a nonzero value.
     '''
     return_value, name = self._obj.AddByPoint(p1,p2,name,propName,name)
-    assert return_value == 0
+    if return_value != 0:
+      print("Adding beam from {} to {} failed.".format(str(p1),str(p2)))
     return name
 
   def addbycoord(self,p1,p2,name="", propName = "Default"):
