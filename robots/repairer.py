@@ -285,7 +285,7 @@ class SmartRepairer(Repairer):
 
     # Get ratios
     sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
-    minimum,maximum = self.get_ratios()
+    min_support_ratio,max_support_ratio = self.get_ratios()
 
     # Reset the broken beam name
     self.memory['broken_beam_name'] = ''
