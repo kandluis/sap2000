@@ -391,6 +391,7 @@ class Builder(Movable):
           # Add beam to broken
           beam = self.structure.get_beam(name,self.location)
           if not any(beam in broken for broken in self.memory['broken']):
+            moment = self.get_moment(name)
             self.memory['broken'].append((beam,moment))
 
 
@@ -409,6 +410,7 @@ class Builder(Movable):
             results[name] = new_directions
 
         if not any(self.beam in broken for broken in self.memory['broken']):
+          moment = self.get_moment(name)
           self.memory['broken'].append((self.beam,moment))
 
     return results

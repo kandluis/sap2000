@@ -6,7 +6,7 @@ class Open:
     self.folder = folder
     self.trials = sorted([name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder,name))])
 
-  def run_trial(self,trial_num):
+  def run_trial(self,trial_num,fullscreen=True):
     '''
     Runs the visualization for the specified file number and returns the 
     visualization object.
@@ -14,6 +14,6 @@ class Open:
     folder = os.path.join(self.folder,self.trials[trial_num-1]) + os.path.sep
     vis = Visualization(folder)
     vis.load_data()
-    vis.run(inverse_speed=.25)
+    vis.run(fullscreen,inverse_speed=.25)
 
     return vis

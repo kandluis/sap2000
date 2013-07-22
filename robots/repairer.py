@@ -172,8 +172,7 @@ class DumbRepairer(Worker):
     # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
     # 180 degree approace
     direction = helpers.make_unit(direction) if non_zero else (0,0,1)
-    disturbance = helpers.make_unit((random.randint(-10,10),random.randint(-10,
-      10),0))
+    disturbance = self.non_zero_xydirection()
     direction = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
     self.memory['repair_beam_direction'] = direction
 
@@ -272,8 +271,36 @@ class SmartRepairer(Repairer):
     limit = construction.beam['beam_limit'] + (
       xy_dist / construction.beam['length']) * construction.beam['horizontal_beam_limit']
 
-    print(limit)
     return (moment < limit or helpers.compare(moment,limit))
+
+  def support_beam_endpoint(self):
+    # Get broken beam
+    e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
+      self.location)
+    # Get pivot and vertical
+    pivot = self.location
+    vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
+        variables.beam_length,
+        helpers.make_unit(construction.beam['vertical_dir_set'])))
+
+    # Get ratios
+    sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
+    minimum,maximum = self.get_ratios()
+
+    # Reset the broken beam name
+    self.memory['broken_beam_name'] = ''
+
+    # Cycle through ratios looking for one that is above our limit (not too
+    # vertical nor horizontal) that is on our broken beam
+    for coord,ratio in sorted_ratios:
+      if helpers.on_line(e1,e2,coord):
+        # We have an acceptable beam
+        if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
+          helpers.compare(ratio,0)):
+          return coord
+      
+    # Otherwise, do default behaviour
+    return super(SmartRepairer,self).support_beam_endpoint()
 
 class LeanRepairer(SmartRepairer):
   def __init__(self,name,structure,location,program):
