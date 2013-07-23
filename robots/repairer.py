@@ -108,8 +108,8 @@ class DumbRepairer(Worker):
         # We have found a support beam, so return to construct mode (the support beam is vertical)
         if (self.memory['previous_beam'] != self.beam.name and (
           self.memory['previous_direction'] is None or 
-          self.memory['previous_direction'][2] > 0 or helpers.compare(
-            self.memory['previous_direction'],0))):
+          self.memory['previous_direction'][1][2] > 0 or helpers.compare(
+            self.memory['previous_direction'][1][2],0))):
           self.construction_mode()
 
         self.find_support()
@@ -293,7 +293,9 @@ class SmartRepairer(Repairer):
     # Cycle through ratios looking for one that is above our limit (not too
     # vertical nor horizontal) that is on our broken beam
     for coord,ratio in sorted_ratios:
-      if helpers.on_line(e1,e2,coord):
+      # Build everywhere on the beam excep for the tips.
+      if helpers.on_line(e1,e2,coord) and not (helpers.compare_tuple(e1,coord)
+        or helpers.compare(e2,coord)):
         # We have an acceptable beam
         if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
           helpers.compare(ratio,0)):
