@@ -244,10 +244,11 @@ class Builder(Movable):
     pass
 
   def random_direction(self,directions):
+    '''
+    Select a random direction from directions
+    '''
     beam_name = random.choice(list(directions.keys()))
     direction = random.choice(directions[beam_name])
-
-    self.memory['previous_direction'] = beam_name, direction
 
     return beam_name, direction
 
@@ -257,7 +258,12 @@ class Builder(Movable):
     no previous direction, we are at a joint, or the previous direction is 
     unacceptable)
     '''
-    return self.random_direction(directions)
+    direction = self.random_direction(directions)
+    
+    # Store direction
+    self.memory['previous_direction'] = direction
+
+    return direction
 
   def elect_direction(self,directions):
     '''
@@ -288,7 +294,7 @@ class Builder(Movable):
 
       # Pick a direction randomly from those that are parallel
       else:
-        self.pick_direction(temp)
+        return self.pick_direction(temp)
 
     # We are not at a joint and we have a previous direction
     if not self.at_joint() and self.memory['previous_direction'] is not None:

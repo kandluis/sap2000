@@ -356,13 +356,13 @@ class Simulation:
       sys.exit("Analysis Setup Failed.")
 
     # Open files for writing if debugging
-    with open(outputfolder + 'repair_info.txt', 'w+') as repair_file, open(outputfolder + "robot_data.txt", 'w+') as loc_text, open(outputfolder + "sap_failures.txt", 'w+') as sap_failures, open(outputfolder + "run_data.txt", 'w+') as run_text, open(outputfolder + "structure.txt", "w+") as struct_data:
+    with open(outputfolder + 'repair_info.txt', 'a') as repair_file, open(outputfolder + "robot_data.txt", 'a') as loc_text, open(outputfolder + "sap_failures.txt", 'a') as sap_failures, open(outputfolder + "run_data.txt", 'a') as run_text, open(outputfolder + "structure.txt", "a") as struct_data:
       loc_text.write("This file contains information on the robots at each" +
         " timestep if debugging.\n\n")
       sap_failures.write("This file contains messages created when SAP 2000 does"
        + " not complete a function successfully if debugging.\n\n")
       struct_data.write("This file contains the data about the Pythonic" +
-        " structure.\n\n")
+        " structure.\n\nCurrently unused do to space issues.")
       run_text.write("This file contains the variables used in the run of the" +
         " simulation.\n\nTotal timesteps: " + str(timesteps) + "\nStart time of"
         + " simumation: " + start_time + "\nSeed:" + str(self.seed) + "\n\n")
@@ -444,10 +444,10 @@ class Simulation:
         # This section writes the robots decisions out to a file
         if debug:
           swarm_data = self.Swarm.get_information()
-          beam_data = self.Structure.get_information()
+          #beam_data = self.Structure.get_information()
           self.__add_excel(swarm_data)
           self.__push_data(swarm_data,loc_text,i+1)
-          self.__push_data(beam_data,struct_data,i+1)
+          #self.__push_data(beam_data,struct_data,i+1)
           
         # Change the model based on decisions made (act on your decisions)
         try:
@@ -483,6 +483,14 @@ class Simulation:
         with open(self.folder + 'random_seed_results.txt', 'a') as rand_tex:
           rand_tex.write("{},".format(str(random.randint(0,i+1))))
 
+        # We run out of mememory is we don't do this every once in a while
+        if i % 100 == 0 and i != 0:
+          # Write out visualization data
+          self.visualization_data()
+
+          # Write out structure physics
+          self.structure_physics()
+          
         # END OF LOOOP
 
       # Clean up
@@ -504,17 +512,43 @@ class Simulation:
     self.__push_excel(self.folder + "locations.xlsx")
 
     # Write out visualization data
-    with open(self.folder + 'structure_color_data.txt','w+') as c_struct, open(self.folder + 'swarm_color_data.txt', 'w+') as c_swarm, open(self.folder + 'swarm_visualization.txt', 'w+') as v_swarm, open(self.folder + 'structure_visualization.txt','w+') as v_struct:
+    self.visualization_data()
+
+    # Write out structure moments
+    self.structure_physics()
+
+    self.run = True
+
+  def visualization_data(self):
+    '''
+    Writes out the data for the visualization currently stored and clears the
+    buffers
+    '''
+    # Write data
+    with open(self.folder + 'structure_color_data.txt','a') as c_struct, open(self.folder + 'swarm_color_data.txt', 'a') as c_swarm, open(self.folder + 'swarm_visualization.txt', 'a') as v_swarm, open(self.folder + 'structure_visualization.txt','a') as v_struct:
       v_swarm.write(self.Swarm.visualization_data)
       c_swarm.write(self.Swarm.color_data)
       v_struct.write(self.Structure.visualization_data)
       c_struct.write(self.Structure.color_data)
 
-    with open(self.folder + 'structure_physics.txt',"w+") as struct_phys:
+    # Clear buffers
+    self.Swarm.visualization_data = ''
+    self.Swarm.color_data = ''
+    self.Structure.visualization_data = ''
+    self.Structure.color_data = ''
+
+  def structure_physics(self):
+    '''
+    Writes out the physical data for the structure and clears the buffer.
+    '''
+    # Write data
+    with open(self.folder + 'structure_physics.txt',"a") as struct_phys:
       for timestep in self.Structure.structure_data:
         for beam,moment in timestep:
           struct_phys.write("{},{},".format(beam,str(moment)))
         struct_phys.write("\n")
 
-    self.run = True
+    # Clear buffers
+    self.Structure.structure_data = []
+
 

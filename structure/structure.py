@@ -528,7 +528,10 @@ class Structure:
       # Calculate gradiant color and store
       ratio = round(max_val/construction.beam['structure_check'],3)
       color = (ratio,max(1-ratio,0),0)
-      self.color_data += "{}:{}<>".format(beam.name,str(color)) 
+      try:
+        self.color_data += "{}:{}<>".format(beam.name,str(color)) 
+      except MemoryError:
+        pass
 
       # Return maximum value
       return max_val
