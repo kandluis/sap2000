@@ -295,7 +295,7 @@ class SmartRepairer(Repairer):
     for coord,ratio in sorted_ratios:
       # Build everywhere on the beam excep for the tips.
       if helpers.on_line(e1,e2,coord) and not (helpers.compare_tuple(e1,coord)
-        or helpers.compare(e2,coord)):
+        or helpers.compare_tuple(e2,coord)):
         # We have an acceptable beam
         if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
           helpers.compare(ratio,0)):
