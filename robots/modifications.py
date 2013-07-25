@@ -1,6 +1,14 @@
+from helpers import helpers
 from robots.repairer import Repairer
+import construction, math, pdb,variables, random
 
-class DeflectionRepairer(Repairer):
+
+class NormalRepairer(Repairer):
+  def __init__(self,name,structure,location,program):
+    super(NormalRepairer,self).__init__(name,structure,location,program)
+
+
+class DeflectionRepairer(NormalRepairer):
   '''
   Attemps to build vertical beams such that they counter balance each Otherwise
   '''
@@ -13,12 +21,31 @@ class DeflectionRepairer(Repairer):
     modified so that the disturbance compensates for the angle at which the
     current beam lies (using basic math)
     '''
-    # TODO
-    return super(Repairer,self).get_disturbance()
+    def compensate_change(coord,change = variables.epsilon):
+      '''
+      Returns a random direction that is the right sign so that it compensates 
+      for the sign of change
+      '''
+      if helpers.compare(coord,0):
+        return random.uniform(-1 * change,change)
+      elif coord < 0:
+        return random.uniform(0,change)
+      else:
+        return random.uniform(-1 * change, 0)
 
-class SmartRepairer(Repairer):
+    # We are currently on a beam
+    if self.beam is not None:
+      i,j = self.beam.endpoints
+      v = helpers.make_vector(i,j)
+      const_change = lambda x : compensate_change(x,variables.random)
+      delta_x, delta_y = const_change(v[0]), const_change(v[1])
+      return (delta_x,delta_y,0)
+    else:
+      return super(Repairer,self).get_disturbance()
+
+class SmartRepairer(NormalRepairer):
   '''
-  Repairs beams based on a sliding scale repair.
+  Repairs beams based on a sliding scale repair for beam limits.
   '''
   def __init__(self,name,structure,location,program):
     super(SmartRepairer,self).__init__(name,structure,location,program)
@@ -35,7 +62,7 @@ class SmartRepairer(Repairer):
 
     return (moment < limit or helpers.compare(moment,limit))
 
-class LeanRepairer(Repairer):
+class LeanRepairer(NormalRepairer):
   '''
   Instead of building directly up, this class builds at a specified angle
   from the ground. There are no perfectly vertical tubes, nor even those that

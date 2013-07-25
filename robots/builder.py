@@ -259,7 +259,7 @@ class Builder(Movable):
     unacceptable)
     '''
     direction = self.random_direction(directions)
-    
+
     # Store direction
     self.memory['previous_direction'] = direction
 
@@ -598,28 +598,46 @@ class Builder(Movable):
     else:
       return self.non_zero_xydirection()
 
-  def support_beam_endpoint(self):
+  def support_xy_direction(self):
     '''
-    Returns the endpoint for construction a support beam
+    Returns the direction in which the support beam should be constructed
     '''
-
-    # Sanity check
-    assert self.memory['repair_beam_direction'] is not None
-
-    # Add beam_directions plus vertical change based on angle ratio (tan)
-    ratio = self.get_ratio('support_angle')
-    vertical = helpers.scale(1/ratio,(0,0,1))
-
     # Check to see if direction is vertical
     if helpers.parallel(self.memory['repair_beam_direction'],vertical):
       xy_dir = self.non_zero_xydirection()
     else:
       xy_dir = self.memory['repair_beam_direction']
 
-    xy_dir = helpers.make_unit(xy_dir)
+    return helpers.make_unit(xy_dir)
 
-    # Obtain construction direction
-    direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
+  def support_vertical_change(self):
+    '''
+    Returns the vertical change for the support endpoint locations
+    '''
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    ratio = self.get_ratio('support_angle')
+    vertical = helpers.scale(1/ratio,(0,0,1))
+
+    return vertical
+
+  def support_beam_endpoint(self):
+    '''
+    Returns the endpoint for construction a support beam
+    '''
+    # Sanity check
+    assert self.memory['repair_beam_direction'] is not None
+
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    ratio = self.get_ratio('support_angle')
+    vertical = self.support_vertical_change()
+    xy_dir = helpers.make_unit(self.support_xy_direction())
+
+    if xy_dir is None:
+      direction = vertical
+    elif vertical is None:
+      direction = xy_dir
+    else:
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
 
     # Calculate endpoints
     endpoint = helpers.sum_vectors(self.location,helpers.scale(

@@ -1,7 +1,7 @@
 from helpers import helpers
-from robots.modifications import SmartRepairer, LeanRepairer, DeflectRepairer
+from robots.modifications import SmartRepairer, LeanRepairer, DeflectionRepairer
 from visual import *
-import construction
+import construction, variables
 
 class Swarm:
   def __init__(self,size, structure, program):
@@ -102,7 +102,7 @@ class ReactiveSwarm(Swarm):
     
       # Otherwise create a new model for the robot at the current location
       else:
-        repairer.simulation_model = sphere(pos=self.location,
+        repairer.simulation_model = sphere(pos=repairer.location,
           radius=variables.local_radius,make_trail=False)
         repairer.simulation_model.color = (1,0,1)
 

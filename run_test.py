@@ -2,7 +2,7 @@ from main import Simulation
 from visualization import Visualization
 
 # Variables
-view = False
+view = True
 
 # Run the Simulation
 sim = Simulation(3137)

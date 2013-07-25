@@ -3,7 +3,24 @@ from helpers.vectors import *
 import errno, math, os, pdb, variables
 
 def ratio(deg):
+  '''
+  Returns the tangent ratio of an angle (deg)
+  '''
   return math.tan(math.radians(deg))
+
+def smallest_angle(v1,v2):
+  '''
+  Returns the smallest angle between the vectors v1 and v2
+  '''
+  # Get the lengths
+  l1,l2 = length(v1),length,v2
+
+  # Sanity Check
+  assert not (compare(l1,0) or compare(l2,0))
+
+  angle = math.degrees(math.acos(dot(v1,v2) / (l1 * l2)))
+
+  return angle
 
 def check(return_value, robot, error, **data):
   '''

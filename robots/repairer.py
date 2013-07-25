@@ -225,6 +225,68 @@ class Repairer(DumbRepairer):
     # Robots have a tendency to return to the previous area of repair
     self.memory['ground_tendencies'] = [None,None,None]
 
+  def support_xy_direction(self):
+    '''
+    Improves the construction direction so that we take into account the angle
+    at which our current beam is located, and the verticality of the beam we
+    are attempting to reach. This returns a unit direction (always should!)
+    '''
+    # If we're on the ground, then continue doing as before
+    if self.beam is None:
+      return super(Repairer,self).support_xy_direction()
+
+    else:
+      # Get repair beam vector
+      b_i,b_j = self.structure.get_endpoints(self.memory['broken_beam_name'],
+        self.location)
+      repair_vector = helpers.make_vector(i,j)
+
+      # Debugging
+      if helpers.memory['previous_direction'] is None:
+        pdb.set_trace()
+
+      # Get the correct vector for the current beam
+      c_i,c_j = self.beam.endpoints
+      current_vector = (helpers.make_vector(b_j,b_i) if 
+        helpers.memory['previous_direction'][2] > 0 else helpers.make_vector(
+          b_i,b_j))
+
+      angle = helpers.smallest_angle(repair_vector,current_vector)
+
+      # If below the specified angle, then place the beam directly upwards (no
+      # change in xy)
+      if angle < construction.beam['direct_repair_limit']:
+        return None
+      else:
+        vertical = (0,0,1)
+        v1,v2 = helpers.make_vector(b_i,c_i), helpers.make_vector(b_i,c_j)
+
+        # We can't get a direction based on beam locations
+        if helpers.parallel(vertical,v1) and helpers.parallel(vertical,v2):
+          return super(Repairer,self).support_xy_direction()
+
+        # We can use the current beam to decide the direction
+        elif not helpers.parallel(vertical,current_vector):
+          # Project onto the xy-plane and negate
+          projection = helpers.make_unit(helpers.scale(-1,(current_vector[0],
+            current_vector[1],0)))
+          disturbance = helpers.scale(random.uniform(-1,1),(-projection[1],
+            projection[0],projection[2]))
+          results = helpers.sum_vectors(projection,disturbance)
+
+          # TODO
+          return projection
+
+        elif not helpers.parallel(vertical,repair_vector):
+          return super(Repairer,self).support_xy_direction()
+        else:
+          raise Exception("?")
+
+  def support_vertical_change(self):
+    # TODO
+    return super(Repairer,self).support_vertical_change()
+
+
   def support_beam_endpoint(self):
     '''
     Returns the endpoint for a support beam
@@ -248,6 +310,7 @@ class Repairer(DumbRepairer):
       # Build everywhere on the beam excep for the tips.
       if helpers.on_line(e1,e2,coord) and not (helpers.compare_tuple(e1,coord)
         or helpers.compare_tuple(e2,coord)):
+        pdb.set_trace()
         # We have an acceptable beam
         if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
           helpers.compare(ratio,0)):

@@ -25,5 +25,11 @@ beam = {
   'support_angle_max'     : 80,
 
   # This is the angle from the vertical at which a beam is initially constructed
-  'construction_angle'    : 30
+  'construction_angle'    : 30,
+
+  # This is the angle between the beam we want to repair and the beam we are
+  # currently on.
+  # If the actual angle is greater, then we add a support beam
+  # If it is less, then we repair directly
+  'direct_repair_limit'   : 120
 }
