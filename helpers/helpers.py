@@ -13,7 +13,7 @@ def smallest_angle(v1,v2):
   Returns the smallest angle between the vectors v1 and v2
   '''
   # Get the lengths
-  l1,l2 = length(v1),length,v2
+  l1,l2 = length(v1),length(v2)
 
   # Sanity Check
   assert not (compare(l1,0) or compare(l2,0))

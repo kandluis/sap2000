@@ -173,7 +173,7 @@ class DumbRepairer(Worker):
     non_zero = not helpers.compare(helpers.length(direction),0)
 
     # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
-    # 180 degree approace
+    # 180 degree approah
     direction = helpers.make_unit(direction) if non_zero else (0,0,1)
     disturbance = self.non_zero_xydirection()
     direction = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
@@ -181,6 +181,8 @@ class DumbRepairer(Worker):
 
     # If vertical, give None so that it can choose a random direction. Otherwise,
     # pick a direction which within 180 degrees of the beam
+    ground_direction = direction if random.randint(0,2) != 1 else helpers.scale(
+      -1,direction)
     self.ground_direction = direction if non_zero else None
     
     # We want to climb down, and travel in 'direction' if possible
@@ -239,16 +241,16 @@ class Repairer(DumbRepairer):
       # Get repair beam vector
       b_i,b_j = self.structure.get_endpoints(self.memory['broken_beam_name'],
         self.location)
-      repair_vector = helpers.make_vector(i,j)
+      repair_vector = helpers.make_vector(b_i,b_j)
 
       # Debugging
-      if helpers.memory['previous_direction'] is None:
+      if self.memory['previous_direction'] is None:
         pdb.set_trace()
 
       # Get the correct vector for the current beam
       c_i,c_j = self.beam.endpoints
-      current_vector = (helpers.make_vector(b_j,b_i) if 
-        helpers.memory['previous_direction'][2] > 0 else helpers.make_vector(
+      current_vector = (helpers.make_vector(c_j,c_i) if 
+        self.memory['previous_direction'][1][2] > 0 else helpers.make_vector(
           b_i,b_j))
 
       angle = helpers.smallest_angle(repair_vector,current_vector)
@@ -268,8 +270,11 @@ class Repairer(DumbRepairer):
         # We can use the current beam to decide the direction
         elif not helpers.parallel(vertical,current_vector):
           # Project onto the xy-plane and negate
-          projection = helpers.make_unit(helpers.scale(-1,(current_vector[0],
-            current_vector[1],0)))
+          if current_vector[2] < 0:
+            projection = helpers.make_unit(helpers.scale(-1,(current_vector[0],
+              current_vector[1],0)))
+          else:
+            projection = helpers.make_unit(current_vector[0],current_vector[1],0)
           disturbance = helpers.scale(random.uniform(-1,1),(-projection[1],
             projection[0],projection[2]))
           results = helpers.sum_vectors(projection,disturbance)
