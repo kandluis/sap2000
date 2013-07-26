@@ -33,6 +33,7 @@ class DumbRepairer(Worker):
     '''
     # If we are at a joint, we might move up but MUST move in right x and y
     if self.at_joint():
+      pdb.set_trace()
       self.memory['pos_z'] = True
       self.memory['dir_priority'] = [1,1,1]
     else:
@@ -102,6 +103,8 @@ class DumbRepairer(Worker):
       # We've moved off the beam, so run the search support routine
       elif (self.memory['broken_beam_name'] != self.beam.name and 
         self.search_mode and self.memory['broken_beam_name'] != ''):
+
+        # Remember the beam we moved onto right after the broken one
         if self.memory['previous_beam'] is None:
           self.memory['previous_beam'] = self.beam.name
 
@@ -227,6 +230,15 @@ class Repairer(DumbRepairer):
     # Robots have a tendency to return to the previous area of repair
     self.memory['ground_tendencies'] = [None,None,None]
 
+  def pickup_beams(self):
+    '''
+    Resets the robot's broken settings. Might change this later
+    '''
+    self.memory['broken'] = []
+    self.memory['broken_beam_name'] = ''
+
+    super(Repairer,self).pickup_beams()
+
   def support_xy_direction(self):
     '''
     Improves the construction direction so that we take into account the angle
@@ -320,17 +332,29 @@ class Repairer(DumbRepairer):
     '''
     Returns the endpoint for a support beam
     '''
-    pdb.set_trace()
+    # pdb.set_trace()
     # Get broken beam
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
+
+    # Direction
+    v = helpers.make_unit(helpers.make_vector(e1,e2))
+
     # Get pivot and repair beam midpoint
     pivot = self.location
     midpoint1 = helpers.midpoint(e1,e2)
+
+    # Upper midpoint to encourate upward building
     midpoint = helpers.midpoint(e2,midpoint1)
-    offset = random.uniform(-variables.random,variables.random)
-    midpoint = helpers.sum_vectors(midpoint,(0,0,offset))
+
+    # Add an offset to mimick inability to determine location exactly
+    offset = helpers.scale(random.uniform(-variables.random,variables.random),v)
+    midpoint = helpers.sum_vectors(midpoint,offset)
+
+    # Calculate starting beam_endpoint
     endpoint = helpers.beam_endpoint(pivot,midpoint)
+
+    # Calculate angle from vertical
     angle_from_vertical = helpers.smallest_angle(helpers.make_vector(pivot,
       endpoint),(0,0,1))
 

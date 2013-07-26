@@ -123,7 +123,8 @@ class ReactiveSwarm(Swarm):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if not (repairer.location[2] == 0 and repairer.beam is not None):
+      if (repairer.memory['pos_z'] == True or repairer.memory['pos_z'] == None
+        or repairer.beam is not None):
         return True
 
     return False
