@@ -322,15 +322,22 @@ def distance_between_lines(l1,l2):
   #return length of projection onto normal
   return abs(dot(diagonal,normal))
 
-def beam_endpoint(pivot,point,beam_length = construction.beam['length']):
+def beam_endpoint(pivot,point,beam_length = construction.beam['length'],
+  disturbance=variables.random_percentage):
   '''
   Returns the endpoint of a beam which begins at pivot and contains the point
-  'point'
+  'point'. The endpoint is not returned perfectly, but with a disturbance of 
+  disturbance (percentage in decimal format)
   '''
   v = make_vector(pivot,point)
   assert not compare(length(v),0)
 
-  unit_v = make_unit(v)
+  if disturbance is None:
+    unit_v = make_unit(v)
+  else:
+    unit_dist = make_unit((-1*v[1],v[0],0))
+    disturbance = scale(disturbance,unit_dist)
+    unit_v = make_unit(sum_vectors(disturbance,make_unit(v)))
 
   return sum_vectors(pivot,scale(beam_length,unit_v))
 

@@ -326,7 +326,10 @@ class Repairer(DumbRepairer):
       self.location)
     # Get pivot and repair beam midpoint
     pivot = self.location
-    midpoint = helpers.midpoint(e1,e2)
+    midpoint1 = helpers.midpoint(e1,e2)
+    midpoint = helpers.midpoint(e2,midpoint1)
+    offset = random.uniform(-variables.random,variables.random)
+    midpoint = helpers.sum_vectors(midpoint,(0,0,offset))
     endpoint = helpers.beam_endpoint(pivot,midpoint)
     angle_from_vertical = helpers.smallest_angle(helpers.make_vector(pivot,
       endpoint),(0,0,1))
