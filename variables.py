@@ -46,6 +46,7 @@ beam_load = 0.027 # kip
 # Name of the load case for the robots
 robot_load_case = "DEAD"
 
+######################################################
 # Name of the material property defined for the beams
 frame_property_name = "Scaffold Tube"
 material_property  = "A500GrB42"
@@ -61,6 +62,7 @@ cross_sect_area = math.pi * ((outside_diameter / 2)**2 - (outside_diameter / 2 -
   wall_thickness)**2) # in*in
 moment_of_intertia = math.pi * ((outside_diameter/2)**4 - (outside_diameter / 2 -
   wall_thickness)**4) / 4
+#####################################################
 
 # Calculating limits
 joint_limit = beam_length * beam_load / 2
@@ -69,3 +71,79 @@ beam_limit = joint_limit + (beam_load + robot_load)*beam_length
 
 # The number of timesteps before an analysis model is saved.
 analysis_timesteps = 100
+########################################################
+
+# Wind pattern settings
+'''
+THESE SETTINGS ARE NOW TAKEN CARE OF MANUALLY THROUGH A TEMPLATE LOCATED In
+C:\\SAP 2000\\template.sbd
+
+''
+exposureFrom indicated the source of the wind exposure
+1 = From extents of rigid diaphragms
+2 = From area objects
+3 = From frame objeccs (open structure)
+4 = From area objects and frame objects (open structure)
+''
+exposureFrom = 3
+
+''
+dirAngle is the direction angle of the wind load. This
+only applies when exposureFrom is 1
+''
+dirAngle = 0
+
+# Windward coefficient (exposureFrom must be 1)
+cpw = 1
+
+# Leeward coefficient (exposureFrom must be 1)
+cpl = 1
+
+# Indicated the desired case from ASCE7-05 (exposureFrom must be 1)
+asceCase = 1
+ascee1 = 1
+ascee2 = 1
+
+''
+This item is True if the top and bottom elevations of the wind load are user 
+specified. It is False if the elevations are determined by the program.
+
+topZ and bottomZ only appy when userZ is set to True
+''
+userZ = False
+topZ = 1
+bottomZ = 1
+
+# The wind speed in mph
+windSpeed = 90
+
+''
+exposureType indicating the exposure Category
+1 = B
+2 = C
+3 = D
+''
+exposureType = 2
+
+importanceFactor = 1
+
+# The topological factor
+kzt = 1
+
+gustFactor = .85
+
+# The directionality factor
+kd = .85
+
+''
+solidGrossRatio is the solid area divided by gross area ratio for open frame
+structure loading.
+
+This only applies when exposureFrom is 3 or 4
+''
+solidGrossRatio = .2
+
+userExposure = False
+
+######################################################
+'''

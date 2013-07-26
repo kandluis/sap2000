@@ -4,10 +4,20 @@ import construction, time, re, pdb, variables
 
 class Visualization:
   def __init__(self,outputfolder):
+    # Stores the loaded data in mememory
     self.data = []
+
+    # Folder storage
     self.folder = outputfolder
+
+    # Keeps track of workers to update color and position with each timestep
     self.workers = {}
+
+    # Keeps track of beams to update color with each timestep
     self.beams = {}
+
+    # Keeps track of the simulation (inverse) speed
+    self.inverse_speed = None
 
   def load_data(self,swarm='swarm_visualization.txt',
     structure='structure_visualization.txt',color_swarm='swarm_color_data.txt',
@@ -122,6 +132,9 @@ class Visualization:
     if self.data == []:
       print("No data has been loaded. Cannot run simulation.")
     else:
+      # Store inverse speed
+      self.inverse_speed = inverse_speed
+
       # Setup the scene
       scene = self.setup_scene(fullscreen)
 
@@ -148,9 +161,8 @@ class Visualization:
         # Add beams if any
         for name,coords in structure_step:
           i,j = coords
-          self.beams[name] = cylinder(pos=i,axis=helpers.make_vector(coords[0],
-            coords[1]),radius=variables.outside_diameter,color=(0,1,0))
-
+          self.add_beam(name,i,j)
+          
           # Update window dimensions
           limit = max(j)
           if limit > max(scene.range):
@@ -197,3 +209,22 @@ class Visualization:
             break
 
       time.sleep(0.01)
+
+  def add_beam(self,name,i,j):
+    '''
+    Visualization for the wiggling effect when adding a beam to the structure
+    '''
+    scale = 1
+    change = 1
+    unit_axis = helpers.make_unit(helpers.make_vector(i,j))
+
+    # Create the beam
+    self.beams[name] = cylinder(pos=i,axis=unit_axis,
+      radius=variables.outside_diameter,color=(0,1,0))
+
+    # Extrude the beam from the robot
+    while scale <= construction.beam['length']:
+      axis = helpers.scale(scale,unit_axis)
+      self.beams[name].axis = axis
+      scale += change
+      time.sleep((change / 120) * self.inverse_speed)

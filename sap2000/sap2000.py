@@ -29,10 +29,15 @@ class Sap2000(object):
     self.frame_objects = SapFrameObjects(sap_com_object)
     self.analysis = SapAnalysis(sap_com_object)
 
-  def reset(self, units="kip_in_F"):
+  def reset(self, units="kip_in_F",template = None):
     if self.model != None:
       self.model.File.Save()
-    self.model = self.initializeModel(units)
+
+    if template is None:
+      self.model = self.initializeModel(units)
+    else:
+      self.open(template)
+      self.model = self.sap_com_object.SapModel
 
   def start(self, units="kip_in_F", visible=True, filename=""):
     """
@@ -49,6 +54,7 @@ class Sap2000(object):
     """
     units = UNITS[units]
     self.sap_com_object.ApplicationStart(units, visible, filename)
+    self.model = self.sap_com_object.SapModel
 
   def exit(self, save_file=True):
     """ If the model file is saved then it is saved with its current name. """

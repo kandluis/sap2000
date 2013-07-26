@@ -1,6 +1,6 @@
 from sap2000.constants import LOAD_PATTERN_TYPES
 from helpers.vectors import *
-import errno, math, os, pdb, variables
+import construction, errno, math, os, pdb, variables
 
 def ratio(deg):
   '''
@@ -244,7 +244,7 @@ def midpoint(p1,p2):
   '''
   Returns the midpoint between p1,p2
   '''
-  return tuple([c1 + c2 / 2 for c1,c2 in zip(p1,p2)])
+  return tuple([(c1 + c2) / 2 for c1,c2 in zip(p1,p2)])
 
 '''
 Helper functions pertaining to the beams (especially intersections)
@@ -321,6 +321,18 @@ def distance_between_lines(l1,l2):
 
   #return length of projection onto normal
   return abs(dot(diagonal,normal))
+
+def beam_endpoint(pivot,point,beam_length = construction.beam['length']):
+  '''
+  Returns the endpoint of a beam which begins at pivot and contains the point
+  'point'
+  '''
+  v = make_vector(pivot,point)
+  assert not compare(length(v),0)
+
+  unit_v = make_unit(v)
+
+  return sum_vectors(pivot,scale(beam_length,unit_v))
 
 def closest_points(l1,l2, segment = True):
   '''

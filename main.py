@@ -9,7 +9,7 @@ from xlsxwriter.workbook import Workbook
 import construction, os, random,sys, variables
 
 class Simulation:
-  def __init__(self,seed = None):
+  def __init__(self,seed = None,template="C:\\SAP 2000\\template.sdb"):
     self.SapProgram = None
     self.SapModel = None
     self.Structure = None
@@ -27,6 +27,9 @@ class Simulation:
     self.seed = seed
     random.seed(seed)
 
+    # Stores the template
+    self.template = template
+
   def __setup_general(self):
     '''
     Function to setup the general settigns for the SAP2000 program
@@ -36,19 +39,6 @@ class Simulation:
     if ret:
       return False
 
-    # add load patterns HERE, which by default also defines a Load Case
-    '''
-    if not helpers.addloadpattern(self.SapModel, variables.robot_load_case, 
-      'LTYPE_DEAD'):
-      print ("Failure when adding the loadpattern {}".format(
-        variables.robot_load_case))
-      return False
-
-    if not self.__setup_case(variables.robot_load_case):
-      print ("Failure when setting-up load case {}.".format(
-        variables.robot_load_case))
-      return False
-    '''
     if not self.__setup_case("DEAD"):
       print("Failure setting up DEAD case.")
       return False
@@ -108,6 +98,11 @@ class Simulation:
     if ret:
       print("Failure with run flag.")
       return False
+
+    # Set the cases to be analyzed (all cases)
+    ret = self.SapModel.Analyze.SetRunCaseFlag("Wind",True,False)
+    if ret:
+      print("Failure with setting the wind case to be analyzed.")
 
     # Set Solver Options (Multithreaded, Auto, 64bit, robot_load_case)
     ret = self.SapModel.Analyze.SetSolverOption_1(2,0,False,
@@ -226,17 +221,13 @@ class Simulation:
     '''
     if self.started:
       # Resetting the SAP Program (this saves the previous file)
-      self.SapProgram.reset()
+      self.SapProgram.reset(template=self.template)
 
       # Creating new SAP Files
       outputfolder = ('C:\SAP 2000\\' +strftime("%b-%d") + "\\" + 
         strftime("%H_%M_%S") + comment + "\\")
       outputfilename = "tower.sdb"
       outputfile = outputfolder + outputfilename
-
-      # Create a new blank moder
-      ret = self.SapModel.File.NewBlank()
-      assert ret == 0
 
       # Create directory if necessary
       path = os.path.dirname(outputfile)
@@ -256,7 +247,8 @@ class Simulation:
     else:
       print("The simulation is not started. Cannot reset.")
 
-  def start(self, visualization = False, robots = 10, comment = "", model=""):
+  def start(self, visualization = False, robots = 10, comment = "", 
+    model="C:\\SAP 2000\\template.sdb"):
     '''
     This starts up the SAP 2000 Program and hides it. 
       visualization = should we display the simulation as it occurs?

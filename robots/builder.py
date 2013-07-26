@@ -569,19 +569,25 @@ class Builder(Movable):
     else:
       return False
 
-  def get_ratio(self,string):
+  def get_angle(self,string):
     '''
     Returns the appropriate ratios for support beam construction
     '''
     angle = construction.beam[string]
     angle = 90 - angle if self.beam is None else angle
-    return helpers.ratio(angle)
+    return angle
 
-  def get_ratios(self):
-    mini,maxi = ((self.get_ratio('support_angle_min'), self.get_ratio(
-      'support_angle_max'))
-      if self.beam is not None else (self.get_ratio('support_angle_max'),
-      self.get_ratio('support_angle_min')))
+  def get_angles(self,support = True):
+    if support:
+      mini,maxi = ((self.get_angle('support_angle_min'), self.get_angle(
+        'support_angle_max'))
+        if self.beam is not None else (self.get_angle('support_angle_max'),
+        self.get_angle('support_angle_min')))
+    else:
+      mini,maxi = ((self.get_angle('min_angle_constraint'), self.get_angle(
+        'max_angle_constraint'))
+        if self.beam is not None else (self.get_angle('max_angle_constraint'),
+        self.get_angle('min_angle_constraint')))
 
     return mini,maxi
 
@@ -603,6 +609,7 @@ class Builder(Movable):
     Returns the direction in which the support beam should be constructed
     '''
     # Check to see if direction is vertical
+    vertical = (0,0,1)
     if helpers.parallel(self.memory['repair_beam_direction'],vertical):
       xy_dir = self.non_zero_xydirection()
     else:
@@ -610,13 +617,16 @@ class Builder(Movable):
 
     return helpers.make_unit(xy_dir)
 
-  def support_vertical_change(self):
+  def support_vertical_change(self,angle=None):
     '''
     Returns the vertical change for the support endpoint locations
     '''
     # Add beam_directions plus vertical change based on angle ratio (tan)
-    ratio = self.get_ratio('support_angle')
-    vertical = helpers.scale(1/ratio,(0,0,1))
+    if angle is None:
+      ratio = helpers.ratio(self.get_angle('support_angle'))
+    else:
+      ratio = helpers.ratio(angle)
+    vertical = helpers.scale(1/ratio,(0,0,1)) if ratio != 0 else None
 
     return vertical
 
@@ -628,14 +638,12 @@ class Builder(Movable):
     assert self.memory['repair_beam_direction'] is not None
 
     # Add beam_directions plus vertical change based on angle ratio (tan)
-    ratio = self.get_ratio('support_angle')
+    ratio = helpers.ratio(self.get_angle('support_angle'))
     vertical = self.support_vertical_change()
     xy_dir = helpers.make_unit(self.support_xy_direction())
 
-    if xy_dir is None:
-      direction = vertical
-    elif vertical is None:
-      direction = xy_dir
+    if xy_dir is None or vertical is None:
+      direction = (0,0,1)
     else:
       direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
 
@@ -645,7 +653,7 @@ class Builder(Movable):
 
     return endpoint
 
-  def local_ratios(self,pivot,endpoint):
+  def local_angles(self,pivot,endpoint):
     '''
     Calculates the ratios of a beam if it were to intersect nearby beams. 
     Utilizes the line defined by pivot -> endpoint as the base for the ratios 
@@ -653,34 +661,33 @@ class Builder(Movable):
     # We place it here in order to have access to the pivot and to the vertical 
     # point
 
-    def add_ratios(box,dictionary):
-      for name in box:
+    def add_angles(box,dictionary):
+      for name, beam in box.items():
         # Ignore the beam you're on.
         if self.beam == None or self.beam.name != name:
-          beam = box[name]
-          # Get the closest points between the vertical and the beam
+          # Base vector (from which angles are measured)
+          base_vector = helpers.make_vector(pivot,endpoint)
+
+          # Get the closest points between the beam we want to construct and the
+          # current beam
           points = helpers.closest_points(beam.endpoints,(pivot,endpoint))
           if points != None:
             # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
             e1,e2 = points
-            # Let's do a sanity check. The shortest distance should have no 
-            # change in z
-            assert helpers.compare(e1[2],e2[2])
             # If we can actually reach the second point from vertical
             if helpers.distance(pivot,e2) <= variables.beam_length:
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
               if dist != 0:
-                # Change in z from vertical to one of the two poitns (we already
-                # asserted their z value to be equal)
-                delta_z = abs(e1[2] - pivot[2])
-                ratio = dist / delta_z if delta_z != 0 else sys.float_info.max
-                # Check to see if in the dictionary. If it is, associate point 
-                # with ratio
+                # Vector of beam we want to construct and angle from base_vector
+                construction_vector = helpers.make_vector(pivot,e2)
+                angle = helpers.smallest_angle(base_vector,construction_vector)
+
+                # Add to dictionary
                 if e2 in dictionary:
-                  assert helpers.compare(dictionary[e2],ratio)
+                  assert helpers.compare(dictionary[e2],angle)
                 else:
-                  dictionary[e2] = ratio
+                  dictionary[e2] = angle
 
           # Get the points at which the beam intersects the sphere created by 
           # the vertical beam      
@@ -692,19 +699,15 @@ class Builder(Movable):
             # which case, we would have already taken care of this). Either way,
             # we just cycle
             for point in sphere_points:
-              # The point is higher above.This way the robot only ever builds up
-              if point[2] >= pivot[2]:
-                projection = helpers.correct(pivot,endpoint,point)
-                # Sanity check
-                assert helpers.compare(projection[2],point[2])
+              # Vector to the beam we want to construct
+              construction_vector = helpers.make_vector(pivot,point)
+              angle = helpers.smallest_angle(base_vector,construction_vector)
 
-                dist = helpers.distance(projection,point)
-                delta_z = abs(point[2] - pivot[2])
-                ratio = dist / delta_z
-                if point in dictionary:
-                  assert helpers.compare(dictionary[point],ratio)
-                else:
-                  dictionary[point] = ratio
+              # Add to dictionary
+              if point in dictionary:
+                assert helpers.compare(dictionary[point],angle)
+              else:
+                dictionary[point] = angle
 
       return dictionary
 
@@ -712,18 +715,15 @@ class Builder(Movable):
     # those further above)
     boxes = self.structure.get_boxes(self.location)
     '''
-    Ratios contains the ratio dist / delta_z where dist is the shortest distance
-    from the vertical beam segment to a beam nearby and delta_z is the 
-    z-component change from the pivot point to the intersection point. Here, we 
-    add to ratios those that arise from the intersection points of the beams 
-    with the sphere. The dictionary is indexed by the point, and each point is 
-    associated with one ratio
+    The dictionary is indexed by the point, and each point is 
+    associated with one angle. The angle is measured from the pivot->endpoint
+    line passed into the function.
     '''
-    ratios = {}
+    angles = {}
     for box in boxes:
-      ratios = add_ratios(box,ratios)
+      angles = add_angles(box,angles)
 
-    return sorted(ratios.items(), key = operator.itemgetter(1))
+    return sorted(angles.items(), key = operator.itemgetter(1))
 
   def build(self):
     '''
@@ -769,10 +769,10 @@ class Builder(Movable):
       helpers.make_unit(construction.beam['vertical_dir_set'])))
 
     # Get the ratios
-    sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
+    sorted_angles = self.local_angles(pivot,vertical_endpoint)
 
     # Find the most vertical position
-    final_coord = self.find_nearby_beam_coord(sorted_ratios,pivot)
+    final_coord = self.find_nearby_beam_coord(sorted_angles,pivot)
 
     # Obtain the default endpoints
     default_endpoint = self.get_default(final_coord,vertical_endpoint)
@@ -783,51 +783,52 @@ class Builder(Movable):
 
     return self.addbeam(i,j)
 
-  def find_nearby_beam_coord(self,sorted_ratios,pivot):
+  def find_nearby_beam_coord(self,sorted_angles,pivot):
     '''
     Returns the coordinate of a nearby, reachable beam which results in the
     angle of construction with the most verticality
     '''
     # Limits
-    constraining_ratio = helpers.ratio(construction.beam['angle_constraint'])
-    min_support_ratio,max_support_ratio = self.get_ratios()
+    min_constraining_angle, max_constraining_angle = self.get_angles(False)
+    min_support_angle,max_support_angle = self.get_angles()
 
-    # Cycle through the sorted ratios until we find the right coordinate to build
-    for coord, ratio in sorted_ratios:
+    # Cycle through the sorted angles until we find the right coordinate to build
+    for coord, angle in sorted_angles:
 
       # If building a support beam, we don't want it too vertical or horizontal
-      if (self.memory['construct_support'] and (ratio < min_support_ratio or
-        ratio > max_support_ratio)) or helpers.compare(ratio,0):
+      if (self.memory['construct_support'] and (angle < min_support_angle or
+        angle > max_support_angle)):
         pass
 
-      # If the smallest ratio is larger than what we've specified as the limit, 
+      # If the smallest angle is larger than what we've specified as the limit, 
       # but larger than our tolerence, then build
-      if ratio > constraining_ratio:
+      if min_constraining_angle <= angle and angle <= max_constraining_angle:
         return coord
 
       # The beam doesn't exist, so build it
+      '''
       elif self.structure.available(pivot,coord):
         unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
         coord = helpers.sum_vectors(pivot,helpers.scale(
           variables.beam_length,unit_direction))
         return coord
-
+      '''
     return None
 
-  def get_default(self,ratio_coord,vertical_coord):
+  def get_default(self,angle_coord,vertical_coord):
     '''
     Returns the coordinate onto which the j-point of the beam to construct 
     should lie
     '''
     if self.memory['construct_support']:
       return self.support_beam_endpoint()
-    elif ratio_coord is not None:
-      return ratio_coord
+    elif angle_coord is not None:
+      return angle_coord
     elif vertical_coord is not None:
       # Create disturbance
       disturbance = self.get_disturbance()
       
-      # We add a bit of disturbance every onece in a while
+      # We add a bit of disturbance every once in a while
       new_coord = vertical_coord if self.default_probability() else (
       helpers.sum_vectors(vertical_coord,disturbance))
       return new_coord

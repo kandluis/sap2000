@@ -251,7 +251,7 @@ class Repairer(DumbRepairer):
       c_i,c_j = self.beam.endpoints
       current_vector = (helpers.make_vector(c_j,c_i) if 
         self.memory['previous_direction'][1][2] > 0 else helpers.make_vector(
-          b_i,b_j))
+          c_i,c_j))
 
       angle = helpers.smallest_angle(repair_vector,current_vector)
 
@@ -270,91 +270,108 @@ class Repairer(DumbRepairer):
         # We can use the current beam to decide the direction
         elif not helpers.parallel(vertical,current_vector):
           # Project onto the xy-plane and negate
-          if current_vector[2] < 0:
+          if current_vector[2] > 0:
             projection = helpers.make_unit(helpers.scale(-1,(current_vector[0],
               current_vector[1],0)))
           else:
-            projection = helpers.make_unit(current_vector[0],current_vector[1],0)
+            projection = helpers.make_unit((current_vector[0],current_vector[1],0))
+
+          # Add some small disturbance
           disturbance = helpers.scale(random.uniform(-1,1),(-projection[1],
             projection[0],projection[2]))
-          results = helpers.sum_vectors(projection,disturbance)
+          result = helpers.sum_vectors(projection,disturbance)
 
           # TODO
-          return projection
+          return result
 
         elif not helpers.parallel(vertical,repair_vector):
           return super(Repairer,self).support_xy_direction()
+
         else:
           raise Exception("?")
 
   def support_vertical_change(self):
-    # TODO
-    return super(Repairer,self).support_vertical_change()
+    # Get vertical vector 
+    change_vector = super(Repairer,self).support_vertical_change()
 
+    # If we're on the ground, just return (no rotation necessary)
+    if self.beam is None:
+      return change_vector
+
+    # Otherwise, rotate it based on our current beam
+    else:
+      # Debugging
+      if self.memory['previous_direction'] is None:
+        pdb.set_trace()
+
+      # Get the correct vector for the current beam
+      i,j = self.beam.endpoints
+      current_vector = helpers.make_vector(i,j)
+      
+      # Find rotation from vertical
+      angle = helpers.smallest_angle((0,0,1),current_vector)
+      rotation_angle = 180 - angle if angle > 90 else angle
+
+      vertical_angle = abs(construction.beam['support_angle'] - rotation_angle)
+
+      return super(Repairer,self).support_vertical_change(angle=vertical_angle)
 
   def support_beam_endpoint(self):
     '''
     Returns the endpoint for a support beam
     '''
+    pdb.set_trace()
     # Get broken beam
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
-    # Get pivot and vertical
+    # Get pivot and repair beam midpoint
     pivot = self.location
-    vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
-        variables.beam_length,
-        helpers.make_unit(construction.beam['vertical_dir_set'])))
+    midpoint = helpers.midpoint(e1,e2)
+    endpoint = helpers.beam_endpoint(pivot,midpoint)
+    angle_from_vertical = helpers.smallest_angle(helpers.make_vector(pivot,
+      endpoint),(0,0,1))
 
-    # Get ratios
-    sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
-    min_support_ratio,max_support_ratio = self.get_ratios()
+    # Get angles
+    sorted_angles = self.local_angles(pivot,endpoint)
+    min_support_angle,max_support_angle = self.get_angles()
 
-    # Cycle through ratios looking for one that is above our limit (not too
+    # Defining here to have access to min,max, etc.
+    def acceptable_support(angle,coord):
+      # Find beam endpoints
+      beam_endpoint = helpers.beam_endpoint(pivot,coord)
+
+      # Calculate angle from vertical of beam we wish to construct based on the
+      # information we've gathered
+      from_vertical = (angle_from_vertical + angle if beam_endpoint[2] <= 
+        endpoint[2] else angle_from_vertical - angle)
+
+      simple = not (from_vertical < min_support_angle or from_vertical > 
+        max_support_angle)
+
+      # On the ground
+      if self.beam is None:
+        return simple
+
+      # On a beam, so check our support_angle_difference
+      else:
+        beam_vector = helpers.make_vector(self.beam.endpoints.i,
+          self.beam.endpoints.j)
+        support_vector = helpers.make_vector(self.location,coord)
+        angle = helpers.smallest_angle(beam_vector,support_vector)
+        real_angle = abs(90-angle) if angle > 90 else angle
+        
+        return simple and real_angle > construction.beam['support_angle_difference']
+
+    # Cycle through angles looking for one that is above our limit (not too
     # vertical nor horizontal) that is on our broken beam
-    for coord,ratio in sorted_ratios:
-      # Build everywhere on the beam excep for the tips.
-      if helpers.on_line(e1,e2,coord) and not (helpers.compare_tuple(e1,coord)
-        or helpers.compare_tuple(e2,coord)):
-        pdb.set_trace()
+    for coord,angle in sorted_angles:
+      # Build everywhere on the beam except for the tips.
+      if helpers.on_line(e1,e2,coord):
         # We have an acceptable beam
-        if not ((ratio < min_support_ratio or ratio > max_support_ratio) or 
-          helpers.compare(ratio,0)):
+        if acceptable_support(angle,coord):
           # Reset the broken beam name
           self.memory['broken_beam_name'] = ''
           return coord
       
     # Otherwise, do default behaviour
     return super(Repairer,self).support_beam_endpoint()
-  '''
-  def support_beam_endpoint(self):
-    # Get broken beam
-    e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
-      self.location)
-
-    # Reset the broken beam name
-    self.memory['broken_beam_name'] = ''
-
-    if (helpers.compare(e1[2],0) or helpers.compare(e2[1],0) and 
-      helpers.compare(self.location[2],0)):
-      pivot = self.location
-      vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
-        variables.beam_length,
-        helpers.make_unit(construction.beam['vertical_dir_set'])))
-      sorted_ratios = self.local_ratios(pivot,vertical_endpoint)
-      # Cycle through ratios looking for one that lies on the beam we want
-      for coord,ratio in sorted_ratios:
-        if helpers.on_line(e1,e2,coord):
-          midpoint = helpers.midpoint(e1,e2)
-          if helpers.distance(pivot,midpoint) <= construction.beam['length']:
-            return midpoint
-          else:
-            return coord
-
-      # We didn't find an appropriate one, so return default enpoint
-      self.memory['construct_support'] = False
-      ratio = self.find_nearby_beam_coord(sorted_ratios,pivot)
-      return self.get_default(ratio,vertical_endpoint)
-      
-    # Otherwise, do default behaviour
-    return super(Repairer,self).support_beam_endpoint()
-  '''

@@ -178,8 +178,8 @@ class Structure:
     Loads the model from SapModel (model variable) into the structure. Simply
     mimicks constructing this model.
     '''
-    frames = program.sap_frame_objects
-    points = program.sap_point_objects
+    frames = program.frame_objects
+    points = program.point_objects
 
     # Get the names
     names = frames.get_names()
@@ -194,6 +194,8 @@ class Structure:
       if not self.add_beam(e1,e2,name):
         print("Could not add the beam {} at the points {}-{}. Maybe those \
           points are out of bounds?".format(name,str(e1),str(e2)))
+
+    return 0
 
   def find_beam(self,beam):
     '''
