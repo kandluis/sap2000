@@ -382,7 +382,7 @@ class Builder(Movable):
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
     if self.at_joint():
-      pdb.set_trace()
+      #pdb.set_trace()
       for name, directions in dirs.items():
         # If the name is our beam, do a structural check instead of a joint check
         if ((self.beam.name == name and self.beam_check(name)) or 
@@ -545,6 +545,9 @@ class Builder(Movable):
     name = self.program.frame_objects.add(p1_name,p2_name,
       propName=variables.frame_property_name)
     if name == '':
+      # Set to false if we were constructing support
+      self.memory['construct_support'] = False
+
       return False
 
     # Get rid of one beam

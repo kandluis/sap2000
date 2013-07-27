@@ -33,7 +33,7 @@ class DumbRepairer(Worker):
     '''
     # If we are at a joint, we might move up but MUST move in right x and y
     if self.at_joint():
-      pdb.set_trace()
+      # pdb.set_trace()
       self.memory['pos_z'] = True
       self.memory['dir_priority'] = [1,1,1]
     else:
@@ -172,12 +172,15 @@ class DumbRepairer(Worker):
     j = beam.endpoints.j
     # This is the xy-change, basically
     direction = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
-    # Check to make sure the direction is non-zero. 
-    non_zero = not helpers.compare(helpers.length(direction),0)
+    # Check to make sure the direction is non-zero and the the verticality is
+    # within a reasonable range
+    v = helpers.make_vector(beam.endpoints.i,beam.endpoints.j)
+    non_vertical = (helpers.smallest_angle(v,(0,0,1)) > 
+      construction.beam['verticality_angle'])
 
     # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
     # 180 degree approah
-    direction = helpers.make_unit(direction) if non_zero else (0,0,1)
+    direction = helpers.make_unit(direction) if non_vertical else (0,0,1)
     disturbance = self.non_zero_xydirection()
     direction = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
     self.memory['repair_beam_direction'] = direction
@@ -186,7 +189,7 @@ class DumbRepairer(Worker):
     # pick a direction which within 180 degrees of the beam
     ground_direction = direction if random.randint(0,2) != 1 else helpers.scale(
       -1,direction)
-    self.ground_direction = direction if non_zero else None
+    self.ground_direction = direction if non_vertical else None
     
     # We want to climb down, and travel in 'direction' if possible
     set_dir('pos_x',direction[0])
@@ -346,7 +349,7 @@ class Repairer(DumbRepairer):
 
     # Add an offset to mimick inability to determine location exactly
     offset = helpers.scale(random.uniform(-variables.random,variables.random),v)
-    midpoint = (helpers.sum_vectors(midpoint,offset) if random.ranint(0,4) == 1
+    midpoint = (helpers.sum_vectors(midpoint,offset) if random.randint(0,4) == 1
     else midpoint) 
 
     # Calculate starting beam_endpoint

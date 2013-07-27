@@ -37,5 +37,9 @@ beam = {
 
   # This is how far a support beam construction from our current beam must
   # occur in order for the beam to be considered acceptable
-  'support_angle_difference' : 10
+  'support_angle_difference' : 10,
+
+  # If a beam is within this angle from vertical, it is considered vertical for 
+  # the purpose of determining the direction we wish to travel in
+  'verticality_angle'        :  5
 }
