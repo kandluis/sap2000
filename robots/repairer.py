@@ -209,15 +209,13 @@ class DumbRepairer(Worker):
     '''
     Overriding so we can build support beam
     '''
-    # If the program is not locked, there are no analysis results so True
-    if not self.model.GetModelIsLocked():
-      return False
-
     # Analysis results available
-    elif self.memory['new_beam_steps'] == 0 and self.memory['construct_support']:
+    if self.memory['new_beam_steps'] == 0 and self.memory['construct_support']:
       return True
-    
-    return False
+
+    # If the program is not locked, there are no analysis results so True
+    else:
+      return super(DumbRepairer,self).local_rules()
 
 class Repairer(DumbRepairer):
   '''
@@ -332,7 +330,6 @@ class Repairer(DumbRepairer):
     '''
     Returns the endpoint for a support beam
     '''
-    # pdb.set_trace()
     # Get broken beam
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
@@ -349,7 +346,8 @@ class Repairer(DumbRepairer):
 
     # Add an offset to mimick inability to determine location exactly
     offset = helpers.scale(random.uniform(-variables.random,variables.random),v)
-    midpoint = helpers.sum_vectors(midpoint,offset)
+    midpoint = (helpers.sum_vectors(midpoint,offset) if random.ranint(0,4) == 1
+    else midpoint) 
 
     # Calculate starting beam_endpoint
     endpoint = helpers.beam_endpoint(pivot,midpoint)

@@ -382,6 +382,7 @@ class Builder(Movable):
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
     if self.at_joint():
+      pdb.set_trace()
       for name, directions in dirs.items():
         # If the name is our beam, do a structural check instead of a joint check
         if ((self.beam.name == name and self.beam_check(name)) or 
@@ -640,11 +641,12 @@ class Builder(Movable):
     # Add beam_directions plus vertical change based on angle ratio (tan)
     ratio = helpers.ratio(self.get_angle('support_angle'))
     vertical = self.support_vertical_change()
-    xy_dir = helpers.make_unit(self.support_xy_direction())
+    xy_dir = self.support_xy_direction()
 
     if xy_dir is None or vertical is None:
       direction = (0,0,1)
     else:
+      xy_dir = helpers.make_unit(xy_dir)
       direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
 
     # Calculate endpoints

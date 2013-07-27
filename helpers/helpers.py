@@ -18,7 +18,14 @@ def smallest_angle(v1,v2):
   # Sanity Check
   assert not (compare(l1,0) or compare(l2,0))
 
-  angle = math.degrees(math.acos(dot(v1,v2) / (l1 * l2)))
+  result = dot(v1,v2) / (l1 * l2)
+
+  if compare(result,1):
+    result = 1
+  elif compare(result,-1):
+    result = -1
+
+  angle = math.degrees(math.acos(result))
 
   return angle
 
@@ -322,22 +329,15 @@ def distance_between_lines(l1,l2):
   #return length of projection onto normal
   return abs(dot(diagonal,normal))
 
-def beam_endpoint(pivot,point,beam_length = construction.beam['length'],
-  disturbance=variables.random_percentage):
+def beam_endpoint(pivot,point,beam_length = construction.beam['length']):
   '''
   Returns the endpoint of a beam which begins at pivot and contains the point
-  'point'. The endpoint is not returned perfectly, but with a disturbance of 
-  disturbance (percentage in decimal format)
+  'point'.
   '''
   v = make_vector(pivot,point)
   assert not compare(length(v),0)
 
-  if disturbance is None:
-    unit_v = make_unit(v)
-  else:
-    unit_dist = make_unit((-1*v[1],v[0],0))
-    disturbance = scale(disturbance,unit_dist)
-    unit_v = make_unit(sum_vectors(disturbance,make_unit(v)))
+  unit_v = make_unit(v)
 
   return sum_vectors(pivot,scale(beam_length,unit_v))
 

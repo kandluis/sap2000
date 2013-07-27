@@ -15,6 +15,7 @@ construction_size = (36,36,variables.epsilon)
 beam = {
   'length'                    : variables.beam_length,
   'min_angle_constraint'      : 20,
+  'angle_constraint'          : 45,
   'max_angle_constraint'      : 70,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
@@ -22,8 +23,8 @@ beam = {
   'horizontal_beam_limit'     : 4,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
-  'support_angle_min'         : 10,
-  'support_angle_max'         : 80,
+  'support_angle_min'         : 15,
+  'support_angle_max'         : 75,
 
   # This is the angle from the vertical at which a beam is initially constructed
   'construction_angle'        : 20,
