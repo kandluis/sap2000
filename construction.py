@@ -23,8 +23,8 @@ beam = {
   'horizontal_beam_limit'     : 4,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
-  'support_angle_min'         : 15,
-  'support_angle_max'         : 75,
+  'support_angle_min'         : 35,
+  'support_angle_max'         : 85,
 
   # This is the angle from the vertical at which a beam is initially constructed
   'construction_angle'        : 20,
@@ -33,7 +33,7 @@ beam = {
   # currently on.
   # If the actual angle is greater, then we add a support beam
   # If it is less, then we repair directly
-  'direct_repair_limit'      : 120,
+  'direct_repair_limit'      : 110,
 
   # This is how far a support beam construction from our current beam must
   # occur in order for the beam to be considered acceptable

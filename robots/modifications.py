@@ -44,7 +44,7 @@ class DeflectionRepairer(NormalRepairer):
   Attemps to build vertical beams such that they counter balance each Otherwise
   '''
   def __init__(self,name,structure,location,program):
-    super(SmartRepairer,self).__init__(name,structure,location,program)
+    super(DeflectionRepairer,self).__init__(name,structure,location,program)
     
   def get_disturbance(self):
     '''
@@ -72,7 +72,7 @@ class DeflectionRepairer(NormalRepairer):
       delta_x, delta_y = const_change(v[0]), const_change(v[1])
       return (delta_x,delta_y,0)
     else:
-      return super(Repairer,self).get_disturbance()
+      return super(DeflectionRepairer,self).get_disturbance()
 
 class SmartRepairer(NormalRepairer):
   '''

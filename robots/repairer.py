@@ -33,7 +33,7 @@ class DumbRepairer(Worker):
     '''
     # If we are at a joint, we might move up but MUST move in right x and y
     if self.at_joint():
-      # pdb.set_trace()
+      #pdb.set_trace()
       self.memory['pos_z'] = True
       self.memory['dir_priority'] = [1,1,1]
     else:

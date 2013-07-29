@@ -202,11 +202,11 @@ class Builder(Movable):
         priorities = list(self.memory['dir_priority'])
       
       max_val = max(priorities)
-      max_indeces = [priorities.index(x) for x in priorities if x == max_val]
       # Set to -1 so we don't use them next time, and set comp_funs to True
-      for index in max_indeces:
-        priorities[index] = -1
-        comp_functions[index] = lambda a : True
+      for i, val in enumerate(priorities):
+        if val == max_val:
+          priorities[i] = -1
+          comp_functions[i] = lambda a : True
 
       if max_val <= 0:
         return new_dirs

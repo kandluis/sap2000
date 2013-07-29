@@ -528,8 +528,8 @@ class Structure:
         self.structure_data[-1].append((beam.name,max_val))
 
       # Calculate gradiant color and store
-      ratio = round(max_val/construction.beam['structure_check'],3)
-      color = (ratio,max(1-ratio,0),0)
+      ratio = round(max_val/construction.beam['structure_check'],2)
+      color = (ratio,round(max(1-ratio,0),2),0)
       try:
         self.color_data += "{}:{}<>".format(beam.name,str(color)) 
       except MemoryError:

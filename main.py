@@ -372,9 +372,13 @@ class Simulation:
           self.Swarm.show()
 
         # Add number and new line to structure visualization data
-        self.Structure.visualization_data += "\n"
-        self.Structure.color_data += '\n'
-        self.Structure.structure_data.append([])
+          self.Structure.visualization_data += "\n"
+          self.Structure.structure_data.append([])
+        try:
+          self.Structure.color_data += '\n'
+        except MemoryError:
+          self.Structure.color_data = ''
+
 
         # Save to a different filename every now and again
         try:

@@ -1,5 +1,5 @@
 from helpers import helpers
-from robots.modifications import SmartRepairer, LeanRepairer, DeflectionRepairer
+from robots.modifications import SmartRepairer, LeanRepairer, DeflectionRepairer, RandomUpwardRepairer
 from visual import *
 import construction, variables
 
