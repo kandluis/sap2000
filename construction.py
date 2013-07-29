@@ -14,9 +14,9 @@ construction_size = (36,36,variables.epsilon)
 # All angles are in degrees.
 beam = {
   'length'                    : variables.beam_length,
-  'min_angle_constraint'      : 20,
+  'min_angle_constraint'      : 5,
   'angle_constraint'          : 45,
-  'max_angle_constraint'      : 70,
+  'max_angle_constraint'      : 85,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
   'beam_limit'                : 0.16,
@@ -27,13 +27,13 @@ beam = {
   'support_angle_max'         : 85,
 
   # This is the angle from the vertical at which a beam is initially constructed
-  'construction_angle'        : 20,
+  'construction_angle'        : 30,
 
   # This is the angle between the beam we want to repair and the beam we are
   # currently on.
   # If the actual angle is greater, then we add a support beam
   # If it is less, then we repair directly
-  'direct_repair_limit'      : 110,
+  'direct_repair_limit'      : 90,
 
   # This is how far a support beam construction from our current beam must
   # occur in order for the beam to be considered acceptable

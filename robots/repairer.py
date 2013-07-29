@@ -101,7 +101,6 @@ class DumbRepairer(Worker):
         self.ground_support()
 
       # We've moved off the beam, so run the search support routine
-      pdb.set_trace()
       elif (self.memory['broken_beam_name'] != self.beam.name and 
         self.search_mode and self.memory['broken_beam_name'] != ''):
 
@@ -366,6 +365,8 @@ class Repairer(DumbRepairer):
     # Get angles
     sorted_angles = self.local_angles(pivot,endpoint)
     min_support_angle,max_support_angle = self.get_angles()
+    min_constraining_angle,max_constraining_angle = self.get_angles(
+      support=False)
 
     # Defining here to have access to min,max, etc.
     def acceptable_support(angle,coord):
@@ -377,8 +378,8 @@ class Repairer(DumbRepairer):
       from_vertical = (angle_from_vertical + angle if beam_endpoint[2] <= 
         endpoint[2] else angle_from_vertical - angle)
 
-      simple = not (from_vertical < min_support_angle or from_vertical > 
-        max_support_angle)
+      simple = not (from_vertical < min_constraining_angle or from_vertical > 
+        max_constraining_angle)
 
       # On the ground
       if self.beam is None:
@@ -407,3 +408,19 @@ class Repairer(DumbRepairer):
       
     # Otherwise, do default behaviour
     return super(Repairer,self).support_beam_endpoint()
+
+  def remove_specific(self,dirs):
+    '''
+    We don't want to move UP along our own beam when we are repairing and at a
+    joint.
+    '''
+    '''
+    if self.at_joint() and self.repair_mode:
+      # Access items
+      for beam, vectors in dirs.items():
+        # If the directions is about our beam, remove references to up.
+        if beam == self.beam.name:
+          dirs[beam] = [v for v in vectors if v[2] < 0 or helpers.compare(v[2],0)]
+          '''
+
+    return super(Repairer,self).remove_specific(dirs)

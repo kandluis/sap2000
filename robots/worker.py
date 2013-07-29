@@ -25,7 +25,7 @@ class Worker(Builder):
       for beam in beams:
         for endpoint in beam.endpoints:
           # If the beam is not close to us and it is greater than our location
-          if (not helpers.comapare(helpers.distance(self.location,endpoint),0)
+          if (not helpers.compare(helpers.distance(self.location,endpoint),0)
             and endpoint[2] > self.location[2]):
             return False
 

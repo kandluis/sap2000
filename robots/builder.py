@@ -161,6 +161,13 @@ class Builder(Movable):
     else:
       super(Builder,self).do_action()
 
+  def remove_specific(self,dirs):
+    '''
+    In case we ever need to remove a specific direction for the set of available
+    directions
+    '''
+    return dirs
+
   def filter_dict(self,dirs,new_dirs,comp_functions,priorities = []):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
@@ -193,6 +200,8 @@ class Builder(Movable):
             new_dirs[beam] = [vector]
           else:
             new_dirs[beam].append(vector)
+
+    new_dirs = self.remove_specific(new_dirs)
 
     # Case is not matched, so obtain keys of max values and remove those
     # restraints if the value is not 0
@@ -801,9 +810,9 @@ class Builder(Movable):
     for coord, angle in sorted_angles:
 
       # If building a support beam, we don't want it too vertical or horizontal
-      if (self.memory['construct_support'] and (angle < min_support_angle or
-        angle > max_support_angle)):
-        pass
+      #if (self.memory['construct_support'] and (angle < min_support_angle or
+      #  angle > max_support_angle)):
+      #  pass
 
       # If the smallest angle is larger than what we've specified as the limit, 
       # but larger than our tolerence, then build
