@@ -23,7 +23,7 @@ beam = {
   'horizontal_beam_limit'     : 4,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
-  'support_angle_min'         : 35,
+  'support_angle_min'         : 30,
   'support_angle_max'         : 85,
 
   # This is the angle from the vertical at which a beam is initially constructed

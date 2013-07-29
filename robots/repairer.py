@@ -101,6 +101,7 @@ class DumbRepairer(Worker):
         self.ground_support()
 
       # We've moved off the beam, so run the search support routine
+      pdb.set_trace()
       elif (self.memory['broken_beam_name'] != self.beam.name and 
         self.search_mode and self.memory['broken_beam_name'] != ''):
 
@@ -115,10 +116,13 @@ class DumbRepairer(Worker):
             self.memory['previous_direction'][1][2],0))):
           self.construction_mode()
 
-        self.find_support()
+          # Decide again since we're out of repair mode
+          self.decide()
 
-        # Move (don't check construction)
-        self.movable_decide()
+        else:
+          self.find_support()
+          # Move (don't check construction)
+          self.movable_decide()
 
       # Simply move
       else:
