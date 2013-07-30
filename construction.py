@@ -16,7 +16,7 @@ beam = {
   'length'                    : variables.beam_length,
   'min_angle_constraint'      : 5,
   'angle_constraint'          : 45,
-  'max_angle_constraint'      : 85,
+  'max_angle_constraint'      : 80,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
   'beam_limit'                : 0.16,
