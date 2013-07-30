@@ -414,13 +414,16 @@ class Repairer(DumbRepairer):
     We don't want to move UP along our own beam when we are repairing and at a
     joint.
     '''
-    '''
+    new_dirs = {}
     if self.at_joint() and self.repair_mode:
       # Access items
       for beam, vectors in dirs.items():
         # If the directions is about our beam, remove references to up.
         if beam == self.beam.name:
-          dirs[beam] = [v for v in vectors if v[2] < 0 or helpers.compare(v[2],0)]
-          '''
+          vectors = [v for v in vectors if v[2] < 0 or helpers.compare(v[2],0)]
+          if vectors != []:
+            new_dirs[beam] = vectors
+        else:
+          new_dirs[beam] = vectors
 
     return super(Repairer,self).remove_specific(dirs)
