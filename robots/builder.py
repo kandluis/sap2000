@@ -441,6 +441,10 @@ class Builder(Movable):
     # Get all the possible directions, as normal
     info = self.get_directions_info()
 
+    # Debuggin
+    if self.repair_mode and self.at_joint() and len(info['directions']) > 2:
+      pdb.set_trace()
+
     # Filter out directions which are unfeasable
     if self.model.GetModelIsLocked():
       feasable_directions = self.filter_feasable(info['directions'])
