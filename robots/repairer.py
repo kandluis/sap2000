@@ -426,4 +426,6 @@ class Repairer(DumbRepairer):
         else:
           new_dirs[beam] = vectors
 
+      return super(Repairer,self).remove_specific(new_dirs)
+
     return super(Repairer,self).remove_specific(dirs)

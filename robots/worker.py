@@ -97,21 +97,33 @@ class Worker(Builder):
   def pick_direction(self,directions):
     '''
     Overwritting to pick the direction of steepest descent when climbing down
-    instead of just picking a direction randomly
+    instead of just picking a direction randomly. Also takes into account that 
+    we might want to travel upward when repairing.
     '''
     if self.repair_mode and not self.memory['construct_support']:
       self.repairing()
 
-    def min_dir(vs):
+    def min_max_dir(vs,get_min=True):
       unit_list = [helpers.make_unit(v) for v in vs if not helpers.compare(
         helpers.length(v),0)]
-      min_val = min(unit_list,key=lambda t : t[2])
-      index = unit_list.index(min_val)
-      return index,min_val
+      if get_min:
+        val = min(unit_list,key=lambda t : t[2])
+      else:
+        val = max(unit_list,key=lambda t : t[2])
+
+      index = unit_list.index(val)
+      return index,val
+
+    # Pick the largest direction going up (in case of support beam)
+    if self.repair_mode and self.at_joint():
+      pdb.set_trace()
+      beam, (index, unit_dir) = max([(n, min_max_dir(vs,False)) for n,vs in directions.items()],
+        key=lambda t : t[1][1][2])
 
     # Pick the smalles pos_z whether moving up or down (modification)
-    beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
-      key=lambda t : t[1][1][2])
+    else:
+      beam, (index, unit_dir) = min([(n, min_max_dir(vs)) for n,vs in directions.items()],
+        key=lambda t : t[1][1][2])
 
     # We want to return the original direction vector since it contains both
     # information on direction and on distance

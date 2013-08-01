@@ -16,28 +16,17 @@ class RandomUpwardRepairer(NormalRepairer):
     '''
     Overwritting to pick upwards direction randomly
     '''
-    if self.repair_mode and not self.memory['construct_support']:
-      self.repairing()
-
-    def min_dir(vs):
-      unit_list = [helpers.make_unit(v) for v in vs if not helpers.compare(
-        helpers.length(v),0)]
-      min_val = min(unit_list,key=lambda t : t[2])
-      index = unit_list.index(min_val)
-      return index,min_val
-
     # Pick the smalles pos_z when down (modification)
     if not self.memory['pos_z']: 
-      beam, (index, unit_dir) = min([(n, min_dir(vs)) for n,vs in directions.items()],
-        key=lambda t : t[1][1][2])
-      direction = beam, directions[beam][index]
+      return super(RandomUpwardRepairer,self).pick_direction(directions)
+    
     else:
       direction = self.random_direction(directions)
-
-    # Store direction
-    self.memory['previous_direction'] = direction
-    
-    return direction
+      
+      # Store direction
+      self.memory['previous_direction'] = direction
+      
+      return direction
 
 class DeflectionRepairer(NormalRepairer):
   '''

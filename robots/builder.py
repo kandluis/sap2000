@@ -442,7 +442,7 @@ class Builder(Movable):
     info = self.get_directions_info()
 
     # Debuggin
-    if self.repair_mode and self.at_joint() and len(info['directions']) > 2:
+    if self.repair_mode and self.at_joint():
       pdb.set_trace()
 
     # Filter out directions which are unfeasable
