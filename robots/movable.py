@@ -389,8 +389,13 @@ class Movable(Automaton):
       if helpers.compare(self.step,0):
         self.step == variables.step_length
 
-      # We still have steps to go
+      # We still have steps to go, so run an analysis if necessary
       elif self.beam is not None:
+        # Run analysys before deciding to get the next direction
+        if not self.model.GetModelIsLocked() and self.location[2] > 0:
+          errors = helpers.run_analysis(self.model)
+          assert errors == ''
+
         self.next_direction_info = self.get_direction()
         self.do_action()
 
@@ -414,6 +419,11 @@ class Movable(Automaton):
     robot can detect (though, this should only be used for finding a connection,
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
+    # Run analysys before deciding to get the next direction
+    if not self.model.GetModelIsLocked() and self.location[2] > 0:
+      errors = helpers.run_analysis(self.model)
+      assert errors == ''
+
     # Verify that the robot is on its beam and
     # correct if necessary. This is done so that floating-point arithmethic 
     # errors don't add up.
@@ -478,7 +488,7 @@ class Movable(Automaton):
       # Before we decide, we need to make sure that we have access to analysis
       # results. Therefore, check to see if the model is locked. If it is not,
       # then execute and analysis.
-      if not self.model.GetModelIsLocked():
+      if not self.model.GetModelIsLocked() and self.location[2] > 0:
         errors = helpers.run_analysis(self.model)
         assert errors == ''
 

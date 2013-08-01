@@ -395,7 +395,7 @@ class Builder(Movable):
       for name, directions in dirs.items():
         # If the name is our beam, do a structural check instead of a joint check
         if ((self.beam.name == name and self.beam_check(name)) or 
-          self.joint_check(name)):
+          (self.beam.name != name and self.joint_check(name))):
           results[name] = directions
         else:
           # Keep only the directions that take us down
@@ -552,6 +552,10 @@ class Builder(Movable):
           print("Something went wrong adding ground point {}.".format(str(p)))
       else:
         return name
+
+    # Unlock the program if necessary
+    if self.model.GetModelIsLocked():
+      self.model.SetModelIsLocked(False)
 
     # Add points to SAP Program
     p1_name, p2_name = addpoint(p1), addpoint(p2)
