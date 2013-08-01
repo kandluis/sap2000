@@ -486,3 +486,35 @@ def sphere_intersection(line, center, radius, segment = True):
           return [p2]
         else:
           return None
+
+def run_analysis(model):
+  '''
+  Runs the analysis, selecting the right cases for output. Returns a string of
+  explanations for any errors that occurred during the analysis process.
+  '''
+  errors = ''
+  try:
+    ret = model.Analyze.RunAnalysis()
+    if ret:
+     errors += "RunAnalysis failed! Value: {}\n".format(str(ret))
+  except:
+    print("Simlation ended when analyzing model.")
+    raise
+
+  try:
+    # Deselect all outputs
+    ret = model.Results.Setup.DeselectAllCasesAndCombosForOutput()
+    if ret and debug:
+      errors += "Deselecting Cases failed! Value: {}\n".format(str(ret))
+
+    # Select just the Robot Load Case for Output
+    ret = model.Results.Setup.SetCaseSelectedForOutput(
+      variables.robot_load_case)
+    if ret:
+      errors += "Selecting {} case failed! Value: {}\n".format(
+        variables.robot_load_case,str(ret))
+  except:
+    print("Simulation ended when setting up output cases.")
+    raise
+
+  return errors

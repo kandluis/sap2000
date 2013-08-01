@@ -394,28 +394,8 @@ class Simulation:
         # robots on it (ie, we actually need the information)
         if self.Structure.tubes > 0 and self.Swarm.need_data():
           try:
-            ret = self.SapModel.Analyze.RunAnalysis()
-            # When ret is not 0 debug is on, write out that it failed.
-            if ret and debug:
-              sap_failures.write("RunAnalysis failed! Value returned was" + 
-                " {}".format(str(ret)))
+            sap_failures.write(helpers.run_analysis(self.SapModel))
           except:
-            print("Simulation ended when analyzing model.")
-            self.exit(run_text)
-            raise
-
-          # Deselect all outputs
-          try:
-            ret = self.SapModel.Results.Setup.DeselectAllCasesAndCombosForOutput()
-            if ret and debug:
-              sap_failures.write("Deselecting Cases failed! Value returned was " +
-                "{}".format(str(ret)))
-
-            # Select just the Robot Load Case for Output
-            ret = self.SapModel.Results.Setup.SetCaseSelectedForOutput(
-              variables.robot_load_case)
-          except:
-            print("Simulation ended when setting up output cases.")
             self.exit(run_text)
             raise
 

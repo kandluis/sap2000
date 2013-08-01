@@ -468,13 +468,20 @@ class Movable(Automaton):
     Later classes need direct access to this method
     '''
     # If we're not on a beam, then we will wander on the ground
-    if self.beam == None:
+    if self.beam is None:
       # reset steps
       self.next_direction_info = None
 
     # Otherwise, we are not on the ground and we decided not to build, so pick 
     # a direction and store that
     else:
+      # Before we decide, we need to make sure that we have access to analysis
+      # results. Therefore, check to see if the model is locked. If it is not,
+      # then execute and analysis.
+      if not self.model.GetModelIsLocked():
+        errors = helpers.run_analysis(self.model)
+        assert errors == ''
+
       self.next_direction_info = self.get_direction()
 
   # Model needs to have been analyzed before calling THIS function
