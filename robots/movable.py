@@ -332,7 +332,6 @@ class Movable(Automaton):
       # yourself again (to find a new location)
       if not helpers.check_location(predicted_location):
         self.ground_direction = None
-        pdb.set_trace()
         return self.get_ground_direction()
       # Here, we return the right direction
       else:
@@ -433,6 +432,8 @@ class Movable(Automaton):
 
     # Obtain all local objects
     box = self.structure.get_box(self.location)
+
+    # Debugging
     if box == {}:
       pdb.set_trace()
 

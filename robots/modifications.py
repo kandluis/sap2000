@@ -110,3 +110,22 @@ class LeanRepairer(NormalRepairer):
         construction.beam['length'],direction))
 
       return endpoint
+
+class OverRepairer(NormalRepairer):
+  '''
+  Instead of climbing up whatever way it can, this robot goes into repair mode
+  as soon as it finds a beam which needs repair. It does this even if there are
+  other directions along which it can travel
+  '''
+  def filter_feasable(self,dirs):
+    '''
+    Overwritting to return the empty set if there are broken beams in memory
+    '''
+    # Call first, as normal, adding broken to memory
+    result = super(NormalRepairer,self).filter_feasable(dirs)
+
+    # Check memory state
+    if len(self.memory['broken']) == 1:
+      return result
+    else:
+      return {}

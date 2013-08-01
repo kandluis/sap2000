@@ -121,6 +121,7 @@ class Builder(Movable):
     # We build almost never.
     self.start_construction = False
     self.step = variables.step_length
+    self.memory['broken'] = []
 
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
@@ -180,9 +181,6 @@ class Builder(Movable):
     priorty numbers as possible. Same priorities must be matched at the same
     level.
     '''
-    # Access the list of broken beam names
-    broken = [beam.name for beam,direction in self.memory['broken']]
-
     # Access items
     for beam, vectors in dirs.items():
       # Access each directions
@@ -192,10 +190,8 @@ class Builder(Movable):
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
 
-        # When repairing, we want to switch direction onto another beam but not
-        # one that is broken
-        if (coord_bool and not (self.repair_mode and self.at_joint() and 
-          self.beam.name == beam and beam in broken)):
+        # Check
+        if coord_bool:
           if beam not in new_dirs:
             new_dirs[beam] = [vector]
           else:
@@ -440,10 +436,6 @@ class Builder(Movable):
     '''
     # Get all the possible directions, as normal
     info = self.get_directions_info()
-
-    # Debuggin
-    if self.repair_mode and self.at_joint():
-      pdb.set_trace()
 
     # Filter out directions which are unfeasable
     if self.model.GetModelIsLocked():

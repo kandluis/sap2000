@@ -351,7 +351,7 @@ class Repairer(DumbRepairer):
     midpoint = helpers.midpoint(e2,midpoint1)
 
     # Add an offset to mimick inability to determine location exactly
-    offset = helpers.scale(random.uniform(-variables.random,variables.random),v)
+    offset = helpers.scale(random.uniform(-2*variables.random,2*variables.random),v)
     midpoint = (helpers.sum_vectors(midpoint,offset) if random.randint(0,4) == 1
     else midpoint) 
 
