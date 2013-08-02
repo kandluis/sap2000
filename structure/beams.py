@@ -49,14 +49,14 @@ class Beam:
 
     else:
       coord = Coord(x=coord[0],y=coord[1],z=coord[2])
-      if coord in self.joints:
-        # Make sure we only keep track of the beam once (no multiple same name
-        # beams per coord)
-        if beam not in self.joints[coord]:
-          self.joints[coord].append(beam)
-      else:
-        self.joints[coord] = [beam]
+      # We cycle manually so we can compare using our compare function
+      for key, beams in self.joints.items():
+        # We have a key and the beam isn't already there
+        if helpers.compare_tuple(key,coord) and beam not in beams:
+          self.joints[key].append(beam)
+          return True
 
+      self.joints[coord] = [beam]
       return True
 
   def removejoint(self,coord, beam):

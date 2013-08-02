@@ -487,11 +487,13 @@ def sphere_intersection(line, center, radius, segment = True):
         else:
           return None
 
-def run_analysis(model):
+def run_analysis(model,output=variables.wind_combo):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.
   '''
+  combo = variables.wind_combo == output
+  
   errors = ''
   try:
     ret = model.Analyze.RunAnalysis()
@@ -507,12 +509,15 @@ def run_analysis(model):
     if ret and debug:
       errors += "Deselecting Cases failed! Value: {}\n".format(str(ret))
 
+    # selecting right function
+    set_output = (model.Results.Setup.SetComboSelectedForOutput if combo else 
+      model.Results.Setup.SetCaseSelectedForOutput)
+
     # Select just the Robot Load Case for Output
-    ret = model.Results.Setup.SetCaseSelectedForOutput(
-      variables.robot_load_case)
+    ret = set_output(output)
     if ret:
       errors += "Selecting {} case failed! Value: {}\n".format(
-        variables.robot_load_case,str(ret))
+        output,str(ret))
   except:
     print("Simulation ended when setting up output cases.")
     raise

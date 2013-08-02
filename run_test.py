@@ -5,7 +5,7 @@ from visualization import Visualization
 view = True
 
 # Run the Simulation
-sim = Simulation(1111)
+sim = Simulation("Smart")
 sim.start(view,1)
 sim.run_simulation(view,6000)
 

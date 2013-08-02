@@ -89,7 +89,7 @@ class LeanRepairer(NormalRepairer):
   are almost vertical
   '''
   def __init__(self,name,structure,location,program):
-    super(SmartRepairer,self).__init__(name,structure,location,program)
+    super(LeanRepairer,self).__init__(name,structure,location,program)
 
   def get_default(self,ratio_coord,vertical_coord):
     '''
@@ -117,6 +117,9 @@ class OverRepairer(NormalRepairer):
   as soon as it finds a beam which needs repair. It does this even if there are
   other directions along which it can travel
   '''
+  def __init__(self,name,structure,location,program):
+    super(OverRepairer,self).__init__(name,structure,location,program)
+
   def filter_feasable(self,dirs):
     '''
     Overwritting to return the empty set if there are broken beams in memory
@@ -125,7 +128,15 @@ class OverRepairer(NormalRepairer):
     result = super(NormalRepairer,self).filter_feasable(dirs)
 
     # Check memory state
-    if len(self.memory['broken']) == 1:
+    if len(self.memory['broken']) == 0:
       return result
     else:
       return {}
+
+class SmartestRepairer(SmartRepairer,OverRepairer,RandomUpwardRepairer):
+  '''
+  Combines the sliding scale, the over-repairing nature, and the random movement
+  upward into one robot
+  '''
+  def __init__(self,name,structure,location,program):
+    super(SmartestRepairer,self).__init__(name,structure,location,program)

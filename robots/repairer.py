@@ -95,11 +95,9 @@ class DumbRepairer(Worker):
     # Repair Mode
     if self.repair_mode:
       self.pre_decision()
-
       # We have moved off the structure entirely, so wander
       if self.beam is None:
         self.ground_support()
-
       # We've moved off the beam, so run the search support routine
       elif (self.memory['broken_beam_name'] != self.beam.name and 
         self.search_mode and self.memory['broken_beam_name'] != ''):
@@ -172,9 +170,11 @@ class DumbRepairer(Worker):
 
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
-    j = beam.endpoints.j
+    i, j = beam.endpoints.i, beam.endpoints.j
+    v1 = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
+    v2 = helpers.make_vector((i[0],i[1],self.location[2]),self.location)
     # This is the xy-change, basically
-    direction = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
+    direction = v1 if not helpers.compare(helpers.length(v1),0) else v2
     # Check to make sure the direction is non-zero and the the verticality is
     # within a reasonable range
     v = helpers.make_vector(beam.endpoints.i,beam.endpoints.j)

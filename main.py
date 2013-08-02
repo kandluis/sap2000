@@ -108,7 +108,7 @@ class Simulation:
     ret = self.SapModel.Analyze.SetSolverOption_1(2,0,False,
       variables.robot_load_case)
     if ret:
-      print("Failure with sovler options")
+      print("Failure with solver options")
       return False
 
     return True

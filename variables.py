@@ -46,6 +46,7 @@ beam_load = 0.027 # kip
 
 # Name of the load case for the robots
 robot_load_case = "DEAD"
+wind_combo = "D+W"
 
 ######################################################
 # Name of the material property defined for the beams
