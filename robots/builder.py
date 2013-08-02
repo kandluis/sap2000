@@ -482,13 +482,14 @@ class Builder(Movable):
       tendency to climb that beam instead.
     '''
     # Check to see if robot is at home location and has no beams
-    if self.at_home() and self.num_beams == 0 :
+    if self.at_home() and self.num_beams == 0:
       self.pickup_beams()
 
     # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.num_beams == 0:
-      self.ground_direction = helpers.make_vector(self.location,
-        construction.home)
+      vector = helpers.make_vector(self.location,construction.home)
+      self.ground_direction = (vector if not helpers.compare(helpers.length(
+        vector),0) else self.non_zero_xydirection())
 
     # Find nearby beams to climb on
     result = self.ground()
