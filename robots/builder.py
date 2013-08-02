@@ -38,6 +38,8 @@ class Builder(Movable):
     # Stores direction of support beam (basically 2d)
     self.memory['repair_beam_direction'] = None
 
+    # Modes for supporting structure
+    self.search_mode = False
     self.repair_mode = False
 
   def at_joint(self):
@@ -65,17 +67,17 @@ class Builder(Movable):
     return state
 
   def climb_off(self,loc):
-    if helpers.compare(loc[2],0) and (self.num_beams == 0 or self.repair_mode):
+    if helpers.compare(loc[2],0) and (self.num_beams == 0 or self.search_mode):
       direction = helpers.make_vector(self.location,construction.home)
       self.ground_direction = (direction if direction[2] == 0 else 
         self.ground_direction)
 
       # Reset the number of steps if we are repairing
       self.memory['new_beam_steps'] = (math.ceil((construction.beam['length'] 
-        / 2) / variables.step_length) if self.repair_mode else 0)
+        / 2) / variables.step_length) if self.search_mode else 0)
       return True
     else:
-      self.ground_direction = (None if not self.repair_mode else 
+      self.ground_direction = (None if not self.search_mode else 
         self.ground_direction)
       return False
 
@@ -493,7 +495,7 @@ class Builder(Movable):
 
     # Find nearby beams to climb on
     result = self.ground()
-    if result == None or self.repair_mode:
+    if result == None or self.search_mode:
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))

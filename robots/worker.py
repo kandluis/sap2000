@@ -73,7 +73,7 @@ class Worker(Builder):
     '''
     # Change stuff up, depending on whether we are in repair mode (but not 
     # construct support mode)
-    if self.repair_mode and not self.memory['construct_support']:
+    if self.search_mode and not self.memory['construct_support']:
       self.repairing()
 
     def bool_fun(string):
@@ -120,11 +120,11 @@ class Worker(Builder):
       index = angle_list.index(min_val)
       return index, min_val
 
-    if self.repair_mode and not self.memory['construct_support']:
+    if self.search_mode and not self.memory['construct_support']:
       self.repairing()
 
     # Pick the closests direction to a support beam
-    if self.repair_mode and self.at_joint():
+    if self.search_mode and self.at_joint():
       #pdb.set_trace()
       beam, (index,angle) = min([(n, pick_support(vs)) for n,vs in directions.items()],
         key=lambda t: t[1][1])
@@ -166,7 +166,7 @@ class Worker(Builder):
     3.  Still carrying construction material
     '''
 
-    if (((self.at_site() and not self.structure.started and not self.repair_mode
+    if (((self.at_site() and not self.structure.started and not self.search_mode
       )) and not self.memory['built'] and self.num_beams > 0):
 
       self.structure.started = True

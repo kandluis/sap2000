@@ -18,9 +18,6 @@ class DumbRepairer(Worker):
     # Constains repair data so we can write it out to file in main.py
     self.repair_data = ''
 
-    # We are searching for a support beam (done and done)
-    self.search_mode = True
-
   def current_state(self):
     state = super(DumbRepairer,self).current_state()
     state.update({  'search_mode' : self.search_mode})
@@ -93,7 +90,7 @@ class DumbRepairer(Worker):
     Overwritting to allow for repair work to take place
     '''
     # Repair Mode
-    if self.repair_mode:
+    if self.search_mode and self.repair_mode:
       self.pre_decision()
       # We have moved off the structure entirely, so wander
       if self.beam is None:
@@ -124,6 +121,16 @@ class DumbRepairer(Worker):
       # Simply move
       else:
         self.movable_decide()
+
+    
+    # We found a support beam and are on it, planning on construction. If 
+    # we reach the endpoint of the beam (the support beam), then construct.
+    elif self.repair_mode:
+      if (helpers.compare(helpers.distance(self.location,self.beam.endpoints.i),
+        self.step / 2) or helpers.compare(helpers.distance(self.location,
+          self.beam.endpoints.j),self.step / 2)):
+        self.start_contruction = True
+        self.memory['broken'] = []
 
     # Build Mode
     else:
@@ -419,7 +426,9 @@ class Repairer(DumbRepairer):
       # Access items
       for beam, vectors in dirs.items():
         # If the directions is about our beam, remove references to up.
-        if beam == self.beam.name:
+        # Also do this for our broken beam (we don't want to get stuck climbing
+        # onto it again and again in a cycle)
+        if beam == self.beam.name or beam == self.memory['broken_beam_name']:
           vectors = [v for v in vectors if v[2] < 0 or helpers.compare(v[2],0)]
           if vectors != []:
             new_dirs[beam] = vectors
