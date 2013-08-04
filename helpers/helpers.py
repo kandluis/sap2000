@@ -487,7 +487,7 @@ def sphere_intersection(line, center, radius, segment = True):
         else:
           return None
 
-def run_analysis(model,output=variables.wind_combo):
+def run_analysis(model,output=variables.robot_load_case):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.

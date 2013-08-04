@@ -133,6 +133,13 @@ class OverRepairer(NormalRepairer):
     else:
       return {}
 
+class SmartLeanRepairer(SmartRepairer,LeanRepairer):
+  '''
+  Combines the sliding ability of smart repairer with deflected construction
+  '''
+  def __init__(self,name,structure,location,program):
+    super(SmartLeanRepairer,self).__init__(name,structure,location,program)
+
 class SmartestRepairer(SmartRepairer,OverRepairer,RandomUpwardRepairer):
   '''
   Combines the sliding scale, the over-repairing nature, and the random movement

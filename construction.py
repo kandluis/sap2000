@@ -2,11 +2,11 @@ import variables
 
 # Home location
 home = (variables.dim_x / 2.2, variables.dim_y / 2.2,0)
-home_size = (36, 36, variables.epsilon)
+home_size = (40, 40, variables.epsilon)
 
 # Location where construction is to begin
 construction_location = (variables.dim_x / 2, variables.dim_y / 2,0)
-construction_size = (36,36,variables.epsilon)
+construction_size = (40,40,variables.epsilon)
 
 # Angle Contraint : When wiggling, if no beam is found within this
 # angle from the vertical, than the beam is laid at vertical_angle_set (
@@ -19,8 +19,8 @@ beam = {
   'max_angle_constraint'      : 80,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
-  'beam_limit'                : 0.16,
-  'horizontal_beam_limit'     : 4,
+  'beam_limit'                : 1.0,
+  'horizontal_beam_limit'     : 4.8,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
   'support_angle_min'         : 30,
@@ -41,5 +41,5 @@ beam = {
 
   # If a beam is within this angle from vertical, it is considered vertical for 
   # the purpose of determining the direction we wish to travel in
-  'verticality_angle'        :  5
+  'verticality_angle'        :  10
 }

@@ -459,7 +459,7 @@ class Simulation:
         with open(self.folder + 'random_seed_results.txt', 'a') as rand_tex:
           rand_tex.write("{},".format(str(random.randint(0,i+1))))
 
-        with open(self.folder + 'structure_height', 'a') as str_height:
+        with open(self.folder + 'structure_height.txt', 'a') as str_height:
           str_height.write("{},\n".format(str(self.Structure.height)))
 
         # We run out of mememory is we don't do this every once in a while

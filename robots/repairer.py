@@ -191,15 +191,14 @@ class DumbRepairer(Worker):
     # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
     # 180 degree approah
     direction = helpers.make_unit(direction) if non_vertical else (0,0,1)
-    disturbance = self.non_zero_xydirection()
-    direction = helpers.make_unit(helpers.sum_vectors(disturbance,direction))
+    disturbance = helpers.scale(0.5,self.non_zero_xydirection())
+    direction = (helpers.make_unit(helpers.sum_vectors(disturbance,direction)) 
+      if direction != (0,0,1) else helpers.make_unit(disturbance))
     self.memory['repair_beam_direction'] = direction
 
     # If vertical, give None so that it can choose a random direction. Otherwise,
     # pick a direction which within 180 degrees of the beam
-    ground_direction = direction if random.randint(0,2) != 1 else helpers.scale(
-      -1,direction)
-    self.ground_direction = direction if non_vertical else None
+    self.ground_direction = direction
     
     # We want to climb down, and travel in 'direction' if possible
     set_dir('pos_x',direction[0])
@@ -311,7 +310,7 @@ class Repairer(DumbRepairer):
           return super(Repairer,self).support_xy_direction()
 
         else:
-          raise Exception("?")
+          return super(Repairer,self).support_xy_direction()
 
   def support_vertical_change(self):
     # Get vertical vector 

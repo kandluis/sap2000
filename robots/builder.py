@@ -461,8 +461,14 @@ class Builder(Movable):
         beam_name, direction = self.elect_direction(feasable_directions)
       # Refilter original directions (to travel down)
       else:
-        beam_name,direction = self.elect_direction(self.filter_directions(
-          info['directions']))
+        directions = self.filter_directions(info['directions'])
+        # We are on the structure
+        if directions != {}:
+          beam_name,direction = self.elect_direction(self.filter_directions(
+            info['directions']))
+        # This happens when we are climbing off the structure
+        else:
+          beam_name, direction = self.elect_direction(info['directions'])
 
     # Otherwise we do have a set of directions taking us in the right place, so 
     # randomly pick any of them. We will change this later based on the analysis
@@ -695,7 +701,7 @@ class Builder(Movable):
             if helpers.distance(pivot,e2) <= variables.beam_length:
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
-              if dist != 0:
+              if not helpers.compare(dist,0):
                 # Vector of beam we want to construct and angle from base_vector
                 construction_vector = helpers.make_vector(pivot,e2)
                 angle = helpers.smallest_angle(base_vector,construction_vector)
