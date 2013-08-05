@@ -489,6 +489,7 @@ class Builder(Movable):
       specified construction site. If it finds another beam nearby, it has a 
       tendency to climb that beam instead.
     '''
+    pdb.set_trace()
     # Check to see if robot is at home location and has no beams
     if self.at_home() and self.num_beams == 0:
       self.pickup_beams()
@@ -501,7 +502,7 @@ class Builder(Movable):
 
     # Find nearby beams to climb on
     result = self.ground()
-    if result == None or self.search_mode:
+    if result == None or self.search_mode or self.num_beams == 0:
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))

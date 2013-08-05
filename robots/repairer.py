@@ -8,6 +8,7 @@ class DumbRepairer(Worker):
     # Number of steps we spend searching for a support beam once we encounter a
     # new beam
     self.memory['new_beam_steps'] = 0
+    self.memory['new_beam_ground_steps'] = 0
 
     # Stores name of beam to be reinforced (so we know when we're no longer on it)
     self.memory['broken_beam_name'] = ''
@@ -43,6 +44,7 @@ class DumbRepairer(Worker):
      - such as the repair_beam_direction and the broken_beam_name available)
     '''
     self.memory['new_beam_steps'] = 0
+    self.memory['new_beam_ground_steps'] = 0
     self.memory['previous_beam'] = None
     self.memory['pos_z'] = True
     self.memory['pos_y'] = None
@@ -67,11 +69,11 @@ class DumbRepairer(Worker):
     '''
     Looks for a support from the ground
     '''
-    if self.memory['new_beam_steps'] == 0:
+    if self.memory['new_beam_ground_steps'] == 0:
       self.add_support_mode()
       self.ground_direction = helpers.scale(-1,self.ground_direction)
 
-    self.memory['new_beam_steps'] -= 1
+    self.memory['new_beam_ground_steps'] -= 1
 
   def find_support(self):
     '''
@@ -83,6 +85,7 @@ class DumbRepairer(Worker):
       self.add_support_mode()
 
     self.memory['new_beam_steps'] -= 1
+    self.memory['new_beam_ground_steps'] -= 1
 
 
   def decide(self):
@@ -213,6 +216,9 @@ class DumbRepairer(Worker):
     length = construction.beam['length'] * math.cos(
       math.radians(construction.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
+    self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
+      non_vertical else self.memory['new_beam_steps'] +  math.sin(math.radians(
+        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps'] 
 
     self.repair_mode = True
     self.search_mode = True
@@ -222,7 +228,10 @@ class DumbRepairer(Worker):
     Overriding so we can build support beam
     '''
     # Analysis results available
-    if self.memory['new_beam_steps'] == 0 and self.memory['construct_support']:
+    if ((self.beam is not None and self.memory['new_beam_steps'] == 0) or (
+      helpers.compare(self.location[2],0) and 
+      self.memory['new_beam_ground_steps'] == 0) and 
+      self.memory['construct_support']):
       return True
 
     # If the program is not locked, there are no analysis results so True
