@@ -33,7 +33,7 @@ class Swarm:
     self.color_data = ''
 
   def create(self,name,structure,location,program):
-    return SmartLeanRepairer(name,structure,location,program)
+    return SmartRepairer(name,structure,location,program)
 
   def decide(self):
     # Tell each robot to make the decion

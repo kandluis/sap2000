@@ -160,7 +160,7 @@ def between(c1,c2,c3, inclusive = True):
   Returns whether or not c3 is between c1 and c2, inclusive.
   '''
   loc_compare = (lambda x,y: compare(x,y) or x < y) if inclusive else (
-    lambda x,y : x < y)
+    lambda x,y : x < y and not compare(x,y))
   if c1 < c2:
     return loc_compare(c1,c3) and loc_compare(c3,c2)
   else:

@@ -783,7 +783,14 @@ class Builder(Movable):
     assert (self.num_beams > 0)
 
     # This is the i-end of the beam being placed. We pivot about this
-    pivot = self.location
+    if self.beam is None:
+      pivot = self.location
+    elif helpers.compare_tuple(self.location,self.beam.endpoints.i):
+      pivot = self.beam.endpoints.i
+    elif helpers.compare_tuple(self.location,self.beam.endpoints.j):
+      pivot = self.beam.endpoints.j
+    else:
+      pivot = self.location
 
     # Default vertical endpoint (the ratios are measured from the line created 
     # by pivot -> vertical_endpoint)

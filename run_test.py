@@ -5,7 +5,7 @@ from visualization import Visualization
 view = True
 
 # Run the Simulation
-sim = Simulation("None")
+sim = Simulation("Euler")
 sim.start(view,1)
 sim.run_simulation(view,4000)
 
