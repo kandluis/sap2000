@@ -3,10 +3,14 @@ import variables
 # Home location
 home = (variables.dim_x / 2.2, variables.dim_y / 2.2,0)
 home_size = (40, 40, variables.epsilon)
+home_center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
+      zip(home,home_size)])
 
 # Location where construction is to begin
 construction_location = (variables.dim_x / 2, variables.dim_y / 2,0)
 construction_size = (40,40,variables.epsilon)
+construction_location_center = tuple([h_coord + size_coord / 2 for h_coord, size_coord in 
+      zip(construction_location,construction_size)])
 
 # Angle Contraint : When wiggling, if no beam is found within this
 # angle from the vertical, than the beam is laid at vertical_angle_set (
@@ -19,7 +23,7 @@ beam = {
   'max_angle_constraint'      : 80,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
-  'beam_limit'                : 1.0,
+  'beam_limit'                : 0.6,
   'horizontal_beam_limit'     : 4.8,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,

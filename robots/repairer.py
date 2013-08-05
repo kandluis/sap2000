@@ -63,6 +63,7 @@ class DumbRepairer(Worker):
     # But specify steps, and that we need to construct a support
     self.memory['broken'] = []
     self.memory['new_beam_steps'] = 1
+    self.memory['new_beam_ground_steps'] = 1
     self.memory['construct_support'] = True
 
   def ground_support(self):
@@ -218,7 +219,7 @@ class DumbRepairer(Worker):
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
       non_vertical else self.memory['new_beam_steps'] +  math.sin(math.radians(
-        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps'] 
+        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps'])
 
     self.repair_mode = True
     self.search_mode = True
@@ -228,9 +229,9 @@ class DumbRepairer(Worker):
     Overriding so we can build support beam
     '''
     # Analysis results available
-    if ((self.beam is not None and self.memory['new_beam_steps'] == 0) or (
+    if (((self.beam is not None and self.memory['new_beam_steps'] == 0) or (
       helpers.compare(self.location[2],0) and 
-      self.memory['new_beam_ground_steps'] == 0) and 
+      self.memory['new_beam_ground_steps'] == 0)) and 
       self.memory['construct_support']):
       return True
 

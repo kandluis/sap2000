@@ -6,7 +6,7 @@ from time import strftime
 from visual import *
 from visualization import Visualization
 from xlsxwriter.workbook import Workbook
-import construction, os, random,sys, variables
+import construction, os, pdb,random,sys, variables
 
 class Simulation:
   def __init__(self,seed = None,template="C:\\SAP 2000\\template.sdb"):
@@ -367,7 +367,6 @@ class Simulation:
       # Run the simulation!
       for i in range(timesteps):
 
-        # Display the swarm if specified
         if visualization:
           self.Swarm.show()
 

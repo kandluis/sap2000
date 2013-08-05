@@ -91,7 +91,7 @@ class Builder(Movable):
 
     # Set the direction towards the structure
     self.ground_direction = helpers.make_vector(self.location,
-      construction.construction_location)
+      construction.construction_location_center)
 
   def discard_beams(self,num = 1):
     '''
@@ -489,20 +489,19 @@ class Builder(Movable):
       specified construction site. If it finds another beam nearby, it has a 
       tendency to climb that beam instead.
     '''
-    pdb.set_trace()
     # Check to see if robot is at home location and has no beams
     if self.at_home() and self.num_beams == 0:
       self.pickup_beams()
 
     # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.num_beams == 0:
-      vector = helpers.make_vector(self.location,construction.home)
+      vector = helpers.make_vector(self.location,construction.home_center)
       self.ground_direction = (vector if not helpers.compare(helpers.length(
         vector),0) else self.non_zero_xydirection())
 
     # Find nearby beams to climb on
     result = self.ground()
-    if result == None or self.search_mode or self.num_beams == 0:
+    if result == None or self.repair_mode or self.num_beams == 0:
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))
