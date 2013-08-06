@@ -1,7 +1,7 @@
 '''
 This file establishes the structure and keeps track of all beam elements added 
 to it. This is done for the sake of efficiency, as we only want to query the 
-SAP program when absolutely necessary. The following functions are all helpful
+SAP program when absolutely necessary. The following functions are all helpful'
 '''
 from helpers import helpers
 from helpers.errors import OutofBox
@@ -209,14 +209,15 @@ class Structure:
 
     return None
 
-  def get_endpoints(self,beam_name,location):
+  def get_endpoints(self,beam_name,location,deflected=False):
     '''
     Returns the endpoints of the beam. It uses location to facilitate the 
     search. If not found, it looks for the beam the old fashion way. 
     '''
     beam = self.get_beam(beam_name,location)
     if beam is not None:
-      return beam.endpoints
+      endpoints = beam.deflected_endpoints if deflected else beam.endpoints
+      return endpoints
     else:
       return None
 
@@ -280,7 +281,7 @@ class Structure:
 
     return boxes
 
-  def add_beam(self,p1,p2,name):
+  def add_beam(self,p1,p1_name,p2,p2_name,name):
     ''' 
     Function to add the name and endpoint combination of a beam
     to all of the boxes that contain it. Returns the number of boxes (which 
@@ -331,7 +332,7 @@ class Structure:
           went wront in addpoint()".format(p))
 
     # Create the beam
-    new_beam = Beam(name,(p1,p2))
+    new_beam = Beam(name,(p1,p2),(p1_name,p2_name))
 
     # Add to all boxes it is located in
     total_boxes = 0
@@ -538,17 +539,69 @@ class Structure:
       # Return maximum value
       return max_val
 
+    def update_deflection(beam):
+      '''
+      Updates the deflection of the specified beam
+      '''
+      # Assert that the local axes are still the default
+      results = program.model.FrameObj.GetLocalAxes(beam.name)
+      if not (results[0] == 0 and results[1] == 0 and not results[2]):
+        pdb.set_trace()
+        return (0,0,0)
+
+      # Obtain local axes for our beam
+      axis_1,axis_2,axis_3 = beam.global_default_axes()
+
+      # Placed here for access to local axes
+      def get_deflection(joint_name):
+        '''
+        Returns the correct displacement in absolute coordinates for the named
+        joint
+        '''
+        # Get displacements
+        results = program.model.Results.JointDispl(joint_name,1)
+        if results[0] != 0:
+          pdb.set_trace()
+          return (0,0,0)
+        u1,u2,u3 = results[8][0], results[9][0], results[10][0]
+
+        # Return the total deflection based on the local axes
+        return helpers.sum_vectors(helpers.scale(u1,axis_1),helpers.sum_vectors(
+          helpers.scale(u2,axis_2),helpers.scale(u3,axis_3)))
+
+      beam.update_deflection(get_deflection(beam.endpoint_names.i),
+        get_deflection(beam.endpoint_names.j))
+
     bool_data = False
+    seen = []
     data = ''
     for wall in self.model:
       for column in wall:
         for cell in column:
           for name,beam in cell.items():
-            moment = get_max_moment(beam)
-            if moment > construction.beam['structure_check']:
-              data += "Beam {} is structurally unstable with moment {}.\n".format(
-                name,str(moment))
-              bool_data = True
+            # Only if this is the first time we are collecting data 
+            if name not in seen:
+              moment = get_max_moment(beam)
+              if moment > construction.beam['structure_check']:
+                data += "Beam {} is structurally unstable with moment {}.\n".format(
+                  name,str(moment))
+                bool_data = True
+
+              # Update deflection of beams :)
+              if update_deflection(beam):
+                # Add the deflection data for the beam if it's changed significantly
+                # since last time we updated it
+                try:
+                  self.visualization_data += "{}:{}-{}<>".format(str(name),str(
+                    helpers.round_tuple(beam.deflected_endpoints.i,3)),str(
+                    helpers.round_tuple(beam.deflected_endpoints.j,3)))
+                except MemoryError:
+                  pass
+
+                # Update the previous endpoints
+                beam.previous_write_endpoints = beam.deflected_endpoints
+
+              seen.append(name)
 
     if not bool_data:
       return bool_data

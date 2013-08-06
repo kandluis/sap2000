@@ -8,6 +8,9 @@ class Worker(Builder):
     # The number of beams the robot is carrying (picked up at home now)
     self.num_beams = 0
 
+    # Since we aren't carryng any beams
+    self.weight = variables.robot_load
+
     # Smaller number gives higher priority
     self.memory['dir_priority'] = [0,0,0]
 

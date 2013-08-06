@@ -522,4 +522,4 @@ def run_analysis(model,output=variables.robot_load_case):
     print("Simulation ended when setting up output cases.")
     raise
 
-  return errors
+  return errors 

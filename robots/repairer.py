@@ -184,8 +184,10 @@ class DumbRepairer(Worker):
     i, j = beam.endpoints.i, beam.endpoints.j
     v1 = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
     v2 = helpers.make_vector((i[0],i[1],self.location[2]),self.location)
+
     # This is the xy-change, basically
     direction = v1 if not helpers.compare(helpers.length(v1),0) else v2
+
     # Check to make sure the direction is non-zero and the the verticality is
     # within a reasonable range
     v = helpers.make_vector(beam.endpoints.i,beam.endpoints.j)
@@ -265,6 +267,7 @@ class Repairer(DumbRepairer):
     at which our current beam is located, and the verticality of the beam we
     are attempting to reach. This returns a unit direction (always should!)
     '''
+    pdb.set_trace()
     # If we're on the ground, then continue doing as before
     if self.beam is None:
       return super(Repairer,self).support_xy_direction()
@@ -367,7 +370,7 @@ class Repairer(DumbRepairer):
     midpoint = helpers.midpoint(e2,midpoint1)
 
     # Add an offset to mimick inability to determine location exactly
-    offset = helpers.scale(random.uniform(-2*variables.random,2*variables.random),v)
+    offset = helpers.scale(random.uniform(-1*variables.random,variables.random),v)
     midpoint = (helpers.sum_vectors(midpoint,offset) if random.randint(0,4) == 1
     else midpoint) 
 
@@ -412,15 +415,13 @@ class Repairer(DumbRepairer):
         return simple and real_angle > construction.beam['support_angle_difference']
 
     # Cycle through angles looking for one that is above our limit (not too
-    # vertical nor horizontal) that is on our broken beam
+    # vertical nor horizontal) that is on our broken beam (why?)
     for coord,angle in sorted_angles:
-      # Build everywhere on the beam except for the tips.
-      if helpers.on_line(e1,e2,coord):
-        # We have an acceptable beam
-        if acceptable_support(angle,coord):
-          # Reset the broken beam name
-          self.memory['broken_beam_name'] = ''
-          return coord
+      # We have an acceptable beam
+      if acceptable_support(angle,coord):
+        # Reset the broken beam name
+        self.memory['broken_beam_name'] = ''
+        return coord
       
     # Otherwise, do default behaviour
     return super(Repairer,self).support_beam_endpoint()

@@ -565,7 +565,12 @@ class Builder(Movable):
     if name == '':
       # Set to false if we were constructing support
       self.memory['construct_support'] = False
+      return False
 
+    # Set the output statios
+    ret = self.model.FrameObj.SetOutputStations(name,2,1,10,False,False)
+    if ret != 0:
+      pdb.set_trace()
       return False
 
     # Get rid of one beam
@@ -575,7 +580,7 @@ class Builder(Movable):
     self.memory['construct_support'] = False
 
     # Successfully added to at least one box
-    if self.structure.add_beam(p1,p2,name) > 0:
+    if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
       box = self.structure.get_box(self.location)
       try:
         beam = box[name]
@@ -701,16 +706,16 @@ class Builder(Movable):
             if helpers.distance(pivot,e2) <= variables.beam_length:
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
-              if not helpers.compare(dist,0):
-                # Vector of beam we want to construct and angle from base_vector
-                construction_vector = helpers.make_vector(pivot,e2)
-                angle = helpers.smallest_angle(base_vector,construction_vector)
+              #if not helpers.compare(dist,0):
+              # Vector of beam we want to construct and angle from base_vector
+              construction_vector = helpers.make_vector(pivot,e2)
+              angle = helpers.smallest_angle(base_vector,construction_vector)
 
-                # Add to dictionary
-                if e2 in dictionary:
-                  assert helpers.compare(dictionary[e2],angle)
-                else:
-                  dictionary[e2] = angle
+              # Add to dictionary
+              if e2 in dictionary:
+                assert helpers.compare(dictionary[e2],angle)
+              else:
+                dictionary[e2] = angle
 
           # Get the points at which the beam intersects the sphere created by 
           # the vertical beam      

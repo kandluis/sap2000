@@ -4,17 +4,20 @@ from sap2000.constants import EOBJECT_TYPES
 import construction, pdb, random, variables
 
 # Class of objects that can move around (on the ground and on the structure)
-class Movable(Automaton):
+class DumbMovable(Automaton):
   def __init__(self,name,structure,location,program):
-    super(Movable, self).__init__(name,program)
+    super(DumbMovable, self).__init__(name,program)
     # Access to my Python structure
     self.structure = structure
 
     # Number of steps left in movement
     self.step = variables.step_length
 
-    # The current location of the robot
+    # The current location of the robot on the designed structure
     self.location = location
+
+    # The current location of the robot on the deflected structure
+    self.true_location = self.get_true_location()
 
     # The robots all initially move towards the centertower
     self.ground_direction = helpers.make_vector(location,
@@ -38,15 +41,23 @@ class Movable(Automaton):
     information to the logs
     '''
     beam = self.beam.name if self.beam is not None else self.beam
-    state = super(Movable,self).current_state()
+    state = super(DumbMovable,self).current_state()
     location = [round(coord,2) for coord in self.location]
+    deflected_location = [round(coord,2) for coord in self.true_location]
     state.update({  'step'              : self.step,
                     'location'          : location,
+                    'deflected_location': deflected_location,
                     'ground_direction'  : self.ground_direction,
                     'beam'              : beam,
                     'weight'            : self.weight})
 
     return state
+
+  def get_true_location(self):
+    '''
+    Returns the normal location
+    '''
+    return self.location
 
   def __addload(self,beam,location,value):
     '''
@@ -522,3 +533,37 @@ class Movable(Automaton):
     # We have climbed off, so wander about 
     else:
       self.wander()
+
+class Movable(DumbMovable):
+  '''
+  Keeps track of deflections that occur when constructing the model
+  '''
+  def __init__(self,name,structure,location,program):
+    super(Movable,self).__init__(name,structure,location,program)
+
+  def get_true_location(self):
+    '''
+    Returns the location of the robot on the current beam, accounting for the
+    deflections that the beam has undergone. Uses the design location and the 
+    deflection data from SAP to calculate this location.
+    '''
+    if self.beam is None:
+      return super(Movable,self).get_true_location()
+
+    else:
+      # Get deflections
+      i_def, j_def = self.beam.deflection.i, self.beam.deflection.j
+
+      # Obtain weight of each scale based on location on beam
+      i_weight = (helpers.distance(self.location,self.beam.endpoints.i) / 
+        construction.beam['length'])
+      j_weight = 1 - i_weight
+
+      # Sum the two vectors to obtain general deflection
+      # This sort of addition works under the assumption that the beam ITSELF 
+      # does not deflect significantly
+      deflection = helpers.sum_vectors(helpers.scale(i_weight,i_def),helpers.scale(
+        j_weight,j_def)
+
+      # Return true location
+      return helpers.sum_vectors(self.location,deflection)

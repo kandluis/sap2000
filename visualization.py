@@ -139,15 +139,17 @@ class Visualization:
       # Setup basic
       self.setup_base()
 
-      # Set up worker dictionary to keep track of objects
+      # Cycle through timestep data
       timestep = 1
       for swarm_step, swarm_color,structure_step,struct_color in self.data:
         for name, locations in swarm_step:
+
           # Create the object
           if name not in self.workers:
             self.workers[name] = sphere(pos=locations[0],
               radius=variables.local_radius/2,make_trail=False)
             self.workers[name].color = (1,0,1)
+
           # Change the objects position
           else:
             self.workers[name].pos = locations[0]
@@ -159,7 +161,15 @@ class Visualization:
         # Add beams if any
         for name,coords in structure_step:
           i,j = coords
-          self.add_beam(name,i,j)
+
+          # Add new beam if not in dictionary
+          if name not in self.beams:
+            self.add_beam(name,i,j)
+          # Otherwise, this means the beam has deflected, so change the position
+          else:
+            deflected_axis = helpers.make_vector(i,j)
+            self.beams[name].pos = i
+            self.beams[name].axis = deflected_axis
           
           # Update window dimensions
           limit = max(j)

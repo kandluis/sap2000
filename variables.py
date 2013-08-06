@@ -11,6 +11,10 @@ local_radius = 12 # 1 ft
 # program units.
 step_length = 12 # .5 ft
 
+# This dictactes what is considered a significant length in the visualization
+# We only record events that occur at a length higher than this
+visualization_step = 4
+
 # Length of each beam (in the units specified by program_units)
 beam_length = 120 # 10ft
 
