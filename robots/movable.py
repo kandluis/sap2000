@@ -563,7 +563,7 @@ class Movable(DumbMovable):
       # This sort of addition works under the assumption that the beam ITSELF 
       # does not deflect significantly
       deflection = helpers.sum_vectors(helpers.scale(i_weight,i_def),helpers.scale(
-        j_weight,j_def)
+        j_weight,j_def))
 
       # Return true location
       return helpers.sum_vectors(self.location,deflection)

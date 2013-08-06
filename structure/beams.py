@@ -107,11 +107,11 @@ class Beam(DumbBeam):
     Adding deflected endpoints to state
     '''
     state = super(Beam,self).current_state()
-    
-    state.update{ 'deflected_enpoints'        : self.deflected_enpoints,
+
+    state.update({ 'deflected_enpoints'        : self.deflected_enpoints,
                   'deflection'                : self.deflection,
                   'previous_write_endpoints'  : self.previous_write_endpoints,
-                  'endpoint_names'            : self.endpoint_names }
+                  'endpoint_names'            : self.endpoint_names })
 
     return state
 

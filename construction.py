@@ -23,7 +23,7 @@ beam = {
   'max_angle_constraint'      : 80,
   'vertical_dir_set'          : (0,0,1),
   'joint_limit'               : variables.joint_limit,
-  'beam_limit'                : 0.1,
+  'beam_limit'                : 0.16,
   'horizontal_beam_limit'     : 4.8,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
