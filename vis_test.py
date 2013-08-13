@@ -4,7 +4,7 @@ one_thousand = 'C:\\SAP 2000\\Jul-08\\14_53_17\\'
 four_robots = "C:\\SAP 2000\\Jul-08\\17_55_09\\"
 ten_robots = 'C:\\SAP 2000\\Jul-08\\18_09_43\\'
 
-to_test = 'C:\\SAP 2000\\Aug-05\\13_54_45\\'
+to_test = 'C:\\SAP 2000\\Aug-12\\19_57_17\\'
 
 vis = Visualization(to_test)
 vis.load_data()

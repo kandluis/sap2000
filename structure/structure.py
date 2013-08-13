@@ -254,7 +254,7 @@ class Structure:
     except IndexError:
       print ("The coordinate, {}, is not in the structure and should never have\
         been. Please check the add function in structure.py".format(point))
-      return False
+      return None
 
   def get_boxes(self,location,radius=variables.beam_length):
     '''
@@ -428,15 +428,14 @@ class Structure:
       3. No beam exists for part of that location (ie, no overlap)
     '''
     def box_available(box):
-      for name in box:
-        beam = box[name]
+      for name, beam in box.items():
         e3,e4 = beam.endpoints
         # If all four points lie on the same line and one of the two points we 
         # are checking lies within the beam's endpoints
         # then the location for our points is not available
-        if ((helpers.collinear(e1,e2,e3) and helpers.collinear(e1,e2,e4) and 
+        if (helpers.collinear(e1,e2,e3) and helpers.collinear(e1,e2,e4) and 
           (helpers.between_points(e3,e4,e1,False) or 
-            helpers.between_points(e3,e4,e2,False)))):
+            helpers.between_points(e3,e4,e2,False))):
           return False
       return True
 
@@ -471,8 +470,8 @@ class Structure:
     # Cycle through the box and compare endpoints
     for name in self.model[xi][yi][zi]:
       beam = self.model[xi][yi][zi][name]
-      if ((helpers.compare_tuple(beam.endpoints.i,e1,0.01) and helpers.compare_tuple(
-        beam.endpoints.j,e2,0.01)) or (helpers.compare_tuple(beam.endpoints.i,e2,0.01) and
+      if ((helpers.compare_tuple(beam.endpoints.i,e1,0.1) and helpers.compare_tuple(
+        beam.endpoints.j,e2,0.1)) or (helpers.compare_tuple(beam.endpoints.i,e2,0.01) and
         helpers.compare_tuple(beam.endpoints.j,e1,0.01))):
         return True
     return False
@@ -549,8 +548,8 @@ class Structure:
         pdb.set_trace()
         return (0,0,0)
 
-      # Obtain local axes for our beam
-      axis_1,axis_2,axis_3 = beam.global_default_axes()
+      # Obtain joint axes - these are, by default, the global axes
+      axis_1,axis_2,axis_3 = beam.global_joint_axes()
 
       # Placed here for access to local axes
       def get_deflection(joint_name):
@@ -569,7 +568,7 @@ class Structure:
         return helpers.sum_vectors(helpers.scale(u1,axis_1),helpers.sum_vectors(
           helpers.scale(u2,axis_2),helpers.scale(u3,axis_3)))
 
-      beam.update_deflection(get_deflection(beam.endpoint_names.i),
+      return beam.update_deflection(get_deflection(beam.endpoint_names.i),
         get_deflection(beam.endpoint_names.j))
 
     bool_data = False
@@ -588,7 +587,7 @@ class Structure:
                 bool_data = True
 
               # Update deflection of beams :)
-              if update_deflection(beam):
+              if update_deflection(beam) and variables.deflection:
                 # Add the deflection data for the beam if it's changed significantly
                 # since last time we updated it
                 try:
@@ -596,7 +595,7 @@ class Structure:
                     helpers.round_tuple(beam.deflected_endpoints.i,3)),str(
                     helpers.round_tuple(beam.deflected_endpoints.j,3)))
                 except MemoryError:
-                  pass
+                  pdb.set_trace()
 
                 # Update the previous endpoints
                 beam.previous_write_endpoints = beam.deflected_endpoints

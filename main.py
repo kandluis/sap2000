@@ -45,6 +45,18 @@ class Simulation:
 
     return True
 
+  def __setup_wind(self,name=variables.wind_case):
+    '''
+    We initalize the wind based on the information in variables.python
+    '''
+    # Add loadpattern and case
+    if not helpers.addloadpattern(self.SapModel,name,'LTYPE_WIND'):
+      return False
+
+    # Make static non-linear
+    if not self.__setup_case(name):
+      return False
+
   def __setup_case(self, name):
     # Initialize Non-linear
     ret = self.SapModel.LoadCases.StaticNonlinear.SetCase(name)
@@ -56,13 +68,8 @@ class Simulation:
     if ret:
       return False
 
-    # Set loads
-    if name == "DEAD":
-      ret,load_types,loads,scales = self.SapModel.LoadCases.StaticNonlinear.SetLoads(
-        name,1,["Load"],[name],[1])
-    else:
-      ret,load_types,loads,scales = self.SapModel.LoadCases.StaticNonlinear.SetLoads(
-        name,2,["Load","Load"],[name,"DEAD"],[1,1])
+    ret,load_types,loads,scales = self.SapModel.LoadCases.StaticNonlinear.SetLoads(
+      name,1,["Load"],[name],[1])
 
     if ret:
       return False
@@ -180,10 +187,12 @@ class Simulation:
       if name not in self.excel['headers']:
         self.excel['headers'].append(name)
         self.excel['headers'].append("{}-height".format(name))
+        self.excel['headers'].append("{}-measured moment".format(name))
 
       # Add the location to a list
       timestep.append(state['location'])
       timestep.append(state['location'][2])
+      timestep.append(state['read_moment'])
 
     # Add the location list to a list of rows
     self.excel['data'].append(timestep)
@@ -371,8 +380,9 @@ class Simulation:
           self.Swarm.show()
 
         # Add number and new line to structure visualization data
-          self.Structure.visualization_data += "\n"
-          self.Structure.structure_data.append([])
+        self.Structure.visualization_data += "\n"
+        self.Structure.structure_data.append([])
+        
         try:
           self.Structure.color_data += '\n'
         except MemoryError:
@@ -386,6 +396,12 @@ class Simulation:
             self.SapModel.File.Save(outputfolder + filename)
         except:
           print("Simulation ended when saving output.")
+          if debug:
+            swarm_data = self.Swarm.get_information()
+            #beam_data = self.Structure.get_information()
+            self.__add_excel(swarm_data)
+            self.__push_data(swarm_data,loc_text,i+1)
+            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
@@ -395,6 +411,12 @@ class Simulation:
           try:
             sap_failures.write(helpers.run_analysis(self.SapModel))
           except:
+            if debug:
+              swarm_data = self.Swarm.get_information()
+              #beam_data = self.Structure.get_information()
+              self.__add_excel(swarm_data)
+              self.__push_data(swarm_data,loc_text,i+1)
+              #self.__push_data(beam_data,struct_data,i+1)
             self.exit(run_text)
             raise
 
@@ -409,26 +431,30 @@ class Simulation:
           self.Swarm.decide()
         except:
           print("Simulation ended at decision.")
+          if debug:
+            swarm_data = self.Swarm.get_information()
+            #beam_data = self.Structure.get_information()
+            self.__add_excel(swarm_data)
+            self.__push_data(swarm_data,loc_text,i+1)
+            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
         # Make sure that the model has been unlocked, and if not, unlock it
         if self.SapModel.GetModelIsLocked():
           self.SapModel.SetModelIsLocked(False)
-
-        # This section writes the robots decisions out to a file
-        if debug:
-          swarm_data = self.Swarm.get_information()
-          #beam_data = self.Structure.get_information()
-          self.__add_excel(swarm_data)
-          self.__push_data(swarm_data,loc_text,i+1)
-          #self.__push_data(beam_data,struct_data,i+1)
           
         # Change the model based on decisions made (act on your decisions)
         try:
           self.Swarm.act()
         except:
           print("Simulation ended at act.")
+          if debug:
+            swarm_data = self.Swarm.get_information()
+            #beam_data = self.Structure.get_information()
+            self.__add_excel(swarm_data)
+            self.__push_data(swarm_data,loc_text,i+1)
+            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
@@ -468,6 +494,14 @@ class Simulation:
 
           # Write out structure physics
           self.structure_physics()
+
+        # This section writes the robots decisions out to a file
+        if debug:
+          swarm_data = self.Swarm.get_information()
+          #beam_data = self.Structure.get_information()
+          self.__add_excel(swarm_data)
+          self.__push_data(swarm_data,loc_text,i+1)
+          #self.__push_data(beam_data,struct_data,i+1)
           
         # END OF LOOOP
 
@@ -475,6 +509,10 @@ class Simulation:
       self.exit(run_text)
 
   def exit(self,run_text):
+
+    # Sort beam data
+    if self.Structure.structure_data[-1] != []:
+      self.Structure.structure_data[-1].sort(key=lambda t: int(t[0]))
 
     # Finish up run_data (add ending time and maximum height)
     run_data = ("\n\nStop time : " + strftime("%H:%M:%S") + 

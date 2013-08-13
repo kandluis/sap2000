@@ -33,7 +33,7 @@ class Swarm:
     self.color_data = ''
 
   def create(self,name,structure,location,program):
-    return DeflectionRepairer(name,structure,location,program)
+    return SmartRepairer(name,structure,location,program)
 
   def decide(self):
     # Tell each robot to make the decion
@@ -41,7 +41,7 @@ class Swarm:
       self.repairers[repairer].decide()
 
       # Add location data for visualization of simulation
-      loc = self.repairers[repairer].true_location
+      loc = self.repairers[repairer].get_true_location()
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
       self.visualization_data += "{}:{}<>".format(repairer,str(
         helpers.round_tuple(location,3)))

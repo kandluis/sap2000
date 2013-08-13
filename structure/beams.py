@@ -127,9 +127,9 @@ class Beam(DumbBeam):
 
     return (self.previous_write_endpoints is None or helpers.distance(
       self.deflected_endpoints.i,self.previous_write_endpoints.i) 
-      >= variables.visualization_step or helpers.distance(
+      >= variables.visualization['step'] or helpers.distance(
         self.deflected_endpoints.j,self.previous_write_endpoints.j) >=
-      variables.visualization_step)
+      variables.visualization['step'])
 
   def global_default_axes(self):
     '''
@@ -152,6 +152,9 @@ class Beam(DumbBeam):
     axis_2 = (1,0,0) if vertical else helpers.make_unit(helpers.sum_vectors(
       helpers.scale(-1 * l2,u1),helpers.scale(l1,u2)))
 
+    # Make it have a positive z-component
+    axis_2 = axis_2 if axis_2[2] > 0 else helpers.scale(-1,axis_2)
+
     # Calculate axis_3 by crossing axis 1 with axis 2 (according to right hand
     # rule)
     axis_3 = helpers.cross(axis_1,axis_2)
@@ -165,6 +168,12 @@ class Beam(DumbBeam):
     assert helpers.compare(axis_3[2],0)
 
     return axis_1,axis_2,axis_3
+
+  def global_joint_axes(self):
+    '''
+    By default, 1,2,3 and the same as +x,+y,+z
+    '''
+    return (1,0,0),(0,1,0),(0,0,1)
 
   def get_true_endpoints(self):
     '''

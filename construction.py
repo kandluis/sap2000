@@ -17,17 +17,24 @@ construction_location_center = tuple([h_coord + size_coord / 2 for h_coord, size
 # which is just an angle, so no direction is actually specified)
 # All angles are in degrees.
 beam = {
+  # The lenght of the beam
   'length'                    : variables.beam_length,
+
+  # The minumum from vertical at which a beam is allowed to be constructed when
+  # intersecting with another
   'min_angle_constraint'      : 5,
+
+  # 
   'angle_constraint'          : 45,
-  'max_angle_constraint'      : 80,
+  'max_angle_constraint'      : 60,
   'vertical_dir_set'          : (0,0,1),
-  'joint_limit'               : variables.joint_limit,
-  'beam_limit'                : 0.16,
-  'horizontal_beam_limit'     : 4.8,
+  'joint_limit'               : 3.39,
+  'beam_limit'                : 0.55,
+  'horizontal_beam_limit'     : 8.3,
+  'moment_change_limit'       : 0.2,
   'structure_check'           : variables.structure_check,
   'support_angle'             : 60,
-  'support_angle_min'         : 30,
+  'support_angle_min'         : 35,
   'support_angle_max'         : 85,
 
   # This is the angle from the vertical at which a beam is initially constructed
@@ -45,5 +52,13 @@ beam = {
 
   # If a beam is within this angle from vertical, it is considered vertical for 
   # the purpose of determining the direction we wish to travel in
-  'verticality_angle'        :  10
+  'verticality_angle'        :  10,
+
+  # If a direction is within this angle of the direction of the beam we want to
+  # repair, then we consider it a preferred location.
+  'direction_tolerance_angle':  30,
+
+  # If there is a joint within this distance of the tip, then the beam is 
+  # considered to be support and no longer requires repair
+  'joint_distance'           :  48 # inches
 }

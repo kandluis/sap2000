@@ -37,6 +37,7 @@ class Builder(Movable):
 
     # Stores direction of support beam (basically 2d)
     self.memory['repair_beam_direction'] = None
+    self.memory['broken_beam_direction'] = None
 
     # Modes for supporting structure
     self.search_mode = False
@@ -48,7 +49,7 @@ class Builder(Movable):
     '''
     if self.beam is not None:
       for joint in self.beam.joints:
-        # If we're at a joint
+        # If we're at a joint to another beam
         if helpers.compare(helpers.distance(self.location,joint),0):
           return True
 
@@ -171,7 +172,7 @@ class Builder(Movable):
     '''
     return dirs
 
-  def filter_dict(self,dirs,new_dirs,comp_functions,priorities = []):
+  def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
     correct directions based on the list of comp_functions (x,y,z).
@@ -181,8 +182,22 @@ class Builder(Movable):
     dictionary is if none of the directions match the direction we want to move
     in for each coordinate with priority zero. Otherwise, we match as many low
     priorty numbers as possible. Same priorities must be matched at the same
-    level.
+    level. 
+
+    Edit: Have done mostly away with priorities, though for compatibility, we
+    still keep them in case we want to use them later. Will probably work on 
+    removing them entirely. 
+
+    Now, we have added a "preferenced" bool which checks to see if the direction
+    is within a specified angle of preferred travel (the angle is dictated in 
+    construction.py). The preference is set to True when we are searching for a
+    support, otherwise to False. We want this direction, but if we can't find it,
+    we reset the variable to False
     '''
+    if self.at_joint():
+      #pdb.set_trace()
+      pass
+
     # Access items
     for beam, vectors in dirs.items():
       # Access each directions
@@ -191,6 +206,18 @@ class Builder(Movable):
         # Apply each function to the correct coordinates
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
+
+        # Additionally, check the x-y direction if we have a preferenced
+        if preferenced and not (helpers.parallel((0,0,1),
+          self.memory['broken_beam_direction']) or helpers.parallel(vector,(0,0,1))):
+          xy = self.memory['broken_beam_direction']
+          xy = (xy[0],xy[1],0) 
+          if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
+            vector[0],vector[1],0),(0,0,0))):
+            pass
+          coord_bool = (coord_bool and helpers.smallest_angle((vector[0],
+            vector[1],0),xy) <= 
+          construction.beam['direction_tolerance_angle'])
 
         # Check
         if coord_bool:
@@ -215,10 +242,10 @@ class Builder(Movable):
           priorities[i] = -1
           comp_functions[i] = lambda a : True
 
-      if max_val <= 0:
+      if max_val <= 0 and not preferenced:
         return new_dirs
       else:
-        return self.filter_dict(dirs,new_dirs,comp_functions,priorities)
+        return self.filter_dict(dirs,new_dirs,comp_functions,False,priorities)
 
     else:
       return new_dirs
@@ -234,11 +261,11 @@ class Builder(Movable):
     # Still have beams, so move upwards
     if self.num_beams > 0:
       directions = self.filter_dict(dirs, directions,
-        (base.append(lambda z : z > 0)))
+        (base.append(lambda z : z > 0)),preferenced=self.search_mode)
     # No more beams, so move downwards
     else:
       directions = self.filter_dict(dirs, directions,
-        (base.append(lambda z : z < 0)))
+        (base.append(lambda z : z < 0)),preferenced=self.search_mode)
 
     return directions
 
@@ -436,6 +463,9 @@ class Builder(Movable):
     downwards. So basically the direction is picked by filtering by the 
     z-component
     '''
+    #if self.at_joint() and self.search_mode:
+    #  pdb.set_trace()
+
     # Get all the possible directions, as normal
     info = self.get_directions_info()
 
@@ -501,7 +531,8 @@ class Builder(Movable):
 
     # Find nearby beams to climb on
     result = self.ground()
-    if result == None or self.repair_mode or self.num_beams == 0:
+    if (result == None or self.repair_mode or self.num_beams == 0 or 
+      (self.memory['construct_support'])):
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))
@@ -563,9 +594,17 @@ class Builder(Movable):
     name = self.program.frame_objects.add(p1_name,p2_name,
       propName=variables.frame_property_name)
     if name == '':
-      # Set to false if we were constructing support
-      self.memory['construct_support'] = False
-      return False
+      # Try to add them by coordinate
+      name = self.program.frame_objects.addbycoord(p1,p2,
+        propName=variables.frame_property_name)
+
+      # If still failed, set pdb. Let's check what's wrong...
+      if name == '':
+        pdb.set_trace()
+
+        # Set to false if we were constructing support
+        self.memory['construct_support'] = False
+        return False
 
     # Set the output statios
     ret = self.model.FrameObj.SetOutputStations(name,2,1,10,False,False)
@@ -579,7 +618,7 @@ class Builder(Movable):
     # Set to false if we were constructing support
     self.memory['construct_support'] = False
 
-    # Successfully added to at least one box
+    # Successfully added at least one box
     if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
       box = self.structure.get_box(self.location)
       try:
@@ -594,6 +633,7 @@ class Builder(Movable):
           added = addpoint(coord)
       return True
     else:
+      pdb.set_trace()
       return False
 
   def get_angle(self,string):
@@ -601,20 +641,20 @@ class Builder(Movable):
     Returns the appropriate ratios for support beam construction
     '''
     angle = construction.beam[string]
-    angle = 90 - angle if self.beam is None else angle
+    # angle = 90 - angle if self.beam is None else angle
     return angle
 
   def get_angles(self,support = True):
     if support:
-      mini,maxi = ((self.get_angle('support_angle_min'), self.get_angle(
+      mini,maxi = (self.get_angle('support_angle_min'), self.get_angle(
         'support_angle_max'))
-        if self.beam is not None else (self.get_angle('support_angle_max'),
-        self.get_angle('support_angle_min')))
+        #if self.beam is not None else (self.get_angle('support_angle_max'),
+        #self.get_angle('support_angle_min')))
     else:
-      mini,maxi = ((self.get_angle('min_angle_constraint'), self.get_angle(
+      mini,maxi = (self.get_angle('min_angle_constraint'), self.get_angle(
         'max_angle_constraint'))
-        if self.beam is not None else (self.get_angle('max_angle_constraint'),
-        self.get_angle('min_angle_constraint')))
+        #if self.beam is not None else (self.get_angle('max_angle_constraint'),
+        #self.get_angle('min_angle_constraint')))
 
     return mini,maxi
 
@@ -703,7 +743,8 @@ class Builder(Movable):
             # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
             e1,e2 = points
             # If we can actually reach the second point from vertical
-            if helpers.distance(pivot,e2) <= variables.beam_length:
+            if (not helpers.compare(helpers.distance(pivot,e2),0) and 
+              helpers.distance(pivot,e2) <= variables.beam_length):
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
               #if not helpers.compare(dist,0):
@@ -736,6 +777,15 @@ class Builder(Movable):
                 assert helpers.compare(dictionary[point],angle)
               else:
                 dictionary[point] = angle
+
+          # Endpoints are also included
+          for e in beam.endpoints:
+            v = helpers.make_vector(pivot,e)
+            l = helpers.length(v)
+            if (e not in dictionary and not helpers.compare(l,0) and (
+              helpers.compare(l,variables.beam_length) or l < variables.beam_length)):
+              angle = helpers.smallest_angle(base_vector,v)
+              dictionary[e] = angle
 
       return dictionary
 
@@ -772,17 +822,25 @@ class Builder(Movable):
       # There is already a beam here, so let's move our current beam slightly to
       # some side
       if not self.structure.available(i,j):
-        limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
-         construction.beam['length'] / 3)
-        return check(i,(random.uniform(-1* limit, limit),random.uniform(
-          -1 * limit,limit), j[2]))
+        # Create a small disturbace
+        lim = variables.random
+        f = random.uniform
+        disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
+
+        # find the new j-point for the beam
+        new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
+
+        #limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
+        # construction.beam['length'] / 3)
+        #return check(i,(random.uniform(-1* limit, limit),random.uniform(
+        #  -1 * limit,limit), j[2]))
+
+        return check(i,j)
+
       else:
         # Calculate the actual endpoint of the beam (now that we now direction 
         # vector)
-        unit_direction = helpers.make_unit(helpers.make_vector(i,j))
-        j = helpers.sum_vectors(i,helpers.scale(variables.beam_length,
-          unit_direction))
-        return i,j
+        return (i,helpers.beam_endpoint(i,j))
 
     # Sanitiy check
     assert (self.num_beams > 0)

@@ -167,9 +167,26 @@ class Visualization:
             self.add_beam(name,i,j)
           # Otherwise, this means the beam has deflected, so change the position
           else:
-            deflected_axis = helpers.make_vector(i,j)
-            self.beams[name].pos = i
-            self.beams[name].axis = deflected_axis
+            # Scale visualization
+            scale = variables.visualization['scaling']
+
+            # Old endpoints (we use this to scale at different values each time
+            # we run)
+            old_i = self.beams[name].pos
+            old_j = helpers.sum_vectors(self.beams[name],self.beams[name].axis)
+
+            # Calculate changes from old location to new location
+            i_change = helpers.scale(scale,helpers.make_vector(old_i,i))
+            j_change = helpers.scale(scale,helpers.make_vector(old_j,j))
+
+            # Calculate the new location based on the scaled chage
+            new_i = helpers.sum_vectors(old_i,i_change) 
+            new_j = helpers.sum_vectors(old_j,j_change)
+            new_axis = helpers.make_vector(new_i,new_j)
+
+            # Update the visualization
+            self.beams[name].pos = new_i
+            self.beams[name].axis = new_axis
           
           # Update window dimensions
           limit = max(j)

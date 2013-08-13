@@ -20,7 +20,7 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
-  def __at_top(self):
+  def at_top(self):
     '''
     Returns if we really are at the top, in which case build
     '''
@@ -93,7 +93,7 @@ class Worker(Builder):
     # direction functions
     funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
 
-    directions =  self.filter_dict(dirs, {}, funs)
+    directions =  self.filter_dict(dirs, {}, funs,preferenced=self.search_mode)
 
     return directions
 
@@ -150,9 +150,11 @@ class Worker(Builder):
     '''
     We construct if we truly are at the top of a beam
     '''
-    if self.num_beams > 0 and self.__at_top():
+    if self.num_beams > 0 and self.at_top():
       self.start_construction = True
       self.memory['broken'] = []
+    else:
+      super(Worker,self).no_available_direction()
 
   def basic_rules(self):
     '''

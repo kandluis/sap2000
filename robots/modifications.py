@@ -4,14 +4,50 @@ import construction, math, pdb,variables, random
 
 
 class NormalRepairer(Repairer):
+  '''
+  This contains small test modifications for the robot. Things to make the code 
+  work as we want it to. Not bug fixes, but just accounting for unexpected edge
+  cases
+  '''
   def __init__(self,name,structure,location,program):
     super(NormalRepairer,self).__init__(name,structure,location,program)
 
+    self.read_moment = 0
+
+  def current_state(self):
+    state = super(NormalRepairer,self).current_state()
+    state['read_moment'] = self.read_moment
+
+    return state
+
+  # Small modification to how we determine joints
+  def at_joint(self):
+    '''
+    Updating to return true when we are on a beam AND on the ground. We want to
+    consider this a joint so that the robot treats it as one and checks that 
+    limit instead of another.
+    '''
+    return ((self.beam is not None and helpers.compare(self.location[2],0)) or 
+      super(NormalRepairer,self).at_joint())
+
+  # Small modification to record the moment that the robot reads at each beam
+  def get_moment(self,name):
+    # Get the moment as normal
+    moment = super(NormalRepairer,self).get_moment(name)
+
+    # Store it to read out every timestep
+    self.read_moment = moment
+
+    # Return the moment
+    return moment
 
 class RandomUpwardRepairer(NormalRepairer):
   '''
   Climbs upward beams randomly instead of following the least vertical
   '''
+  def __init__(self,name,structure,location,program):
+    super(RandomUpwardRepairer,self).__init__(name,structure,location,program)
+
   def pick_direction(self,directions):
     '''
     Overwritting to pick upwards direction randomly
@@ -147,3 +183,92 @@ class SmartestRepairer(SmartRepairer,OverRepairer,RandomUpwardRepairer):
   '''
   def __init__(self,name,structure,location,program):
     super(SmartestRepairer,self).__init__(name,structure,location,program)
+
+class IntelligentRepairer(NormalRepairer):
+  '''
+  Add the ability to remember moments (up to one). Uses this information to 
+  analyze how quickly the moments are changing on the beam.
+  '''
+  def __init__(self,name,structure,location,program):
+    super(IntelligentRepairer,self).__init__(name,structure,location,program)
+
+    # Keeps track of the previous moment measure
+    self.memory['previous_moment'] = None
+
+    # A boolean that tells use whether or not we need to add additional steps to
+    # our repair operation
+    self.special_repair = True
+
+  def get_moment(self,beam):
+    '''
+    Stores the previous moment of our current beam in memory
+    '''
+    moment = super(IntelligentRepairer,self).get_moment(beam)
+
+    if (self.memory['previous_moment'] is None or 
+      self.memory['previous_moment'][1] != moment):
+      self.memory['previous_moment'] = (beam,moment)
+
+    return moment
+
+  def beam_check(self,name):
+    '''
+    Overwritting for the purpose of including a check which measures how quickly
+    the moment is changing on the beam.
+    '''
+    curr_moment = self.get_moment(name)
+    prev_beam = self.memory['previous_moment'][0]
+    prev_moment = self.memory['previous_moment'][1]
+    change = curr_moment - prev_moment if prev_beam == name else 0
+
+    if change >= construction.beam['moment_change_limit']:
+      self.special_repair = True
+
+    return (curr_moment < construction.beam['beam_limit'] or 
+      change >= construction.beam['moment_change_limit'])
+
+  def pre_decision(self):
+    '''
+    Adding the ability to add more steps to the repair mode.
+    '''
+    super(IntelligentRepairer,self).pre_decision()
+
+    # Add additional steps if necessary
+    if self.repair_mode and self.special_repair:
+      self.memory['new_beam_steps'] = 2 * self.memory['new_beam_steps']
+      self.special_repair = False
+
+class SlowBuilder(NormalRepairer):
+  '''
+  Adds an additional check to the decision algorithms. This check is as follows:
+    1. If we ever reach the top of a beam (there are no joints at the top) AND
+    2. We have not seen a joint within the defined distance (in variables.py)
+    3. Then we construct at that location
+
+  Otherwise:
+    1. If we reach the top of a beam where we would normally construct
+    2. But that beam has no supporting structures withint the specified distance
+    3. Go into repair mode.
+  '''
+  def __init__(self,name,structure,location,program):
+    super(SlowBuilder,self).__ini__(name,structure,location,program)
+
+  def no_available_directions(self):
+    '''
+    Overwritting to start repair of current beam if it meets the correct criteria
+    We add the current beam to broken_list - indicating that we need repair - 
+    when we meet the following conditions:
+      1. At top of beam
+      2. No joint within a specified distance (as defined in variables.py)
+    '''
+    # Find the closest joint on our beam
+    # There should always be a joint on a beam (the i-end :))
+    distance_to_joint = min(([helpers.distance(self.location,coord) 
+      for coord in self.beam.joints])):
+
+    # Add the current beam to broken because it needs support
+    if self.at_top() and distance_to_joint > construction.beam['joint_distance']:
+      self.memory['broken'] = (self.beam,0.0)
+
+    # Call the normal function
+    super(SlowBuilder,self).no_available_directions()

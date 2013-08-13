@@ -13,7 +13,11 @@ step_length = 12 # .5 ft
 
 # This dictactes what is considered a significant length in the visualization
 # We only record events that occur at a length higher than this
-visualization_step = 4
+visualization = { 'step'    : 0.5,
+                  'scaling' : 4 }
+
+# This turns on and off recordning the deflection
+deflection = True
 
 # Length of each beam (in the units specified by program_units)
 beam_length = 120 # 10ft
@@ -45,29 +49,29 @@ epsilon = 0.0001
 # This defines the mass of each robot in the units specified by program_units
 robot_load = 0.035 # kip
 
-# This defines the load of each beam carried by the robots
-beam_load = 0.027 # kip
-
 # Name of the load case for the robots
 robot_load_case = "DEAD"
+wind_case = "Wind"
 wind_combo = "D+W"
 
 ######################################################
 # Name of the material property defined for the beams
 frame_property_name = "Scaffold Tube"
 material_property  = "A500GrB42"
-outside_diameter = 1.9 # inches
-wall_thickness = 0.145 # inches
+outside_diameter = 3.0 # inches(1.9)
+wall_thickness = 0.188 # inches (0.144)
+steel_density = 490
 
 material_type = "MATERIAL_STEEL"
 material_subtype = "MATERIAL_STEEL_SUBTYPE_ASTM_A500GrB_Fy42"
 
 steel_yield = 42 #ksi
-density_ = 0.28 # pci
+density = steel_density / (12**3) # pci
 cross_sect_area = math.pi * ((outside_diameter / 2)**2 - (outside_diameter / 2 -
   wall_thickness)**2) # in*in
 moment_of_intertia = math.pi * ((outside_diameter/2)**4 - (outside_diameter / 2 -
   wall_thickness)**4) / 4
+beam_load = cross_sect_area * beam_length * density / 1000 # kip
 #####################################################
 
 # Calculating limits
@@ -84,19 +88,19 @@ analysis_timesteps = 100
 THESE SETTINGS ARE NOW TAKEN CARE OF MANUALLY THROUGH A TEMPLATE LOCATED In
 C:\\SAP 2000\\template.sbd
 
-''
 exposureFrom indicated the source of the wind exposure
 1 = From extents of rigid diaphragms
 2 = From area objects
 3 = From frame objeccs (open structure)
 4 = From area objects and frame objects (open structure)
-''
+'''
 exposureFrom = 3
 
-''
+'''
 dirAngle is the direction angle of the wind load. This
 only applies when exposureFrom is 1
-''
+'''
+
 dirAngle = 0
 
 # Windward coefficient (exposureFrom must be 1)
@@ -110,12 +114,12 @@ asceCase = 1
 ascee1 = 1
 ascee2 = 1
 
-''
+'''
 This item is True if the top and bottom elevations of the wind load are user 
 specified. It is False if the elevations are determined by the program.
 
 topZ and bottomZ only appy when userZ is set to True
-''
+'''
 userZ = False
 topZ = 1
 bottomZ = 1
@@ -123,12 +127,12 @@ bottomZ = 1
 # The wind speed in mph
 windSpeed = 90
 
-''
+'''
 exposureType indicating the exposure Category
 1 = B
 2 = C
 3 = D
-''
+'''
 exposureType = 2
 
 importanceFactor = 1
@@ -141,15 +145,14 @@ gustFactor = .85
 # The directionality factor
 kd = .85
 
-''
+'''
 solidGrossRatio is the solid area divided by gross area ratio for open frame
 structure loading.
 
 This only applies when exposureFrom is 3 or 4
-''
+'''
 solidGrossRatio = .2
 
 userExposure = False
 
 ######################################################
-'''

@@ -93,7 +93,6 @@ class DumbRepairer(Worker):
     '''
     Overwritting to allow for repair work to take place
     '''
-    # Repair Mode
     if self.search_mode and self.repair_mode:
       self.pre_decision()
       # We have moved off the structure entirely, so wander
@@ -130,8 +129,7 @@ class DumbRepairer(Worker):
     # We found a support beam and are on it, planning on construction. If 
     # we reach the endpoint of the beam (the support beam), then construct.
     elif self.repair_mode:
-      if (helpers.compare(helpers.distance(self.location,self.beam.endpoints.i),
-        self.step / 2) or helpers.compare(helpers.distance(self.location,
+      if (helpers.compare(helpers.distance(self.location,
           self.beam.endpoints.j),self.step / 2)):
         self.start_contruction = True
         self.memory['broken'] = []
@@ -151,6 +149,9 @@ class DumbRepairer(Worker):
       beam, moment = max(self.memory['broken'],key=lambda t : t[1])
       string = "{} is starting repair of beam {} which has moment {} at {}".format(
         self.name,beam.name,str(moment),str(self.location))
+      if moment == 0:
+        string += ". This repair occurs due to special rules."
+        
       print(string)
       self.repair_data = string
       
@@ -194,6 +195,9 @@ class DumbRepairer(Worker):
     non_vertical = (helpers.smallest_angle(v,(0,0,1)) > 
       construction.beam['verticality_angle'])
 
+    # Store real broken beam direction
+    self.memory['broken_beam_direction'] = v
+
     # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
     # 180 degree approah
     direction = helpers.make_unit(direction) if non_vertical else (0,0,1)
@@ -207,8 +211,8 @@ class DumbRepairer(Worker):
     self.ground_direction = direction
     
     # We want to climb down, and travel in 'direction' if possible
-    set_dir('pos_x',direction[0])
-    set_dir('pos_y',direction[1])
+    # set_dir('pos_x',direction[0])
+    # set_dir('pos_y',direction[1])
     self.memory['pos_z'] = False
 
     # Store name of repair beam
@@ -220,8 +224,8 @@ class DumbRepairer(Worker):
       math.radians(construction.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
-      non_vertical else self.memory['new_beam_steps'] +  math.sin(math.radians(
-        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps'])
+      not non_vertical else self.memory['new_beam_steps'] +  math.floor(math.sin(math.radians(
+        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps']))
 
     self.repair_mode = True
     self.search_mode = True
@@ -267,7 +271,6 @@ class Repairer(DumbRepairer):
     at which our current beam is located, and the verticality of the beam we
     are attempting to reach. This returns a unit direction (always should!)
     '''
-    pdb.set_trace()
     # If we're on the ground, then continue doing as before
     if self.beam is None:
       return super(Repairer,self).support_xy_direction()
@@ -355,6 +358,7 @@ class Repairer(DumbRepairer):
     '''
     Returns the endpoint for a support beam
     '''
+    #pdb.set_trace()
     # Get broken beam
     e1,e2 = self.structure.get_endpoints(self.memory['broken_beam_name'],
       self.location)
@@ -414,6 +418,12 @@ class Repairer(DumbRepairer):
         
         return simple and real_angle > construction.beam['support_angle_difference']
 
+    #pdb.set_trace()
+    for coord,angle in sorted_angles:
+      if acceptable_support(angle,coord) and helpers.on_line(e1,e2,coord):
+        self.memory['broken_beam_name'] = ''
+        return coord
+
     # Cycle through angles looking for one that is above our limit (not too
     # vertical nor horizontal) that is on our broken beam (why?)
     for coord,angle in sorted_angles:
@@ -433,6 +443,7 @@ class Repairer(DumbRepairer):
     '''
     new_dirs = {}
     if self.at_joint() and self.repair_mode:
+      pdb.set_trace()
       # Access items
       for beam, vectors in dirs.items():
         # If the directions is about our beam, remove references to up.

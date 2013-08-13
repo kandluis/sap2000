@@ -226,7 +226,7 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
 
   # load case is already defined
   if name in names:
-    return False
+    return True
 
   # defining for the first time  
   else:

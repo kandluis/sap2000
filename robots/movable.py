@@ -16,13 +16,6 @@ class DumbMovable(Automaton):
     # The current location of the robot on the designed structure
     self.location = location
 
-    # The current location of the robot on the deflected structure
-    self.true_location = self.get_true_location()
-
-    # The robots all initially move towards the centertower
-    self.ground_direction = helpers.make_vector(location,
-      construction.construction_location)
-
     # The beam on which the robot currently is
     self.beam = None
 
@@ -35,6 +28,10 @@ class DumbMovable(Automaton):
     # Contains Errors from SAP 2000
     self.error_data = ''
 
+    # The robots all initially move towards the centertower
+    self.ground_direction = helpers.make_vector(location,
+      construction.construction_location)
+
   def current_state(self):
     '''
     Returns the current state of the robot. This is used when we write the 
@@ -43,7 +40,7 @@ class DumbMovable(Automaton):
     beam = self.beam.name if self.beam is not None else self.beam
     state = super(DumbMovable,self).current_state()
     location = [round(coord,2) for coord in self.location]
-    deflected_location = [round(coord,2) for coord in self.true_location]
+    deflected_location = [round(coord,2) for coord in self.get_true_location()]
     state.update({  'step'              : self.step,
                     'location'          : location,
                     'deflected_location': deflected_location,
@@ -64,6 +61,8 @@ class DumbMovable(Automaton):
     Adds a load of the specified value to the named beam at the specific 
     location
     '''
+    assert not self.model.GetModelIsLocked()
+
     self.beam = beam
     distance = helpers.distance(beam.endpoints.i,location)
     ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
@@ -108,8 +107,9 @@ class DumbMovable(Automaton):
     def removeload(location):
       '''
       Removes the load assigned to a specific location based on where the robot 
-      existed (assumes the robot is on a beam)
+      existed (assumes the robot is on a beams
       '''
+      assert not self.model.GetModelIsLocked()
       # obtain current values.
       # values are encapsulated in a list as follows: ret, number_items, 
       # frame_names, loadpat_names, types, coordinates, directions, rel_dists, 
@@ -407,10 +407,17 @@ class DumbMovable(Automaton):
           assert errors == ''
 
         self.next_direction_info = self.get_direction()
+
+        # Unlock the results so that we can actually move
+        if self.model.GetModelIsLocked():
+          self.model.SetModelIsLocked(False)
+
         self.do_action()
 
       # We climbed off
       else:
+        assert not self.model.GetModelIsLocked()
+        
         self.do_action()
 
     # The direction is larger than the usual step, so move only the step in the 
@@ -547,7 +554,7 @@ class Movable(DumbMovable):
     deflections that the beam has undergone. Uses the design location and the 
     deflection data from SAP to calculate this location.
     '''
-    if self.beam is None:
+    if self.beam is None or self.beam.deflection is None or variables.deflection:
       return super(Movable,self).get_true_location()
 
     else:
