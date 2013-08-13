@@ -343,11 +343,14 @@ class Builder(Movable):
     # previous direction, or that previous direction is no longer acceptable
     return self.pick_direction(directions)
 
-  def get_moment(self,name):
+  def get_moment_magnitudes(self,name,pivot = None):
     '''
-    Returns the moment for the beam specified by name at the point closest 
-    to the robot itself
+    Returns the moment magnitudes (m11,m22,m33) for the local axes u1,u2,u3 at
+    the output station closest to the pivot. If there is no pivot, it returns
+    the values from the output station closest to the robot's location.
     '''
+    pivot = self.location if pivot is None else pivot
+
     # Format (ret[0], number_results[1], obj_names[2], i_end distances[3], 
     # elm_names[4], elm_dist[5], load_cases[6], step_types[7], step_nums[8],
     # Ps[9], V2s[10], V3s[11], Ts[12], M2s[13], M3s[14]
@@ -368,7 +371,7 @@ class Builder(Movable):
       beam_direction = helpers.make_unit(helpers.make_vector(i_end,j_end))
       point = helpers.sum_vectors(i_end,helpers.scale(i_distance,
         beam_direction))
-      distance = helpers.distance(self.location,point)
+      distance = helpers.distance(pivot,point)
 
       # If closer than the current closes point, update information
       if shortest_distance is None or distance < shortest_distance:
@@ -381,12 +384,21 @@ class Builder(Movable):
     assert close_index < results[1]
 
     # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
+    m11 = results[12][close_index]
     m22 = results[13][close_index]
     m33 = results[14][close_index]
-    total = math.sqrt(m22**2 + m33**2)
 
-    #if total > 0.5:
-      #pdb.set_trace()
+    return m11,m22,m33
+
+  def get_moment(self,name):
+    '''
+    Returns the moment for the beam specified by name at the point closest 
+    to the robot itself
+    '''
+    m11,m22,m33 = self.get_moment_magnitudes(name)
+
+    # Find magnitude
+    total = math.sqrt(m22**2 + m33**2)
 
     return total
 
@@ -835,7 +847,7 @@ class Builder(Movable):
         #return check(i,(random.uniform(-1* limit, limit),random.uniform(
         #  -1 * limit,limit), j[2]))
 
-        return check(i,j)
+        return check(i,new_j)
 
       else:
         # Calculate the actual endpoint of the beam (now that we now direction 
@@ -845,15 +857,22 @@ class Builder(Movable):
     # Sanitiy check
     assert (self.num_beams > 0)
 
-    # This is the i-end of the beam being placed. We pivot about this
-    if self.beam is None:
-      pivot = self.location
-    elif helpers.compare_tuple(self.location,self.beam.endpoints.i):
-      pivot = self.beam.endpoints.i
-    elif helpers.compare_tuple(self.location,self.beam.endpoints.j):
-      pivot = self.beam.endpoints.j
-    else:
-      pivot = self.location
+    # Default pivot is our location
+    pivot = self.location
+
+    if self.beam is not None:
+      # Obtain any nearby joints, and insert the j-end if needed
+      all_joints = [coord for coord in self.beam.joints]
+      if self.beam.endpoints.j not in all_joints:
+        all_joints.append(self.beam.endpoints.j)
+      if self.beam.endpoints.i not in all_joints:
+        all_joints.append(self.beam.endpoints.i)
+
+      # Find the nearest one
+      joint_coord, dist = min([(coord, helpers.distance(self.location,coord)) for coord in all_joints], key = lambda t: t[1])
+      # If the nearest joint is within our error, then use it as the pivot
+      if dist <= construction.beam['joint_error']:
+        pivot = joint_coord
 
     # Default vertical endpoint (the ratios are measured from the line created 
     # by pivot -> vertical_endpoint)

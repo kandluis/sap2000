@@ -470,9 +470,9 @@ class Structure:
     # Cycle through the box and compare endpoints
     for name in self.model[xi][yi][zi]:
       beam = self.model[xi][yi][zi][name]
-      if ((helpers.compare_tuple(beam.endpoints.i,e1,0.1) and helpers.compare_tuple(
-        beam.endpoints.j,e2,0.1)) or (helpers.compare_tuple(beam.endpoints.i,e2,0.01) and
-        helpers.compare_tuple(beam.endpoints.j,e1,0.01))):
+      if ((helpers.compare_tuple(beam.endpoints.i,e1,0.5) and helpers.compare_tuple(
+        beam.endpoints.j,e2,0.5)) or (helpers.compare_tuple(beam.endpoints.i,e2,0.5) and
+        helpers.compare_tuple(beam.endpoints.j,e1,0.5))):
         return True
     return False
 

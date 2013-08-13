@@ -150,7 +150,7 @@ class DumbRepairer(Worker):
       string = "{} is starting repair of beam {} which has moment {} at {}".format(
         self.name,beam.name,str(moment),str(self.location))
       if moment == 0:
-        string += ". This repair occurs due to special rules."
+        string += ". This repair occured due to special rules."
         
       print(string)
       self.repair_data = string
@@ -179,6 +179,16 @@ class DumbRepairer(Worker):
         self.memory[string] = True
       else:
         self.memory[string] = False
+
+    # Obtain the moment vector
+    u1,u2,u3 = beam.global_default_axes()
+    m11,m22,m33 = self.get_moment_magnitured(beam.name)
+
+    if not helpers.compare(m11,0):
+      pdb.set_trace()
+
+    moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3))
+    xy_moment = (moment_vector[0],moment_vector[1],0)
 
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
@@ -443,7 +453,6 @@ class Repairer(DumbRepairer):
     '''
     new_dirs = {}
     if self.at_joint() and self.repair_mode:
-      pdb.set_trace()
       # Access items
       for beam, vectors in dirs.items():
         # If the directions is about our beam, remove references to up.

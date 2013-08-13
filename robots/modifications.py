@@ -264,11 +264,11 @@ class SlowBuilder(NormalRepairer):
     # Find the closest joint on our beam
     # There should always be a joint on a beam (the i-end :))
     distance_to_joint = min(([helpers.distance(self.location,coord) 
-      for coord in self.beam.joints])):
+      for coord in self.beam.joints]))
 
     # Add the current beam to broken because it needs support
     if self.at_top() and distance_to_joint > construction.beam['joint_distance']:
-      self.memory['broken'] = (self.beam,0.0)
+      self.memory['broken'] = (self.beam,0)
 
     # Call the normal function
     super(SlowBuilder,self).no_available_directions()

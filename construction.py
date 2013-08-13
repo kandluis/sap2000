@@ -60,5 +60,9 @@ beam = {
 
   # If there is a joint within this distance of the tip, then the beam is 
   # considered to be support and no longer requires repair
-  'joint_distance'           :  48 # inches
+  'joint_distance'           :  48, # inches
+
+  # If there is a joint within this distance of where we want to build, then the
+  # robot goes ahead and uses this nearby joint.
+  'joint_error'              :  2 # inches
 }

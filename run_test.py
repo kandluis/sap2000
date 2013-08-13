@@ -7,7 +7,7 @@ view = True
 # Run the Simulation
 sim = Simulation("Run")
 sim.start(view,1)
-sim.run_simulation(view,8000)
+sim.run_simulation(view,2000)
 
 # Display the simulation
 sim.run_visualization()
