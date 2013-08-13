@@ -182,7 +182,7 @@ class DumbRepairer(Worker):
 
     # Obtain the moment vector
     u1,u2,u3 = beam.global_default_axes()
-    m11,m22,m33 = self.get_moment_magnitured(beam.name)
+    m11,m22,m33 = self.get_moment_magnitude(beam.name)
 
     if not helpers.compare(m11,0):
       pdb.set_trace()

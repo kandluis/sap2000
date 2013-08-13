@@ -223,6 +223,10 @@ class Simulation:
 
     workbook.close()
 
+    # Empty memory (this usually happens every 4000 timesteps)
+    self.excel['header'] = []
+    self.excel['data'] = [[]]
+
 
   def reset(self, comment = ""):
     '''
@@ -495,6 +499,11 @@ class Simulation:
           # Write out structure physics
           self.structure_physics()
 
+        # We run out of memory for Excel information if we don't clean it out
+        # everynow and again
+        if i % 5000 == 0 and i != 0:
+          self.__push_excel(self.folder + "locations-{}.xlsx".format(str(i)))
+
         # This section writes the robots decisions out to a file
         if debug:
           swarm_data = self.Swarm.get_information()
@@ -524,8 +533,8 @@ class Simulation:
     # Write out simulation data
     run_text.write(run_data)
 
-    # Write out locations
-    self.__push_excel(self.folder + "locations.xlsx")
+    # Write out locations to excel
+    self.__push_excel(self.folder + "locations-end.xlsx")
 
     # Write out visualization data
     self.visualization_data()
