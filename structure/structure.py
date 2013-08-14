@@ -558,11 +558,11 @@ class Structure:
         joint
         '''
         # Get displacements
-        results = program.model.Results.JointDispl(joint_name,1)
+        results = program.model.Results.JointDisplAbs(joint_name,0)
         if results[0] != 0:
           pdb.set_trace()
           return (0,0,0)
-        u1,u2,u3 = results[8][0], results[9][0], results[10][0]
+        u1,u2,u3 = results[7][0], results[8][0], results[11][0]
 
         # Return the total deflection based on the local axes
         return helpers.sum_vectors(helpers.scale(u1,axis_1),helpers.sum_vectors(

@@ -173,7 +173,7 @@ class Visualization:
             # Old endpoints (we use this to scale at different values each time
             # we run)
             old_i = self.beams[name].pos
-            old_j = helpers.sum_vectors(self.beams[name],self.beams[name].axis)
+            old_j = helpers.sum_vectors(self.beams[name].pos,self.beams[name].axis)
 
             # Calculate changes from old location to new location
             i_change = helpers.scale(scale,helpers.make_vector(old_i,i))

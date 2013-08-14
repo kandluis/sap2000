@@ -186,6 +186,13 @@ def collinear(p1,p2,p3):
   normal = cross(v1,v2)
   return compare(length(normal),0,variables.epsilon*2)
 
+def is_vertical(v):
+  '''
+  Returns whether we consider the vector v to be vertical. This error angle is
+  defined in variables.py
+  '''
+  return smallest_angle(v,(0,0,1)) <= construction.beam['verticality_angle']
+
 def correct(l1,l2,point):
   '''
   Returns the corrected version of 'point' so that it is within the line spanned

@@ -52,7 +52,7 @@ beam = {
 
   # If a beam is within this angle from vertical, it is considered vertical for 
   # the purpose of determining the direction we wish to travel in
-  'verticality_angle'        :  10,
+  'verticality_angle'        :  5,
 
   # If a direction is within this angle of the direction of the beam we want to
   # repair, then we consider it a preferred location.

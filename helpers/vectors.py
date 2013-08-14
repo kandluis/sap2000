@@ -4,6 +4,21 @@ Python
 '''
 import math, variables
 
+def normalize(v,max_val):
+  '''
+  Normalizes the vector v. If the magnide of v is max_val, then v becomes a unit
+  vector in the original direction of v. Otherwise, it is a scalar multiple based
+  on the ratio maginute_of_v/max_val. v must be non-zere
+  '''
+  assert not compare(length(v),0)
+
+  # Obtain unit direction and scale factor
+  unit = make_unit(v)
+  scalar = length(v) / max_val
+
+  # Return normalized vectors
+  return scale(scalar,unit)
+
 def compare(x,y,e=variables.epsilon):
   '''
   Compares two int/floats by taking into account "epsilon"

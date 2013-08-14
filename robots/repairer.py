@@ -162,6 +162,37 @@ class DumbRepairer(Worker):
       # Do parent's work
       super(DumbRepairer,self).no_available_direction()
 
+  def get_preferred_direction(self,beam):
+    '''
+    Returns the preferred direction - this is the direction towards which the 
+    robot wants to move when looking for an already set support tube.
+    The direction is a unit vector
+    '''
+    # Calculate direction of repair (check 0 dist, which means it is perfectly
+    # vertical!)
+    i, j = beam.endpoints.i, beam.endpoints.j
+    v1 = helpers.make_vector(self.location,j)
+    v2 = helpers.make_vector(i,self.location)
+    l1,l2 = helpers.length(v1), helpers.length(v2)
+
+    # v1 is non-zero and it is not vertical
+    if not (helpers.compare(l1,0) or is_vertical(v1)):
+      return helpers.make_unit(v1)
+
+    # v2 is non-zero and it is not vertical
+    elif not (helpers.compare(l2,0) or is_vertical(v2)):
+      return helpers.make_unit(v2)
+
+    # No preferred direction because the beam is perfectly vertical
+    else:
+      return None
+
+  def get_preferred_ground_direction(direction):
+    '''
+    Returns the direction of preffered travel if we reach the ground when repairing
+    '''
+    return direction
+
   def start_repair(self,beam):
     '''
     Initializes the repair of the specified beam. Figures out which direction to
@@ -180,49 +211,18 @@ class DumbRepairer(Worker):
       else:
         self.memory[string] = False
 
-    # Obtain the moment vector
-    u1,u2,u3 = beam.global_default_axes()
-    m11,m22,m33 = self.get_moment_magnitude(beam.name)
+    angle_with_vertical = helpers.smallest_angle(helpers.make_vector(
+      beam.endpoints.i,beam.endpoints.j),(0,0,1))
 
-    if not helpers.compare(m11,0):
-      pdb.set_trace()
+    # Get direction of travel
+    self.memory['preferred_direction'] = self.get_preferred_direction()
 
-    moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3))
-    xy_moment = (moment_vector[0],moment_vector[1],0)
+    # Get direction of travel if on the ground based on preferred direction on
+    # the structure
+    self.ground_direction = self.get_preferred_ground_direction(
+      self.memory['preferred_direction'])
 
-    # Calculate direction of repair (check 0 dist, which means it is perfectly
-    # vertical!)
-    i, j = beam.endpoints.i, beam.endpoints.j
-    v1 = helpers.make_vector(self.location,(j[0],j[1],self.location[2]))
-    v2 = helpers.make_vector((i[0],i[1],self.location[2]),self.location)
-
-    # This is the xy-change, basically
-    direction = v1 if not helpers.compare(helpers.length(v1),0) else v2
-
-    # Check to make sure the direction is non-zero and the the verticality is
-    # within a reasonable range
-    v = helpers.make_vector(beam.endpoints.i,beam.endpoints.j)
-    non_vertical = (helpers.smallest_angle(v,(0,0,1)) > 
-      construction.beam['verticality_angle'])
-
-    # Store real broken beam direction
-    self.memory['broken_beam_direction'] = v
-
-    # If it is zero-length, then store (0,0,1) as direction. Otherwise, give a 
-    # 180 degree approah
-    direction = helpers.make_unit(direction) if non_vertical else (0,0,1)
-    disturbance = helpers.scale(0.5,self.non_zero_xydirection())
-    direction = (helpers.make_unit(helpers.sum_vectors(disturbance,direction)) 
-      if direction != (0,0,1) else helpers.make_unit(disturbance))
-    self.memory['repair_beam_direction'] = direction
-
-    # If vertical, give None so that it can choose a random direction. Otherwise,
-    # pick a direction which within 180 degrees of the beam
-    self.ground_direction = direction
-    
-    # We want to climb down, and travel in 'direction' if possible
-    # set_dir('pos_x',direction[0])
-    # set_dir('pos_y',direction[1])
+    # Travel down !
     self.memory['pos_z'] = False
 
     # Store name of repair beam
@@ -234,8 +234,8 @@ class DumbRepairer(Worker):
       math.radians(construction.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
-      not non_vertical else self.memory['new_beam_steps'] +  math.floor(math.sin(math.radians(
-        helpers.smallest_angle(v,(0,0,1)))) * self.memory['new_beam_steps']))
+      self.ground_direction is None else self.memory['new_beam_steps'] + math.floor(
+        math.sin(math.radians(angle_with_vertical)) * self.memory['new_beam_steps']))
 
     self.repair_mode = True
     self.search_mode = True

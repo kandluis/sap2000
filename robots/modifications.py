@@ -272,3 +272,58 @@ class SlowBuilder(NormalRepairer):
 
     # Call the normal function
     super(SlowBuilder,self).no_available_directions()
+
+class MomentVectors(NormalRepairer):
+  '''
+  Adds the ability to take into account the direction of the moments, in additional
+  to their magnitudes
+  '''
+  def get_preferred_direction(self,beam):
+    # Obtain the moment vector
+    u1,u2,u3 = beam.global_default_axes()
+    m11,m22,m33 = self.get_moment_magnitudes(beam.name)
+
+    # Quick debugging - making sure the torsion doesn't get too high
+    if not helpers.compare(m11,0,4):
+      pdb.set_trace()
+
+    # Sum m22 and m33 (m11 is torsion, which doesn't play a role in the direction)
+    moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3)))
+    
+    '''
+    Cross axis-1 with the moment vector to obtain the positive clockwise direction
+    This keeps the overall magnitude of moment_vector since u1 is a unit vector
+      We are always attempting to repair further up the broken beam (closer to 
+      the j-end). The cross will always give us the vector in the right direction
+      if we do it this way.
+    '''
+    twist_direction = helpers.cross(moment_vector,u1)
+
+    # Project the twist direction onto the xy-plane and normalize to have a
+    # maximum of 45 degree approach (or, as specified in the variables.py)
+    # depending on the ratio of moment magnitude to max_magnitude
+    xy_change = (twist_direction[0],twist_direction[1],0)
+
+    # The rotation is parallel to the z-axis, so we don't add disturbance
+    if helpers.compare(helpers.length(xy_change),0):
+      # Return the normal direction - which way is the beam leaning???
+      return super(MomentVectors,self).get_preferred_direction()
+
+    # We know the direction in which the beam is turning
+    else:
+      # Get direction of travel (this is a unit vector)
+      travel = super(MomentVectors,self).get_preferred_direction()
+      
+      # Normalize twist to the maximum moment of force -- structure_check
+      normal = helpers.normalize(xy_change,construction.beam['structure_check'])
+
+      # The beam is vertical - check to see how large the normalized moment is
+      if travel is None:
+        # The change is relatively small, so ignore it
+        if helpers.length(normal) <= helpers.ratio(construction.beam['verticality_angle']):
+          return travel
+        else:
+          return helpers.make_unit(normal)
+
+      else:
+        return helpesr.make_unit(helpers.sum_vectors(normal,travel))

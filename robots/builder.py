@@ -35,9 +35,10 @@ class Builder(Movable):
     # support)
     self.memory['construct_support'] = False
 
-    # Stores direction of support beam (basically 2d)
-    self.memory['repair_beam_direction'] = None
-    self.memory['broken_beam_direction'] = None
+    # This is the direction towards which the robot looks when searching for a 
+    # support tube.
+    # This is in the form (x,y,z)
+    self.memory['preferred_direction'] = None
 
     # Modes for supporting structure
     self.search_mode = False
@@ -207,10 +208,9 @@ class Builder(Movable):
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
 
-        # Additionally, check the x-y direction if we have a preferenced
-        if preferenced and not (helpers.parallel((0,0,1),
-          self.memory['broken_beam_direction']) or helpers.parallel(vector,(0,0,1))):
-          xy = self.memory['broken_beam_direction']
+        # Additionally, check the x-y direction if we have a preferenced direction
+        if (preferenced and self.memory['preferred_direction'] is not None and
+          not helpers.is_vertical(vector)):
           xy = (xy[0],xy[1],0) 
           if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
             vector[0],vector[1],0),(0,0,0))):
@@ -683,16 +683,41 @@ class Builder(Movable):
     else:
       return self.non_zero_xydirection()
 
+  def get_repair_beam_direction(self):
+    '''
+    Returns the xy direction at which the support beam should be set (if none is
+    found). Currently, we just add a bit of disturbace while remaining within 
+    the range that the robot was set to search.
+    '''
+    direction = self.memory['preferred_direction']
+    if xy is None:
+      return None
+    else:
+      # Project onto xy_plane and make_unit
+      xy = helpers.make_unit((direction[0],direction[1],0))
+      xy_perp = (-1 * xy[1],xy[0],0)
+
+      # Obtain disturbance based on "search_angle"
+      limit = helpers.ratio(construction.beam['direction_tolerance_angle'])
+      scale = random.uniform(-1 * limit,limit)
+      disturbance = helpers.scale(scale,xy_perp)
+
+      return helpers.sum_vectors(disturbance,xy)
+
   def support_xy_direction(self):
     '''
     Returns the direction in which the support beam should be constructed
     '''
     # Check to see if direction is vertical
-    vertical = (0,0,1)
-    if helpers.parallel(self.memory['repair_beam_direction'],vertical):
+    default_direction = self.get_repair_beam_direction()
+
+    # The beam was vertical
+    if default_direction is None:
       xy_dir = self.non_zero_xydirection()
+
+    # Use the default direction
     else:
-      xy_dir = self.memory['repair_beam_direction']
+      xy_dir = default_direction
 
     return helpers.make_unit(xy_dir)
 
@@ -713,9 +738,6 @@ class Builder(Movable):
     '''
     Returns the endpoint for construction a support beam
     '''
-    # Sanity check
-    assert self.memory['repair_beam_direction'] is not None
-
     # Add beam_directions plus vertical change based on angle ratio (tan)
     ratio = helpers.ratio(self.get_angle('support_angle'))
     vertical = self.support_vertical_change()
