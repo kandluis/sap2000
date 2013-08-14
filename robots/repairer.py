@@ -176,18 +176,18 @@ class DumbRepairer(Worker):
     l1,l2 = helpers.length(v1), helpers.length(v2)
 
     # v1 is non-zero and it is not vertical
-    if not (helpers.compare(l1,0) or is_vertical(v1)):
+    if not (helpers.compare(l1,0) or helpers.is_vertical(v1)):
       return helpers.make_unit(v1)
 
     # v2 is non-zero and it is not vertical
-    elif not (helpers.compare(l2,0) or is_vertical(v2)):
+    elif not (helpers.compare(l2,0) or helpers.is_vertical(v2)):
       return helpers.make_unit(v2)
 
     # No preferred direction because the beam is perfectly vertical
     else:
       return None
 
-  def get_preferred_ground_direction(direction):
+  def get_preferred_ground_direction(self,direction):
     '''
     Returns the direction of preffered travel if we reach the ground when repairing
     '''
@@ -215,7 +215,7 @@ class DumbRepairer(Worker):
       beam.endpoints.i,beam.endpoints.j),(0,0,1))
 
     # Get direction of travel
-    self.memory['preferred_direction'] = self.get_preferred_direction()
+    self.memory['preferred_direction'] = self.get_preferred_direction(beam)
 
     # Get direction of travel if on the ground based on preferred direction on
     # the structure

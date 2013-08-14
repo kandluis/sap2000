@@ -306,12 +306,12 @@ class MomentAwareBuilder(NormalRepairer):
     # The rotation is parallel to the z-axis, so we don't add disturbance
     if helpers.compare(helpers.length(xy_change),0):
       # Return the normal direction - which way is the beam leaning???
-      return super(MomentAwareBuilder,self).get_preferred_direction()
+      return super(MomentAwareBuilder,self).get_preferred_direction(beam)
 
     # We know the direction in which the beam is turning
     else:
       # Get direction of travel (this is a unit vector)
-      travel = super(MomentAwareBuilder,self).get_preferred_direction()
+      travel = super(MomentAwareBuilder,self).get_preferred_direction(beam)
       
       # Normalize twist to the maximum moment of force -- structure_check
       normal = helpers.normalize(xy_change,construction.beam['structure_check'])

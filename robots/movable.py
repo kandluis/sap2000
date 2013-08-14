@@ -554,7 +554,7 @@ class Movable(DumbMovable):
     deflections that the beam has undergone. Uses the design location and the 
     deflection data from SAP to calculate this location.
     '''
-    if self.beam is None or self.beam.deflection is None or variables.deflection:
+    if self.beam is None or self.beam.deflection is None or not variables.deflection:
       return super(Movable,self).get_true_location()
 
     else:

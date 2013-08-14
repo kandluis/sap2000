@@ -590,6 +590,7 @@ class Structure:
               if update_deflection(beam) and variables.deflection:
                 # Add the deflection data for the beam if it's changed significantly
                 # since last time we updated it
+                pdb.set_trace()
                 try:
                   self.visualization_data += "{}:{}-{}<>".format(str(name),str(
                     helpers.round_tuple(beam.deflected_endpoints.i,3)),str(

@@ -13,8 +13,8 @@ step_length = 12 # .5 ft
 
 # This dictactes what is considered a significant length in the visualization
 # We only record events that occur at a length higher than this
-visualization = { 'step'    : 0.5,
-                  'scaling' : 4 }
+visualization = { 'step'    : 1,
+                  'scaling' : 1 }
 
 # This turns on and off recordning the deflection
 deflection = True
