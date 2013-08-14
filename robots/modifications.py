@@ -273,7 +273,7 @@ class SlowBuilder(NormalRepairer):
     # Call the normal function
     super(SlowBuilder,self).no_available_directions()
 
-class MomentVectors(NormalRepairer):
+class MomentAwareBuilder(NormalRepairer):
   '''
   Adds the ability to take into account the direction of the moments, in additional
   to their magnitudes
@@ -306,12 +306,12 @@ class MomentVectors(NormalRepairer):
     # The rotation is parallel to the z-axis, so we don't add disturbance
     if helpers.compare(helpers.length(xy_change),0):
       # Return the normal direction - which way is the beam leaning???
-      return super(MomentVectors,self).get_preferred_direction()
+      return super(MomentAwareBuilder,self).get_preferred_direction()
 
     # We know the direction in which the beam is turning
     else:
       # Get direction of travel (this is a unit vector)
-      travel = super(MomentVectors,self).get_preferred_direction()
+      travel = super(MomentAwareBuilder,self).get_preferred_direction()
       
       # Normalize twist to the maximum moment of force -- structure_check
       normal = helpers.normalize(xy_change,construction.beam['structure_check'])
@@ -325,4 +325,6 @@ class MomentVectors(NormalRepairer):
           return helpers.make_unit(normal)
 
       else:
-        return helpesr.make_unit(helpers.sum_vectors(normal,travel))
+        scalar = 1 / helpers.ratio(construction.beam['moment_angle_max'])
+        scaled_travel = helpers.scale(scalar,travel)
+        return helpesr.make_unit(helpers.sum_vectors(normal,scaled_travel))

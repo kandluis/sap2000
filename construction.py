@@ -58,6 +58,9 @@ beam = {
   # repair, then we consider it a preferred location.
   'direction_tolerance_angle':  30,
 
+  # This is the maximum angle change that can occur due to the moment vector
+  'moment_angle_max'         :  45,
+
   # If there is a joint within this distance of the tip, then the beam is 
   # considered to be support and no longer requires repair
   'joint_distance'           :  48, # inches
