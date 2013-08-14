@@ -288,8 +288,7 @@ class MomentVectors(NormalRepairer):
       pdb.set_trace()
 
     # Sum m22 and m33 (m11 is torsion, which doesn't play a role in the direction)
-    moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3)))
-    
+    moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3))
     '''
     Cross axis-1 with the moment vector to obtain the positive clockwise direction
     This keeps the overall magnitude of moment_vector since u1 is a unit vector

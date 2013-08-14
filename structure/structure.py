@@ -562,6 +562,7 @@ class Structure:
         if results[0] != 0:
           pdb.set_trace()
           return (0,0,0)
+        pdb.set_trace()
         u1,u2,u3 = results[7][0], results[8][0], results[11][0]
 
         # Return the total deflection based on the local axes
