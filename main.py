@@ -402,10 +402,8 @@ class Simulation:
           print("Simulation ended when saving output.")
           if debug:
             swarm_data = self.Swarm.get_information()
-            #beam_data = self.Structure.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
-            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
@@ -417,10 +415,8 @@ class Simulation:
           except:
             if debug:
               swarm_data = self.Swarm.get_information()
-              #beam_data = self.Structure.get_information()
               self.__add_excel(swarm_data)
               self.__push_data(swarm_data,loc_text,i+1)
-              #self.__push_data(beam_data,struct_data,i+1)
             self.exit(run_text)
             raise
 
@@ -437,10 +433,8 @@ class Simulation:
           print("Simulation ended at decision.")
           if debug:
             swarm_data = self.Swarm.get_information()
-            #beam_data = self.Structure.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
-            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
@@ -455,10 +449,8 @@ class Simulation:
           print("Simulation ended at act.")
           if debug:
             swarm_data = self.Swarm.get_information()
-            #beam_data = self.Structure.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
-            #self.__push_data(beam_data,struct_data,i+1)
           self.exit(run_text)
           raise
 
@@ -507,10 +499,8 @@ class Simulation:
         # This section writes the robots decisions out to a file
         if debug:
           swarm_data = self.Swarm.get_information()
-          #beam_data = self.Structure.get_information()
           self.__add_excel(swarm_data)
           self.__push_data(swarm_data,loc_text,i+1)
-          #self.__push_data(beam_data,struct_data,i+1)
           
         # END OF LOOOP
 

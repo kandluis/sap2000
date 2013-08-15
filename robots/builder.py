@@ -430,10 +430,18 @@ class Builder(Movable):
     if self.at_joint():
       #pdb.set_trace()
       for name, directions in dirs.items():
-        # If the name is our beam, do a structural check instead of a joint check
-        if ((self.beam.name == name and self.beam_check(name)) or 
-          (self.beam.name != name and self.joint_check(name))):
+        # If the name is our beam and we can read moment from beams, 
+        # do a structural check instead of a joint check
+        if (variables.read_beam and 
+          ((self.beam.name == name and self.beam_check(name)) or 
+          (self.beam.name != name and self.joint_check(name)))):
           results[name] = directions
+
+        # Otherwise, do a joint_check for all beams
+        elif self.joint_check(name):
+          results[name] = directions
+
+        # It joint check failed, only keep down directions
         else:
           # Keep only the directions that take us down
           new_directions = ([direction for direction in directions if 
@@ -448,8 +456,8 @@ class Builder(Movable):
             self.memory['broken'].append((beam,moment))
 
 
-    # Not at joint, so check own beam
-    else:
+    # Not at joint, and can read beam moments
+    elif variables.read_beam:
       assert len(dirs) == 1
       if self.beam_check(self.beam.name):
         results = dirs
@@ -466,6 +474,10 @@ class Builder(Movable):
           moment = self.get_moment(name)
           self.memory['broken'].append((self.beam,moment))
 
+    # We aren't reading beams, so we keep all the directions if not at a joint
+    else:
+      results = dirs
+      
     return results
 
   def get_direction(self):

@@ -19,6 +19,10 @@ visualization = { 'step'    : 1,
 # This turns on and off recordning the deflection
 deflection = True
 
+# This is a switch as to whether the robot can read moments along a beam (True)
+# or not (False)
+read_beam = True
+
 # Length of each beam (in the units specified by program_units)
 beam_length = 120 # 10ft
 
