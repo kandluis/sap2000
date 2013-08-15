@@ -48,7 +48,8 @@ class Builder(Movable):
     '''
     Returns whether or not the robot is at a joint
     '''
-    if self.beam is not None:
+    if self.on_structure():
+
       for joint in self.beam.joints:
         # If we're at a joint to another beam
         if helpers.compare(helpers.distance(self.location,joint),0):
@@ -58,29 +59,42 @@ class Builder(Movable):
 
   def current_state(self):
     state = super(Builder, self).current_state()
+
+    # Copy the memory so that it is not modified
     memory = self.memory.copy()
+
+    # We want the name of the broken beam (more user-friendly)
     memory['broken'] = [(beam.name,beam.endpoints) for beam,direction in memory['broken']]
     state.update({  'num_beams'           : self.num_beams,
                     'start_construction'  : self.start_construction,
-                    'next_direction_info' : self.next_direction_info,
                     'memory'              : memory,
-                    'repair_mode'         : self.repair_mode})
+                    'repair_mode'         : self.repair_mode,
+                    'search_mode'         : self.search_mode})
     
     return state
 
   def climb_off(self,loc):
+    '''
+    Returns whether or not the robot should climb off the structure. Additionally,
+    sets some special variables
+    '''
+    # On the xy-plane with no beams OR repairing
     if helpers.compare(loc[2],0) and (self.num_beams == 0 or self.search_mode):
-      direction = helpers.make_vector(self.location,construction.home)
-      self.ground_direction = (direction if direction[2] == 0 else 
-        self.ground_direction)
+      
+      # Not repairing, so calculate direction
+      if not self.search_mode:
+        direction = helpers.make_vector(self.location,construction.home)
+        direction = (direction[0],direction[1],0)
+        self.ground_direction = direction
 
-      # Reset the number of steps if we are repairing
-      self.memory['new_beam_steps'] = (math.ceil((construction.beam['length'] 
-        / 2) / variables.step_length) if self.search_mode else 0)
       return True
+    
     else:
+
+      # Resetting to None if not in search_mode
       self.ground_direction = (None if not self.search_mode else 
         self.ground_direction)
+
       return False
 
   def pickup_beams(self,num = variables.beam_capacity):
@@ -120,7 +134,7 @@ class Builder(Movable):
 
   def pre_decision(self):
     '''
-    Takes care of resetting appropriate values
+    Takes care of resetting appropriate values.
     '''
     # We build almost never.
     self.start_construction = False
@@ -195,15 +209,13 @@ class Builder(Movable):
     support, otherwise to False. We want this direction, but if we can't find it,
     we reset the variable to False
     '''
-    if self.at_joint():
-      #pdb.set_trace()
-      pass
-
     # Access items
     for beam, vectors in dirs.items():
+
       # Access each directions
       for vector in vectors:
         coord_bool = True
+
         # Apply each function to the correct coordinates
         for function, coord in zip(comp_functions,vector):
           coord_bool = coord_bool and function(coord)
@@ -211,6 +223,7 @@ class Builder(Movable):
         # Additionally, check the x-y direction if we have a preferenced direction
         if (preferenced and self.memory['preferred_direction'] is not None and
           not helpers.is_vertical(vector)):
+          xy = self.memory['preferred_direction']
           xy = (xy[0],xy[1],0) 
           if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
             vector[0],vector[1],0),(0,0,0))):
@@ -219,34 +232,44 @@ class Builder(Movable):
             vector[1],0),xy) <= 
           construction.beam['direction_tolerance_angle'])
 
-        # Check
+        # Check to see if the direciton is acceptable and keep if it is
         if coord_bool:
           if beam not in new_dirs:
             new_dirs[beam] = [vector]
           else:
             new_dirs[beam].append(vector)
 
+    # Special rules for travelling
     new_dirs = self.remove_specific(new_dirs)
 
     # Case is not matched, so obtain keys of max values and remove those
     # restraints if the value is not 0
     if new_dirs == {}:
+
+      # We didn't take priorities into account, now we do
       if priorities == []:
+
         # COPY the LIST
         priorities = list(self.memory['dir_priority'])
       
       max_val = max(priorities)
+
       # Set to -1 so we don't use them next time, and set comp_funs to True
       for i, val in enumerate(priorities):
         if val == max_val:
           priorities[i] = -1
           comp_functions[i] = lambda a : True
 
+      # We ran out of priorities and we have no preference, so just return the
+      # empty set
       if max_val <= 0 and not preferenced:
         return new_dirs
+
+      # We have preference, and/or priorites
       else:
         return self.filter_dict(dirs,new_dirs,comp_functions,False,priorities)
 
+    # Non-empty set
     else:
       return new_dirs
 
@@ -258,10 +281,12 @@ class Builder(Movable):
     '''
     directions = {}
     base = [lambda x : True, lambda y : True]
+
     # Still have beams, so move upwards
     if self.num_beams > 0:
       directions = self.filter_dict(dirs, directions,
         (base.append(lambda z : z > 0)),preferenced=self.search_mode)
+
     # No more beams, so move downwards
     else:
       directions = self.filter_dict(dirs, directions,
@@ -294,7 +319,7 @@ class Builder(Movable):
     '''
     direction = self.random_direction(directions)
 
-    # Store direction
+    # Store direction in memoery
     self.memory['previous_direction'] = direction
 
     return direction
@@ -312,6 +337,7 @@ class Builder(Movable):
       key, value = item
       temp = {}
       for test_key,test_values in dictionary.items():
+
         # Keys are the same, vectors are parallel (point in same dir too)
         if key == test_key:
           for test_value in test_values:
@@ -326,11 +352,12 @@ class Builder(Movable):
       if temp == {}:
         return None
 
-      # Pick a direction randomly from those that are parallel
+      # Pick a direction from those that are parallel (so we continue moving)
+      # in our preferred direction
       else:
         return self.pick_direction(temp)
 
-    # We are not at a joint and we have a previous direction
+    # We are not at a joint and we have a previous direction - keep direction
     if not self.at_joint() and self.memory['previous_direction'] is not None:
 
       # Pull a direction parallel to our current from the set of directions
@@ -349,6 +376,7 @@ class Builder(Movable):
     the output station closest to the pivot. If there is no pivot, it returns
     the values from the output station closest to the robot's location.
     '''
+    # So we can modify the pivot whenever we call the fuction
     pivot = self.location if pivot is None else pivot
 
     # Format (ret[0], number_results[1], obj_names[2], i_end distances[3], 
@@ -366,6 +394,7 @@ class Builder(Movable):
     shortest_distance = None
     distances = results[3]
     for i_distance in distances:
+
       # Get beam endpoints to calculate global position of moment
       i_end,j_end = self.structure.get_endpoints(name,self.location)
       beam_direction = helpers.make_unit(helpers.make_vector(i_end,j_end))
@@ -380,7 +409,7 @@ class Builder(Movable):
 
       i += 1
 
-    # Make sure index is indexiable
+    # Make sure index is indexable
     assert close_index < results[1]
 
     # Now that we have the closest moment, calculate sqrt(m2^2+m3^2)
@@ -428,8 +457,10 @@ class Builder(Movable):
     # If at a joint, cycle through possible directions and check that the beams
     # meet the joint_limit. If they do, keep them. If not, discard them.
     if self.at_joint():
-      #pdb.set_trace()
+      
+      # Cycle through directions
       for name, directions in dirs.items():
+
         # If the name is our beam and we can read moment from beams, 
         # do a structural check instead of a joint check
         if (variables.read_beam and 
@@ -443,6 +474,7 @@ class Builder(Movable):
 
         # It joint check failed, only keep down directions
         else:
+
           # Keep only the directions that take us down
           new_directions = ([direction for direction in directions if 
             helpers.compare(direction[2],0) or direction[2] < 0])
@@ -458,11 +490,18 @@ class Builder(Movable):
 
     # Not at joint, and can read beam moments
     elif variables.read_beam:
+
+      # Sanity check (there should only be one beam in the set of directions if
+      # We are not at a joint)
       assert len(dirs) == 1
+
+      # Check beam
       if self.beam_check(self.beam.name):
         results = dirs
+
       # Add the beam to the broken
       else:
+
         # Keep only the directions that take us down
         for name,directions in dirs.items():
           new_directions = ([direction for direction in directions if 
@@ -470,6 +509,7 @@ class Builder(Movable):
           if len(new_directions) > 0:
             results[name] = new_directions
 
+        # Beam is not already in broken
         if not any(self.beam in broken for broken in self.memory['broken']):
           moment = self.get_moment(name)
           self.memory['broken'].append((self.beam,moment))
@@ -477,7 +517,7 @@ class Builder(Movable):
     # We aren't reading beams, so we keep all the directions if not at a joint
     else:
       results = dirs
-      
+
     return results
 
   def get_direction(self):
@@ -487,13 +527,11 @@ class Builder(Movable):
     downwards. So basically the direction is picked by filtering by the 
     z-component
     '''
-    #if self.at_joint() and self.search_mode:
-    #  pdb.set_trace()
-
     # Get all the possible directions, as normal
     info = self.get_directions_info()
 
-    # Filter out directions which are unfeasable
+    # Filter out directions which are unfeasable if we have an analysis result
+    # available
     if self.model.GetModelIsLocked():
       feasable_directions = self.filter_feasable(info['directions'])
     else:
@@ -506,6 +544,7 @@ class Builder(Movable):
     # that's the case, then just a pick a random direction to go on and run the
     # routine for when no directions are available.
     if directions == {}:
+
       # No direction takes us exactly in the way we want to go, so check if we
       # might need to construct up or might want to repair
       self.no_available_direction()
@@ -513,13 +552,16 @@ class Builder(Movable):
       # Feasable is empty when our own beam is the one that doesn't support us
       if feasable_directions != {}:
         beam_name, direction = self.elect_direction(feasable_directions)
+
       # Refilter original directions (to travel down)
       else:
         directions = self.filter_directions(info['directions'])
+
         # We are on the structure
         if directions != {}:
           beam_name,direction = self.elect_direction(self.filter_directions(
             info['directions']))
+
         # This happens when we are climbing off the structure
         else:
           beam_name, direction = self.elect_direction(info['directions'])
@@ -555,12 +597,17 @@ class Builder(Movable):
 
     # Find nearby beams to climb on
     result = self.ground()
-    if (result == None or self.repair_mode or self.num_beams == 0 or 
-      (self.memory['construct_support'])):
+
+    # Either there are no nearby beams, we are on repair_mode/search_mode, our beams are 0, or
+    # we are constructing a support - so don't mess with direction
+    if (result == None or self.repair_mode or self.search_mode or 
+      self.num_beams == 0 or self.memory['construct_support']):
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))
       self.change_location_local(new_location)
+
+    # Nearby beam, jump on it
     else:
       dist, close_beam, direction = (result['distance'], result['beam'],
         result['direction'])
@@ -579,6 +626,8 @@ class Builder(Movable):
         new_location = helpers.sum_vectors(self.location, helpers.scale(
           self.step,helpers.make_unit(direction)))
         self.change_location_local(new_location)
+      
+      # Local beams, but could not detect (this is redundant)
       else:
         direction = self.get_ground_direction()
         new_location = helpers.sum_vectors(self.location,helpers.scale(
@@ -617,23 +666,17 @@ class Builder(Movable):
     p1_name, p2_name = addpoint(p1), addpoint(p2)
     name = self.program.frame_objects.add(p1_name,p2_name,
       propName=variables.frame_property_name)
+
+    # Skip addition of beam
     if name == '':
-      # Try to add them by coordinate
-      name = self.program.frame_objects.addbycoord(p1,p2,
-        propName=variables.frame_property_name)
-
-      # If still failed, set pdb. Let's check what's wrong...
-      if name == '':
-        pdb.set_trace()
-
-        # Set to false if we were constructing support
-        self.memory['construct_support'] = False
-        return False
+      # Set to false if we were constructing support
+      self.memory['construct_support'] = False
+      return False
 
     # Set the output statios
     ret = self.model.FrameObj.SetOutputStations(name,2,1,10,False,False)
     if ret != 0:
-      pdb.set_trace()
+      print("Could not set output stations for added beam.")
       return False
 
     # Get rid of one beam
@@ -644,6 +687,8 @@ class Builder(Movable):
 
     # Successfully added at least one box
     if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
+      
+      # Check to make sure the added element is near us 
       box = self.structure.get_box(self.location)
       try:
         beam = box[name]
@@ -651,13 +696,20 @@ class Builder(Movable):
         print("Failed in addbeam. Adding beam {} at points {} and {} didn't \
           work.".format(name,str(p1),str(p2)))
         return False
+
       # Cycle through the joints and add the necessary points
       for coord in beam.joints:
         if coord != p1 and coord != p2:
           added = addpoint(coord)
+          if added == '':
+            print("Something went wrong when adding joint {} to SAP".format(str(
+              coord)))
+            return False
+
       return True
+
     else:
-      pdb.set_trace()
+      print("Did not add beam to structure.")
       return False
 
   def get_angle(self,string):
@@ -665,20 +717,15 @@ class Builder(Movable):
     Returns the appropriate ratios for support beam construction
     '''
     angle = construction.beam[string]
-    # angle = 90 - angle if self.beam is None else angle
     return angle
 
   def get_angles(self,support = True):
     if support:
       mini,maxi = (self.get_angle('support_angle_min'), self.get_angle(
         'support_angle_max'))
-        #if self.beam is not None else (self.get_angle('support_angle_max'),
-        #self.get_angle('support_angle_min')))
     else:
       mini,maxi = (self.get_angle('min_angle_constraint'), self.get_angle(
         'max_angle_constraint'))
-        #if self.beam is not None else (self.get_angle('max_angle_constraint'),
-        #self.get_angle('min_angle_constraint')))
 
     return mini,maxi
 
@@ -687,11 +734,16 @@ class Builder(Movable):
     Returns a non_zero list of random floats with zero z component.
     The direction returned is a unit vector.
     '''
+    # Random list
     tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
       random.uniform(-1,1)])
+
+    # All are non-zero
     if all(tuple_list):
       tuple_list[2] = 0
       return helpers.make_unit(tuple(tuple_list))
+
+    # All are zero - try again
     else:
       return self.non_zero_xydirection()
 
@@ -702,9 +754,14 @@ class Builder(Movable):
     the range that the robot was set to search.
     '''
     direction = self.memory['preferred_direction']
+
+    # No preferred direction, so beam was vertically above use
     if xy is None:
       return None
+
+    # Add a bit of disturbace
     else:
+
       # Project onto xy_plane and make_unit
       xy = helpers.make_unit((direction[0],direction[1],0))
       xy_perp = (-1 * xy[1],xy[0],0)
@@ -740,15 +797,19 @@ class Builder(Movable):
     # Add beam_directions plus vertical change based on angle ratio (tan)
     if angle is None:
       ratio = helpers.ratio(self.get_angle('support_angle'))
+
+    # We changed the angle from the default  
     else:
       ratio = helpers.ratio(angle)
+
+    # Calculate vertical based on assumption that xy-dir is unit
     vertical = helpers.scale(1/ratio,(0,0,1)) if ratio != 0 else None
 
     return vertical
 
   def support_beam_endpoint(self):
     '''
-    Returns the endpoint for construction a support beam
+    Returns the endpoint for construction of a support beam
     '''
     # Add beam_directions plus vertical change based on angle ratio (tan)
     ratio = helpers.ratio(self.get_angle('support_angle'))
@@ -777,8 +838,10 @@ class Builder(Movable):
 
     def add_angles(box,dictionary):
       for name, beam in box.items():
+
         # Ignore the beam you're on.
         if self.beam == None or self.beam.name != name:
+
           # Base vector (from which angles are measured)
           base_vector = helpers.make_vector(pivot,endpoint)
 
@@ -786,14 +849,17 @@ class Builder(Movable):
           # current beam
           points = helpers.closest_points(beam.endpoints,(pivot,endpoint))
           if points != None:
+
             # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
             e1,e2 = points
+
             # If we can actually reach the second point from vertical
             if (not helpers.compare(helpers.distance(pivot,e2),0) and 
               helpers.distance(pivot,e2) <= variables.beam_length):
+
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
-              #if not helpers.compare(dist,0):
+
               # Vector of beam we want to construct and angle from base_vector
               construction_vector = helpers.make_vector(pivot,e2)
               angle = helpers.smallest_angle(base_vector,construction_vector)
@@ -809,11 +875,13 @@ class Builder(Movable):
           sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,
             variables.beam_length)
           if sphere_points != None:
+
             # Cycle through intersection points (really, should be two, though 
             # it is possible for it to be one, in
             # which case, we would have already taken care of this). Either way,
             # we just cycle
             for point in sphere_points:
+
               # Vector to the beam we want to construct
               construction_vector = helpers.make_vector(pivot,point)
               angle = helpers.smallest_angle(base_vector,construction_vector)
@@ -868,6 +936,7 @@ class Builder(Movable):
       # There is already a beam here, so let's move our current beam slightly to
       # some side
       if not self.structure.available(i,j):
+
         # Create a small disturbace
         lim = variables.random
         f = random.uniform
@@ -876,14 +945,10 @@ class Builder(Movable):
         # find the new j-point for the beam
         new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
 
-        #limit = (math.tan(math.radians(construction.beam['angle_constraint'])) *
-        # construction.beam['length'] / 3)
-        #return check(i,(random.uniform(-1* limit, limit),random.uniform(
-        #  -1 * limit,limit), j[2]))
-
         return check(i,new_j)
 
       else:
+
         # Calculate the actual endpoint of the beam (now that we now direction 
         # vector)
         return (i,helpers.beam_endpoint(i,j))
@@ -895,15 +960,20 @@ class Builder(Movable):
     pivot = self.location
 
     if self.beam is not None:
+
       # Obtain any nearby joints, and insert the j-end if needed
-      all_joints = [coord for coord in self.beam.joints]
-      if self.beam.endpoints.j not in all_joints:
+      all_joints = [coord for coord in self.beam.joints if not helpers.compare(
+        coord[2],0)]
+      if self.beam.endpoints.j not in all_joints and not helpers.compare(
+        self.beam.endpoints.j[2],0):
         all_joints.append(self.beam.endpoints.j)
-      if self.beam.endpoints.i not in all_joints:
+      if self.beam.endpoints.i not in all_joints and not helpers.compare(
+        self.beam.endpoints.i[2],0):
         all_joints.append(self.beam.endpoints.i)
 
       # Find the nearest one
       joint_coord, dist = min([(coord, helpers.distance(self.location,coord)) for coord in all_joints], key = lambda t: t[1])
+      
       # If the nearest joint is within our error, then use it as the pivot
       if dist <= construction.beam['joint_error']:
         pivot = joint_coord
@@ -941,24 +1011,11 @@ class Builder(Movable):
     # Cycle through the sorted angles until we find the right coordinate to build
     for coord, angle in sorted_angles:
 
-      # If building a support beam, we don't want it too vertical or horizontal
-      #if (self.memory['construct_support'] and (angle < min_support_angle or
-      #  angle > max_support_angle)):
-      #  pass
-
       # If the smallest angle is larger than what we've specified as the limit, 
       # but larger than our tolerence, then build
       if min_constraining_angle <= angle and angle <= max_constraining_angle:
         return coord
 
-      # The beam doesn't exist, so build it
-      '''
-      elif self.structure.available(pivot,coord):
-        unit_direction = helpers.make_unit(helpers.make_vector(pivot,coord))
-        coord = helpers.sum_vectors(pivot,helpers.scale(
-          variables.beam_length,unit_direction))
-        return coord
-      '''
     return None
 
   def get_default(self,angle_coord,vertical_coord):
@@ -971,6 +1028,7 @@ class Builder(Movable):
     elif angle_coord is not None:
       return angle_coord
     elif vertical_coord is not None:
+
       # Create disturbance
       disturbance = self.get_disturbance()
       
@@ -1009,6 +1067,7 @@ class Builder(Movable):
       self.memory['built'] = True
       self.memory['constructed'] += 1
       return True
+
     else:
       self.memory['built'] = False
       return False

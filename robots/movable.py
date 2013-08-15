@@ -37,22 +37,34 @@ class DumbMovable(Automaton):
     Returns the current state of the robot. This is used when we write the 
     information to the logs
     '''
+    # None if on the ground
     beam = self.beam.name if self.beam is not None else self.beam
+
     state = super(DumbMovable,self).current_state()
+
+    # Round location to prevent decimal runoff in Excel
     location = [round(coord,2) for coord in self.location]
     deflected_location = [round(coord,2) for coord in self.get_true_location()]
+    
     state.update({  'step'              : self.step,
                     'location'          : location,
                     'deflected_location': deflected_location,
                     'ground_direction'  : self.ground_direction,
                     'beam'              : beam,
-                    'weight'            : self.weight})
+                    'weight'            : self.weight,
+                    'next_direction'    : self.next_direction_info })
 
     return state
 
+  def need_data(self):
+    '''
+    Returns whether or not this particular robot needs the structure to be analyzed
+    '''
+    return self.beam is not None and self.memory['pos_z']
+
   def get_true_location(self):
     '''
-    Returns the normal location
+    Returns the location of the robot.
     '''
     return self.location
 
@@ -61,9 +73,13 @@ class DumbMovable(Automaton):
     Adds a load of the specified value to the named beam at the specific 
     location
     '''
+    # Sanity check
     assert not self.model.GetModelIsLocked()
 
+    # Jump on beam
     self.beam = beam
+
+    # Find distance and add load
     distance = helpers.distance(beam.endpoints.i,location)
     ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
       1,10,distance,value,"Global", False, True,0)
@@ -109,13 +125,17 @@ class DumbMovable(Automaton):
       Removes the load assigned to a specific location based on where the robot 
       existed (assumes the robot is on a beams
       '''
+      # Sanity check
       assert not self.model.GetModelIsLocked()
+
       # obtain current values.
       # values are encapsulated in a list as follows: ret, number_items, 
       # frame_names, loadpat_names, types, coordinates, directions, rel_dists, 
       # dists, loads
       data = self.model.FrameObj.GetLoadPoint(self.beam.name)
-      assert data[0] == 0 # Making sure everything went okay
+     
+      # Sanity check with data
+      assert data[0] == 0 
       if data[1] == 0:
         helpers.check(1,self,"getting loads",beam=self.beam.name,
           return_data=data,state=self.current_state())
@@ -170,6 +190,8 @@ class DumbMovable(Automaton):
     else:
       self.beam = new_beam
 
+
+    # Update local location
     self.location = new_location
 
   def get_walkable_directions(self,box):
@@ -192,12 +214,16 @@ class DumbMovable(Automaton):
           # The index error should never happen, but this provides nice error 
           # support
           try:
+            # Get endpoints of beam and find direction vector to those endpoints
             e1, e2 = beam.endpoints
             v1, v2 = helpers.make_vector(self.location,e1), helpers.make_vector(
               self.location,e2)
+
             # We don't want to include zero-vectors
             bool_v1,bool_v2 = (not helpers.compare(helpers.length(v1),0),
               not helpers.compare(helpers.length(v2),0))
+
+            # Checking for zero_vectors
             if bool_v1 and bool_v2:
               crawlable[beam.name] = ([helpers.make_vector(self.location,e1), 
                 helpers.make_vector(self.location,e2)])
@@ -208,13 +234,18 @@ class DumbMovable(Automaton):
             else:
               raise Exception("All distances from beam were zero-length.")
 
-            # Include distances to nearby joints
+            # Include distances to nearby joints (on the beam moving out from our
+            # current joint)
             for coord in beam.joints:
+              # Direction vecotrs
               v = helpers.make_vector(self.location,coord)
               length = helpers.length(v)
+
+              # If further than our step, or zero, pass
               if ((length < self.step or helpers.compare(length, self.step))
                 and not helpers.compare(length,0)):
                 try:
+                  # Only add if it is not already accounted for
                   if v not in crawlable[beam.name]:
                     crawlable[beam.name].append(v)
                 except IndexError:
@@ -226,7 +257,7 @@ class DumbMovable(Automaton):
               the box?".format(name,self.beam.name))
       
       # For all joints within the timestep, return a direction that is exactly 
-      # the change from current to that point
+      # the change from current to that point.
       elif dist <= self.step:
         if self.beam.name in crawlable:
           crawlable[self.beam.name].append(helpers.make_vector(self.location,
@@ -237,15 +268,18 @@ class DumbMovable(Automaton):
       else:
         pass
 
-    # There are no joints nearby. This means we are either on a joint OR far 
-    # from one. Therefore, we add the directions to the endpoint of our current 
-    # beam to the current set of directions
+    # The joints never include our own beam, so now add directions pertaining to
+    # our own beam
     v1, v2 = (helpers.make_vector(self.location,self.beam.endpoints.i), 
       helpers.make_vector(self.location,self.beam.endpoints.j))
+
+    # Check to make sure directions are non-zero
     b_v1 = not helpers.compare(helpers.length(v1),0)
     b_v2 = not helpers.compare(helpers.length(v2),0)
+
+    # If we haven't already accounted for our beam
     if self.beam.name not in crawlable:
-      #crawlable[self.beam.name] = [v1,v2]
+      # Add the non-zero directions
       if b_v1 and b_v2:
         crawlable[self.beam.name] = [v1,v2]
       elif b_v1:
@@ -257,10 +291,13 @@ class DumbMovable(Automaton):
     else:
       bool_v1, bool_v2 = True, True
       for direct in crawlable[self.beam.name]:
+        # Don't add directions which are basically the same.
         if helpers.parallel(direct,v1) and helpers.dot(direct,v1) > 0:
           bool_v1 = False
         if helpers.parallel(direct,v2) and helpers.dot(direct,v2) > 0:
           bool_v2 = False
+
+      # Add the non-zero non-parallel direction
       if bool_v2 and b_v2:
         crawlable[self.beam.name].append(v2)
       if bool_v1 and b_v1:
@@ -270,44 +307,65 @@ class DumbMovable(Automaton):
 
   def get_location(self):
     '''
-    Provides easy access to the location
+    Provides easy access to the location.
     '''
     return self.location
 
   def ground(self):
     '''
     This function finds the nearest beam to the robot that is connected 
-    to the xy-place (ground). It returns that beam and its direction from the 
+    to the xy-plane (ground). It returns that beam and its direction from the 
     robot.
     '''
-    box = self.structure.get_box(self.location)
+    # Get local boxes
+    boxes = self.structure.get_boxes(self.location)
+
+    # Initializations
     distances = {}
     vectors = {}
-    for name in box:
-      e1, e2 = box[name].endpoints # So e1 is in the form (x,y,z)
-      # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
-      if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
-        vectors[name] = helpers.vector_to_line(e1,e2,self.location)
-        distances[name] = helpers.length(vectors[name])
-        assert 1 == 2
-      # Only one point is on the ground
-      elif helpers.compare(e1[2],0):
-        vectors[name] = helpers.make_vector(self.location, e1)
-        distances[name] = helpers.distance(e1, self.location)
-      elif helpers.compare(e2[2],0):
-        vectors[name] = helpers.make_vector(self.location, e2)
-        distances[name] = helpers.distances(e2, self.location)
+
+    # Cycle through boxes
+    for box in boxes:
+      # Cycle through beams in each box
+      for name in box:
+
+        # So e1 is in the form (x,y,z)
+        e1, e2 = box[name].endpoints 
+        # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
+        if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
+          pdb.set_trace()
+          vectors[name] = helpers.vector_to_line(e1,e2,self.location)
+          distances[name] = helpers.length(vectors[name])
+
+        # Only one point is on the ground
+        elif helpers.compare(e1[2],0):
+          vectors[name] = helpers.make_vector(self.location, e1)
+          distances[name] = helpers.distance(e1, self.location)
+        elif helpers.compare(e2[2],0):
+          vectors[name] = helpers.make_vector(self.location, e2)
+          distances[name] = helpers.distances(e2, self.location)
+
+        # No points on the ground
+        else:
+          pass
 
     # get name of beam at the minimum distance if one exists
     if distances == {}:
       return None
+    else:
+      # This returns the key (ie, name) of the minimum value in distances
+      name = min(distances, key=distances.get)
 
-    # This retruns the key (ie, name) of the minimum value in distances
-    name = min(distances, key=distances.get)
+      # So far away that we can't "see it"      
+      if distances[name] > variables.local_radius:
+        return None
+      else:
+        # All the same beans 
+        beams = [box[name] for box in boxes if name in box]
 
-    return {  'beam'  : box[name],
-              'distance' : distances[name],
-              'direction' : vectors[name]}
+        return {  'beam'  : beams[0],
+                  'distance' : distances[name],
+                  'direction' : vectors[name]}
 
   def get_ground_direction(self):
     ''' 
@@ -324,11 +382,13 @@ class DumbMovable(Automaton):
         -1 * self.step, self.step), 0)
 
       # The they can't all be zero!
-      if helpers.length(direction) == 0:
+      if helpers.compare(helpers.length(direction),0):
         return random_direction()
       else:
         step = helpers.scale(self.step,helpers.make_unit(direction))
         predicted_location = helpers.sum_vectors(step, self.location)
+
+        # Check the location
         if helpers.check_location(predicted_location):
           return direction
         else:
@@ -339,15 +399,18 @@ class DumbMovable(Automaton):
     if self.ground_direction != None:
       step = helpers.scale(self.step,helpers.make_unit(self.ground_direction))
       predicted_location = helpers.sum_vectors(step, self.location)
+
       # We are going out of bounds, so set the direction to none and call 
       # yourself again (to find a new location)
       if not helpers.check_location(predicted_location):
         self.ground_direction = None
         return self.get_ground_direction()
+
       # Here, we return the right direction
       else:
         assert self.ground_direction != None
         return self.ground_direction
+
     # We don't have a direction, so pick a random one (it is checked when we 
     # pick it)
     else:
@@ -365,20 +428,34 @@ class DumbMovable(Automaton):
     # Check to see if robot is on a beam. If so, pick between moving on it or 
     # off it.
     result = self.ground()
-    if result == None:
+
+    # Nothign nearby
+    if result is None:
+      # Get direction
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.location,helpers.scale(self.step,
         helpers.make_unit(direction)))
+
+      # Move
       self.change_location_local(new_location)
+
+    # A beam is nearby
     else:
       dist, close_beam, direction = (result['distance'], result['beam'],
         result['direction'])
+
+      # If close enough, just jump on it
       if dist < self.step:
         self.move(direction,close_beam)
+
+      # Otherwise, walk towards it
       else:
-        direction = self.get_ground_direction()
+        # Scale direction to be step_size
+        direction = helpers.scale(self.step,helpers.make_unit(direction))
         new_location = helpers.sum_vectors(self.location,helpers.scale(
           self.step, helpers.make_unit(direction)))
+
+        # Move
         self.change_location_local(new_location)
 
   def move(self, direction, beam):
@@ -396,22 +473,27 @@ class DumbMovable(Automaton):
       # call do_action again since we still have some distance left, and update
       # step to reflect how much distance is left to cover
       self.step = self.step - length
+
+      # Reset step in preparation for next timestep
       if helpers.compare(self.step,0):
         self.step == variables.step_length
 
       # We still have steps to go, so run an analysis if necessary
       elif self.beam is not None:
-        # Run analysys before deciding to get the next direction
-        if not self.model.GetModelIsLocked() and self.location[2] > 0:
+        # Run analysis before deciding to get the next direction
+        if not self.model.GetModelIsLocked() and self.need_data():
           errors = helpers.run_analysis(self.model)
-          assert errors == ''
+          if errors != '':
+            pdb.set_trace()
 
+        # Get next direction
         self.next_direction_info = self.get_direction()
 
         # Unlock the results so that we can actually move
         if self.model.GetModelIsLocked():
           self.model.SetModelIsLocked(False)
 
+        # Move
         self.do_action()
 
       # We climbed off
@@ -437,13 +519,13 @@ class DumbMovable(Automaton):
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
     # Run analysys before deciding to get the next direction
-    if not self.model.GetModelIsLocked() and self.location[2] > 0:
+    if not self.model.GetModelIsLocked() and self.need_data():
       errors = helpers.run_analysis(self.model)
-      assert errors == ''
+      if errors != '':
+        pdb.set_trace()
 
-    # Verify that the robot is on its beam and
-    # correct if necessary. This is done so that floating-point arithmethic 
-    # errors don't add up.
+    # Verify that the robot is on its beam and correct if necessary. 
+    # This is done so that floating-point arithmethic errors don't add up.
     (e1, e2) = self.beam.endpoints
     if not (helpers.on_line (e1,e2,self.location)):
       self.change_location(helpers.correct(e1,e2,self.location), self.beam)
@@ -469,6 +551,7 @@ class DumbMovable(Automaton):
     direction is also returned with it's corresponding beam in the following 
     format (direction, beam).
     '''
+    # Get information on direction
     info = self.get_directions_info()
 
     # Pick a random beam to walk on
@@ -484,7 +567,7 @@ class DumbMovable(Automaton):
     '''
     Returns whether or not the robot is on the structure
     '''
-    return not self.beam == None
+    return self.beam is not None
 
   def pre_decision(self):
     '''
@@ -507,7 +590,7 @@ class DumbMovable(Automaton):
       # Before we decide, we need to make sure that we have access to analysis
       # results. Therefore, check to see if the model is locked. If it is not,
       # then execute and analysis.
-      if not self.model.GetModelIsLocked() and self.location[2] > 0:
+      if not self.model.GetModelIsLocked() and self.need_data():
         errors = helpers.run_analysis(self.model)
         assert errors == ''
 
@@ -554,7 +637,8 @@ class Movable(DumbMovable):
     deflections that the beam has undergone. Uses the design location and the 
     deflection data from SAP to calculate this location.
     '''
-    if self.beam is None or self.beam.deflection is None or not variables.deflection:
+    # Not on the structure, no deflection, or not recording deflection
+    if not self.on_structure() or self.beam.deflection is None or not variables.deflection:
       return super(Movable,self).get_true_location()
 
     else:

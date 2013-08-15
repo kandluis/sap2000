@@ -103,7 +103,7 @@ class ReactiveSwarm(Swarm):
       # Otherwise create a new model for the robot at the current location
       else:
         repairer.simulation_model = sphere(pos=repairer.location,
-          radius=variables.local_radius,make_trail=False)
+          radius=variables.visualization['robot_size']/2,make_trail=False)
         repairer.simulation_model.color = (1,0,1)
 
   def reset(self):
@@ -123,9 +123,8 @@ class ReactiveSwarm(Swarm):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if (repairer.memory['pos_z'] == True or repairer.memory['pos_z'] == None
-        or repairer.beam is not None):
-      #if not (repairer.memory['pos_z'] != True or repairer.beam is None):
+      if repairer.need_data() or (variables.collect_data and 
+        repairer.beam is not None):
         return True
 
     return False

@@ -20,13 +20,20 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
+  def current_state(self):
+    return super(Worker,self).current_state()
+
   def at_top(self):
     '''
-    Returns if we really are at the top, in which case build
+    Returns if we really are at the top
     '''
     def below(beams):
+      '''
+      Returns whether all of the beams are below us
+      '''
       for beam in beams:
         for endpoint in beam.endpoints:
+
           # If the beam is not close to us and it is greater than our location
           if (not helpers.compare(helpers.distance(self.location,endpoint),0)
             and endpoint[2] > self.location[2]):
@@ -52,6 +59,8 @@ class Worker(Builder):
     Adding ability to change memory
     '''
     super(Worker,self).discard_beams(num)
+
+    # Move down
     if self.num_beams == 0:
       self.memory['pos_z'] = False
 
@@ -60,11 +69,13 @@ class Worker(Builder):
     Adding ability to change memory
     '''
     super(Worker,self).pickup_beams(num)
+
+    # Move up when you pick one up
     self.memory['pos_z'] = True
 
   def repairing(self):
     '''
-    Place holder for later access
+    Place holder for later access.
     '''
     pass
 

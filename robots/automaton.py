@@ -14,13 +14,25 @@ class Automaton:
     self.name = name
 
   def my_type(self):
+    '''
+    Returns the class name.
+    '''
     return self.__class__.name
 
   def current_state(self):
+    '''
+    Returns the state of the robot at the moment the function is called
+    '''
     return {  'name'  : self.name }
 
   def decide(self):
+    '''
+    Makes decisions based on available data
+    '''
     pass
 
   def do_action(self):
+    '''
+    Acts based on decisions made
+    '''
     pass

@@ -5,7 +5,7 @@ program_units = "kip_in_F"
 
 # Radius of "locality" (how far can a robot obtain information about 
 # the structure from where it is located. In units specified by program_units
-local_radius = 12 # 1 ft
+local_radius = 36 # 3 ft
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
@@ -13,8 +13,9 @@ step_length = 12 # .5 ft
 
 # This dictactes what is considered a significant length in the visualization
 # We only record events that occur at a length higher than this
-visualization = { 'step'    : 1,
-                  'scaling' : 1 }
+visualization = { 'step'        : 1, #in
+                  'scaling'     : 1, # in
+                  'robot_size'  : 18  } # ft
 
 # This turns on and off recordning the deflection
 deflection = True
@@ -50,6 +51,10 @@ dim_z = 170000
 # structure
 epsilon = 0.0001
 
+# If true, then we record data when moving down the structure. This slows down
+# the simulation significantly.
+collect_data = False
+
 # This defines the mass of each robot in the units specified by program_units
 robot_load = 0.035 # kip
 
@@ -84,13 +89,13 @@ structure_check = steel_yield * moment_of_intertia / (outside_diameter / 2)
 beam_limit = joint_limit + (beam_load + robot_load)*beam_length
 
 # The number of timesteps before an analysis model is saved.
-analysis_timesteps = 100
+analysis_timesteps = 200
 ########################################################
 
 # Wind pattern settings
 '''
 THESE SETTINGS ARE NOW TAKEN CARE OF MANUALLY THROUGH A TEMPLATE LOCATED In
-C:\\SAP 2000\\template.sbd
+C:\SAP 2000\ template.sbd
 
 exposureFrom indicated the source of the wind exposure
 1 = From extents of rigid diaphragms
@@ -104,7 +109,6 @@ exposureFrom = 3
 dirAngle is the direction angle of the wind load. This
 only applies when exposureFrom is 1
 '''
-
 dirAngle = 0
 
 # Windward coefficient (exposureFrom must be 1)

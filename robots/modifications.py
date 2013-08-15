@@ -278,6 +278,9 @@ class MomentAwareBuilder(NormalRepairer):
   Adds the ability to take into account the direction of the moments, in additional
   to their magnitudes
   '''
+  def __init__(self,name,structure,location,program):
+    super(SlowBuilder,self).__ini__(name,structure,location,program)
+
   def get_preferred_direction(self,beam):
     # Obtain the moment vector
     u1,u2,u3 = beam.global_default_axes()
@@ -328,3 +331,11 @@ class MomentAwareBuilder(NormalRepairer):
         scalar = 1 / helpers.ratio(construction.beam['moment_angle_max'])
         scaled_travel = helpers.scale(scalar,travel)
         return helpesr.make_unit(helpers.sum_vectors(normal,scaled_travel))
+
+class SlowMomentBuilder(SlowBuilder,MomentAwareBuilder):
+  '''
+  Adds the new rules from SlowBuilder and combines them with the ability to
+  repair based on the direction of moment (twist)
+  '''
+  def __init__(self,name,structure,location,program):
+    super(SlowBuilder,self).__ini__(name,structure,location,program)

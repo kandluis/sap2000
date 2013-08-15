@@ -5,9 +5,13 @@ import construction, math, pdb,variables, random
 class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
     super(DumbRepairer,self).__init__(name,structure,location,program)
+
     # Number of steps we spend searching for a support beam once we encounter a
     # new beam
     self.memory['new_beam_steps'] = 0
+
+    # Same as above, but on the ground - since the ground is already a horizontal
+    # support beam
     self.memory['new_beam_ground_steps'] = 0
 
     # Stores name of beam to be reinforced (so we know when we're no longer on it)
@@ -21,7 +25,6 @@ class DumbRepairer(Worker):
 
   def current_state(self):
     state = super(DumbRepairer,self).current_state()
-    state.update({  'search_mode' : self.search_mode})
     return state
 
   def repairing(self):
@@ -31,10 +34,13 @@ class DumbRepairer(Worker):
     '''
     # If we are at a joint, we might move up but MUST move in right x and y
     if self.at_joint():
-      #pdb.set_trace()
-      self.memory['pos_z'] = True
+
+      # No longer care if we move up or down
+      self.memory['pos_z'] = None
       self.memory['dir_priority'] = [1,1,1]
     else:
+
+      # Want to move down
       self.memory['pos_z'] = False
       self.memory['dir_priority'] = [1,1,0]
 
@@ -70,6 +76,7 @@ class DumbRepairer(Worker):
     '''
     Looks for a support from the ground
     '''
+    # We have run our course, so add the support
     if self.memory['new_beam_ground_steps'] == 0:
       self.add_support_mode()
       self.ground_direction = helpers.scale(-1,self.ground_direction)
@@ -95,9 +102,11 @@ class DumbRepairer(Worker):
     '''
     if self.search_mode and self.repair_mode:
       self.pre_decision()
+
       # We have moved off the structure entirely, so wander
       if self.beam is None:
         self.ground_support()
+
       # We've moved off the beam, so run the search support routine
       elif (self.memory['broken_beam_name'] != self.beam.name and 
         self.search_mode and self.memory['broken_beam_name'] != ''):
@@ -147,18 +156,24 @@ class DumbRepairer(Worker):
     # Initialize repair mode if there are broken beams (and you can fix)
     if self.memory['broken'] != [] and self.num_beams > 0:
       beam, moment = max(self.memory['broken'],key=lambda t : t[1])
+
+      # Print to console
       string = "{} is starting repair of beam {} which has moment {} at {}".format(
         self.name,beam.name,str(moment),str(self.location))
+
+      # This is a special repair of the moment is zero
       if moment == 0:
         string += ". This repair occured due to special rules."
-        
       print(string)
+
+      # Store, to output into file later
       self.repair_data = string
       
-      # Uncomment when ready!
+      # switch to repair mode with the beam as the one being repaired
       self.start_repair(beam)
 
     else:
+
       # Do parent's work
       super(DumbRepairer,self).no_available_direction()
 
@@ -191,7 +206,10 @@ class DumbRepairer(Worker):
     '''
     Returns the direction of preffered travel if we reach the ground when repairing
     '''
-    return direction
+    if direction is not None:
+      return (direction[0],direction[1],0)
+    else:
+      return None
 
   def start_repair(self,beam):
     '''
@@ -203,6 +221,9 @@ class DumbRepairer(Worker):
     def set_dir(string,coord):
       '''
       Figures out what pos_var should be in order to travel in that direction
+      
+      NO LONGER USED
+
       '''
       if helpers.compare(coord,0):
         self.memory[string] = None
@@ -237,6 +258,7 @@ class DumbRepairer(Worker):
       self.ground_direction is None else self.memory['new_beam_steps'] + math.floor(
         math.sin(math.radians(angle_with_vertical)) * self.memory['new_beam_steps']))
 
+    # So the entire robot knows that we are in repair mode
     self.repair_mode = True
     self.search_mode = True
 
@@ -244,14 +266,14 @@ class DumbRepairer(Worker):
     '''
     Overriding so we can build support beam
     '''
-    # Analysis results available
+    # If we ran our course with the support, construct it
     if (((self.beam is not None and self.memory['new_beam_steps'] == 0) or (
       helpers.compare(self.location[2],0) and 
       self.memory['new_beam_ground_steps'] == 0)) and 
       self.memory['construct_support']):
       return True
 
-    # If the program is not locked, there are no analysis results so True
+    # Local rules as before
     else:
       return super(DumbRepairer,self).local_rules()
 
@@ -291,16 +313,15 @@ class Repairer(DumbRepairer):
         self.location)
       repair_vector = helpers.make_vector(b_i,b_j)
 
-      # Debugging
-      if self.memory['previous_direction'] is None:
-        pdb.set_trace()
-
       # Get the correct vector for the current beam
+      # Remember - we travel in the opposite direction as normal when building
+      # the support beam, so that's why this seems opposite of normal
       c_i,c_j = self.beam.endpoints
       current_vector = (helpers.make_vector(c_j,c_i) if 
         self.memory['previous_direction'][1][2] > 0 else helpers.make_vector(
           c_i,c_j))
 
+      # 
       angle = helpers.smallest_angle(repair_vector,current_vector)
 
       # If below the specified angle, then place the beam directly upwards (no
@@ -317,6 +338,8 @@ class Repairer(DumbRepairer):
 
         # We can use the current beam to decide the direction
         elif not helpers.parallel(vertical,current_vector):
+          pdb.set_trace()
+
           # Project onto the xy-plane and negate
           if current_vector[2] > 0:
             projection = helpers.make_unit(helpers.scale(-1,(current_vector[0],
@@ -349,6 +372,7 @@ class Repairer(DumbRepairer):
     # Otherwise, rotate it based on our current beam
     else:
       # Debugging
+      pdb.set_trace()
       if self.memory['previous_direction'] is None:
         pdb.set_trace()
 
@@ -428,23 +452,19 @@ class Repairer(DumbRepairer):
         
         return simple and real_angle > construction.beam['support_angle_difference']
 
-    #pdb.set_trace()
+    return_coord = None
     for coord,angle in sorted_angles:
       if acceptable_support(angle,coord) and helpers.on_line(e1,e2,coord):
         self.memory['broken_beam_name'] = ''
         return coord
+      elif acceptable_support(angle,coord):
+        return_coord = coord
 
-    # Cycle through angles looking for one that is above our limit (not too
-    # vertical nor horizontal) that is on our broken beam (why?)
-    for coord,angle in sorted_angles:
-      # We have an acceptable beam
-      if acceptable_support(angle,coord):
-        # Reset the broken beam name
-        self.memory['broken_beam_name'] = ''
-        return coord
-      
-    # Otherwise, do default behaviour
-    return super(Repairer,self).support_beam_endpoint()
+    if return_coord is not None:
+      return return_coord
+    else:  
+      # Otherwise, do default behaviour
+      return super(Repairer,self).support_beam_endpoint()
 
   def remove_specific(self,dirs):
     '''

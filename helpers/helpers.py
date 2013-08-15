@@ -58,15 +58,15 @@ def distance_to_line(l1,l2,p):
   Calculates the distance from the line (l1 -> l2) to the point (p)
   '''
   xl1, yl1, zl1 = l1
-  xl2, yl2, xl2 = l2
+  xl2, yl2, zl2 = l2
   x, y , z = p
 
   # vector from one endpoint of line to p
   a = (x - xl1, y - yl1, z - zl1)
   # unit line vector
-  length = distance(l1,l2)
-  assert length > 0
-  v = (xl2 - xl1 / length, yl2 - yl1 / length, zl2 - zl1 / length)
+  l = distance(l1,l2)
+  assert l > 0
+  v = (xl2 - xl1 / l, yl2 - yl1 / l, zl2 - zl1 / l)
 
   # cross the two and return the magnitude of result (this is the distance)
   return length(cross(a,v))
@@ -191,7 +191,10 @@ def is_vertical(v):
   Returns whether we consider the vector v to be vertical. This error angle is
   defined in variables.py
   '''
-  return smallest_angle(v,(0,0,1)) <= construction.beam['verticality_angle']
+  angle = smallest_angle(v,(0,0,1))
+  angle = angle if angle <= 90 else 180 - angle
+
+  return angle <= construction.beam['verticality_angle']
 
 def correct(l1,l2,point):
   '''
@@ -406,7 +409,7 @@ def closest_points(l1,l2, segment = True):
   normal = cross(v1,v2)
 
   # If the two are parallel, infinite points, so return None
-  if length(normal) == 0:
+  if compare(length(normal),0):
     return None
 
   # Find the distance between the two lines

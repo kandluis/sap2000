@@ -147,7 +147,7 @@ class Visualization:
           # Create the object
           if name not in self.workers:
             self.workers[name] = sphere(pos=locations[0],
-              radius=variables.local_radius/2,make_trail=False)
+              radius=variables.visualization['robot_size']/2,make_trail=False)
             self.workers[name].color = (1,0,1)
 
           # Change the objects position
