@@ -255,7 +255,7 @@ class DumbRepairer(Worker):
       math.radians(construction.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
-      self.ground_direction is None else self.memory['new_beam_steps'] + math.floor(
+      self.ground_direction is None else self.memory['new_beam_steps'] - 1 + math.floor(
         math.sin(math.radians(angle_with_vertical)) * self.memory['new_beam_steps']))
 
     # So the entire robot knows that we are in repair mode
@@ -338,7 +338,7 @@ class Repairer(DumbRepairer):
 
         # We can use the current beam to decide the direction
         elif not helpers.parallel(vertical,current_vector):
-          pdb.set_trace()
+          # pdb.set_trace()
 
           # Project onto the xy-plane and negate
           if current_vector[2] > 0:
@@ -372,9 +372,10 @@ class Repairer(DumbRepairer):
     # Otherwise, rotate it based on our current beam
     else:
       # Debugging
-      pdb.set_trace()
+      # pdb.set_trace()
       if self.memory['previous_direction'] is None:
-        pdb.set_trace()
+        #pdb.set_trace()
+        pass
 
       # Get the correct vector for the current beam
       i,j = self.beam.endpoints

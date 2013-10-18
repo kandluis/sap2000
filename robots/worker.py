@@ -42,15 +42,21 @@ class Worker(Builder):
       return True
 
     if self.beam is not None:
-      for endpoint in self.beam.endpoints:
-        # If we are at the top and the joint has no beams connecting to it.
-        # Or the beams connected to the joint are all lower
-        if helpers.compare(helpers.distance(self.location,endpoint),0):
-          try:
-            beams = self.beam.joints[endpoint]
-            return below(beams)
-          except KeyError:
-            return True
+      if (helpers.compare(helpers.distance(self.location,self.beam.endpoints.i),0)
+        and self.beam.endpoints.i[2] > self.beam.endpoints.j[2]):
+        close = self.beam.endpoints.i
+      elif (helpers.compare(helpers.distance(self.location,self.beam.endpoints.j),0)
+        and self.beam.endpoints.j[2] > self.beam.endpoints.i[2]):
+        close = self.beam.endpoints.j
+      else:
+        close = None
+
+      if close is not None:
+        try:
+          beams = self.beam.joints[self.beam.endpoints.i]
+          return below(beams)
+        except KeyError:
+          return True
 
     return False
 

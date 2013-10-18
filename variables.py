@@ -9,7 +9,7 @@ local_radius = 36 # 3 ft
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 12 # .5 ft
+step_length = 10 # .5 ft
 
 # This dictactes what is considered a significant length in the visualization
 # We only record events that occur at a length higher than this
@@ -53,7 +53,7 @@ epsilon = 0.0001
 
 # If true, then we record data when moving down the structure. This slows down
 # the simulation significantly.
-collect_data = False
+collect_data = True
 
 # This defines the mass of each robot in the units specified by program_units
 robot_load = 0.035 # kip

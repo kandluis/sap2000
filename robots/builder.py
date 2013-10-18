@@ -64,7 +64,7 @@ class Builder(Movable):
     memory = self.memory.copy()
 
     # We want the name of the broken beam (more user-friendly)
-    memory['broken'] = [(beam.name,beam.endpoints) for beam,direction in memory['broken']]
+    memory['broken'] = [(beam.name,beam.endpoints, moment) for beam,moment in memory['broken']]
     state.update({  'num_beams'           : self.num_beams,
                     'start_construction'  : self.start_construction,
                     'memory'              : memory,
@@ -187,6 +187,19 @@ class Builder(Movable):
     '''
     return dirs
 
+  def preferred(self,vector):
+    '''
+    Returns True if vector is preferred, False if it is not
+    '''
+    xy = self.memory['preferred_direction']
+    xy = (xy[0],xy[1],0) 
+    if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
+      vector[0],vector[1],0),(0,0,0))):
+      return True
+
+    return (helpers.smallest_angle((vector[0],vector[1],0),xy) <= 
+      construction.beam['direction_tolerance_angle'])
+
   def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
@@ -212,6 +225,13 @@ class Builder(Movable):
     # Access items
     for beam, vectors in dirs.items():
 
+      true_beam = self.structure.get_beam(beam,self.location)
+
+      # If the beam won't be a support beam, pass it..
+      if (preferenced and true_beam.endpoints.j in true_beam.joints and 
+        self.memory['preferred_direction'] is not None):
+        pass 
+
       # Access each directions
       for vector in vectors:
         coord_bool = True
@@ -223,14 +243,7 @@ class Builder(Movable):
         # Additionally, check the x-y direction if we have a preferenced direction
         if (preferenced and self.memory['preferred_direction'] is not None and
           not helpers.is_vertical(vector)):
-          xy = self.memory['preferred_direction']
-          xy = (xy[0],xy[1],0) 
-          if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
-            vector[0],vector[1],0),(0,0,0))):
-            pass
-          coord_bool = (coord_bool and helpers.smallest_angle((vector[0],
-            vector[1],0),xy) <= 
-          construction.beam['direction_tolerance_angle'])
+          coord_bool = coord_bool and self.filter_preferred(vector)
 
         # Check to see if the direciton is acceptable and keep if it is
         if coord_bool:
@@ -384,7 +397,7 @@ class Builder(Movable):
     # Ps[9], V2s[10], V3s[11], Ts[12], M2s[13], M3s[14]
     results = self.model.Results.FrameForce(name,0)
     if results[0] != 0:
-      pdb.set_trace()
+      # pdb.set_trace()
       helpers.check(results[0],self,"getting frame forces",results=results,
         state=self.current_state())
       return 0
@@ -961,7 +974,7 @@ class Builder(Movable):
 
     if self.beam is not None:
 
-      # Obtain any nearby joints, and insert the j-end if needed
+      # Obtain any nearby joints, and insert the i/j-end if needed
       all_joints = [coord for coord in self.beam.joints if not helpers.compare(
         coord[2],0)]
       if self.beam.endpoints.j not in all_joints and not helpers.compare(
@@ -1018,17 +1031,32 @@ class Builder(Movable):
 
     return None
 
+  def support_coordinate(self):
+    '''
+    Returns whether or not the beam being built should be done so as a support beam.
+    '''
+    return self.memory['construct_support']
+
+  def struck_coordinate(self):
+    '''
+    Returns whether the struck coordinate of a nearby beam should be used if found
+    '''
+    return True
+
   def get_default(self,angle_coord,vertical_coord):
     '''
     Returns the coordinate onto which the j-point of the beam to construct 
     should lie
     '''
+    # pdb.set_trace()
     if self.memory['construct_support']:
       return self.support_beam_endpoint()
-    elif angle_coord is not None:
-      return angle_coord
-    elif vertical_coord is not None:
 
+    elif angle_coord is not None and self.struck_coordinate():
+      return angle_coord
+
+    # Retunr the vertical coordinate
+    else:
       # Create disturbance
       disturbance = self.get_disturbance()
       
@@ -1036,8 +1064,6 @@ class Builder(Movable):
       new_coord = vertical_coord if self.default_probability() else (
       helpers.sum_vectors(vertical_coord,disturbance))
       return new_coord
-    else:
-      return None
 
   def get_disturbance(self):
     '''

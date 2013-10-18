@@ -333,7 +333,7 @@ class DumbMovable(Automaton):
         e1, e2 = box[name].endpoints 
         # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
         if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
-          pdb.set_trace()
+          # pdb.set_trace()
           vectors[name] = helpers.vector_to_line(e1,e2,self.location)
           distances[name] = helpers.length(vectors[name])
 
@@ -484,7 +484,8 @@ class DumbMovable(Automaton):
         if not self.model.GetModelIsLocked() and self.need_data():
           errors = helpers.run_analysis(self.model)
           if errors != '':
-            pdb.set_trace()
+            # pdb.set_trace()
+            pass
 
         # Get next direction
         self.next_direction_info = self.get_direction()
@@ -522,7 +523,8 @@ class DumbMovable(Automaton):
     if not self.model.GetModelIsLocked() and self.need_data():
       errors = helpers.run_analysis(self.model)
       if errors != '':
-        pdb.set_trace()
+        # pdb.set_trace()
+        pass
 
     # Verify that the robot is on its beam and correct if necessary. 
     # This is done so that floating-point arithmethic errors don't add up.
@@ -535,7 +537,8 @@ class DumbMovable(Automaton):
 
     # Debugging
     if box == {}:
-      pdb.set_trace()
+      # pdb.set_trace()
+      pass
 
     # Find the beams and directions (ie, where can he walk?)
     directions_info = self.get_walkable_directions(box)
@@ -646,7 +649,7 @@ class Movable(DumbMovable):
       i_def, j_def = self.beam.deflection.i, self.beam.deflection.j
 
       # Obtain weight of each scale based on location on beam
-      i_weight = (helpers.distance(self.location,self.beam.endpoints.i) / 
+      i_weight = 1 - (helpers.distance(self.location,self.beam.endpoints.i) / 
         construction.beam['length'])
       j_weight = 1 - i_weight
 

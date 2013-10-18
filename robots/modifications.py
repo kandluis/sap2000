@@ -251,9 +251,37 @@ class SlowBuilder(NormalRepairer):
     3. Go into repair mode.
   '''
   def __init__(self,name,structure,location,program):
-    super(SlowBuilder,self).__ini__(name,structure,location,program)
+    super(SlowBuilder,self).__init__(name,structure,location,program)
 
-  def no_available_directions(self):
+  def struck_coordinate(self):
+    '''
+    Overwritting to return false whenever we are at the top of a supported beam_limit
+    '''
+    if not self.special_repair():
+      return False
+    else:
+      return super(SlowBuilder,self).struck_coordinate()
+
+  def special_repair(self):
+    '''
+    Returns whether or not we should start repairing due to any special rules
+    '''
+    if self.at_top():
+      if self.beam.joints == {}:
+        return True
+      elif self.beam.joints != {}:
+        # Find the closest joint on our beam
+        # There should always be a joint on a beam (the i-end :))
+        distance_to_joint = min(([helpers.distance(self.location,coord) 
+          for coord in self.beam.joints]))
+
+        # Add the current beam to broken because it needs support
+        if distance_to_joint > construction.beam['joint_distance']:
+          return True
+
+    return False
+
+  def no_available_direction(self):
     '''
     Overwritting to start repair of current beam if it meets the correct criteria
     We add the current beam to broken_list - indicating that we need repair - 
@@ -261,17 +289,38 @@ class SlowBuilder(NormalRepairer):
       1. At top of beam
       2. No joint within a specified distance (as defined in variables.py)
     '''
-    # Find the closest joint on our beam
-    # There should always be a joint on a beam (the i-end :))
-    distance_to_joint = min(([helpers.distance(self.location,coord) 
-      for coord in self.beam.joints]))
-
-    # Add the current beam to broken because it needs support
-    if self.at_top() and distance_to_joint > construction.beam['joint_distance']:
-      self.memory['broken'] = (self.beam,0)
+    # If we should start repair, then add the beam to broken 
+    # We check the book (so other functions can tell us to start) or manually check
+    if self.special_repair():
+      self.memory['broken'] = [(self.beam,0)]
 
     # Call the normal function
-    super(SlowBuilder,self).no_available_directions()
+    super(SlowBuilder,self).no_available_direction()
+
+  def decide(self):
+    '''
+    Overwritting because repair now takes precedence over construction.
+    '''
+    # If we decide to repair, the call movable and skip the check for construction
+    if self.special_repair():
+      self.pre_decision()
+      self.movable_decide()
+
+    else:
+      # Check construction
+      super(SlowBuilder,self).decide()
+
+  def construct(self):
+    '''
+    Overwritting to prevent construction from ocurring if we are to start repair
+    instead
+    '''
+    if self.special_repair():
+      self.start_special_repair = True
+      return False
+
+    else:
+      return super(SlowBuilder,self).construct()
 
 class MomentAwareBuilder(NormalRepairer):
   '''
@@ -288,7 +337,8 @@ class MomentAwareBuilder(NormalRepairer):
 
     # Quick debugging - making sure the torsion doesn't get too high
     if not helpers.compare(m11,0,4):
-      pdb.set_trace()
+      #pdb.set_trace()
+      pass
 
     # Sum m22 and m33 (m11 is torsion, which doesn't play a role in the direction)
     moment_vector = helpers.sum_vectors(helpers.scale(m22,u2),helpers.scale(m33,u3))
