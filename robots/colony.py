@@ -1,6 +1,6 @@
 from helpers import helpers
 from robots.modifications import *
-# from visual import *
+from visual import *
 import construction, variables
 
 class Swarm:

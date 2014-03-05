@@ -4,7 +4,7 @@ from visualization import Visualization
 # Variables
 view = True
 
-# Run the Simulation
+# Run the Simulation, input is the random seed
 sim = Simulation("Papyrus")
 sim.start(view,1)
 sim.run_simulation(view,10000)

@@ -3,7 +3,7 @@ from robots.colony import SmartSwarm
 from structure.structure import Structure
 from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from time import strftime
-# from visual import *
+from visual import *
 from visualization import Visualization
 from xlsxwriter.workbook import Workbook
 import construction, os, pdb,random,sys, variables

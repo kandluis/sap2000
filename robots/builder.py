@@ -200,6 +200,12 @@ class Builder(Movable):
     return (helpers.smallest_angle((vector[0],vector[1],0),xy) <= 
       construction.beam['direction_tolerance_angle'])
 
+  def filter_preferred(self,v):
+    '''
+    Decided whether or not v is a preferred direction
+    '''
+    return True
+
   def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 

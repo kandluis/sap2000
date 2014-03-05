@@ -9,7 +9,7 @@ local_radius = 36 # 3 ft
 
 # The size of a step that the robot can take. This is expressed in the specified
 # program units.
-step_length = 10 # .5 ft
+step_length = 10 # 
 
 # This dictactes what is considered a significant length in the visualization
 # We only record events that occur at a length higher than this
