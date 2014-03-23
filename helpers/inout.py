@@ -16,7 +16,7 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   # start program
   program = sap2000.Sap2000()
 
-  # This opens the model if it is passedin
+  # This opens the model if it is passed in
   program.start(filename=inputfile)
 
   # If there was no model specified, open an empty one
