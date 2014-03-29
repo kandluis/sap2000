@@ -1,6 +1,9 @@
 from sap2000 import sap2000
 from sap2000.constants import UNITS
-from helpers.helpers import path_exists
+try:
+  from helpers import path_exists
+except:
+  from helpers.helpers import path_exists
 import os, variables
 
 # temp

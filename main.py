@@ -8,7 +8,7 @@ from visualization import Visualization
 from xlsxwriter.workbook import Workbook
 import construction, os, pdb,random,sys, variables
 
-class Simulation:
+class Simulation(object):
   def __init__(self,seed = None,template="C:\\SAP 2000\\template.sdb"):
     self.SapProgram = None
     self.SapModel = None

@@ -2,7 +2,10 @@
 
 from collections import namedtuple
 import win32com.client as win32
-from sap2000.constants import UNITS
+try:
+  from constants import UNITS
+except:
+  from sap2000.constants import UNITS
 
 
 class SapBase(object):

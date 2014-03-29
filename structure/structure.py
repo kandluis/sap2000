@@ -5,7 +5,10 @@ SAP program when absolutely necessary. The following functions are all helpful'
 '''
 from helpers import helpers
 from helpers.errors import OutofBox
-from structure.beams import Beam
+try:
+  from beams import Beam
+except:
+  from structure.beams import Beam
 from visual import *
 import construction, math, pdb, sys, variables
 
@@ -64,7 +67,7 @@ class Structure:
       '''
       Returns index associated with the coord.
       '''
-      return math.floor(coord / axis)
+      return int(math.floor(coord / axis))
 
     x,y,z = point
 
@@ -268,7 +271,7 @@ class Structure:
       return math.ceil(ret)
 
     boxes = []
-    x,y,z = index_range(0),index_range(1),index_range(2)
+    x,y,z = int(index_range(0)),int(index_range(1)),int(index_range(2))
     xi,yi,zi = self.__get_indeces(location)
     for i in range(-x,x+1):
       for j in range(-y,y+1):

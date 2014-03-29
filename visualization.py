@@ -2,7 +2,7 @@ from helpers import helpers
 from visual import *
 import construction, time, re, pdb, variables
 
-class Visualization:
+class Visualization(object):
   def __init__(self,outputfolder):
     # Stores the loaded data in mememory
     self.data = []

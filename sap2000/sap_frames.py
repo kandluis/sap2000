@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-from sap2000.sap_base import SapBase
+try:
+    from sap_base import SapBase
+except:
+    from sap2000.sap_base import SapBase
 
 
 class SapFramesBase(SapBase):

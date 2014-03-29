@@ -1,5 +1,5 @@
 # Basic class for any automatic object that needs access to the SAP program
-class Automaton:
+class Automaton(object):
   def __init__(self,name,program):
     # Accesss to the SapModel from SAP 2000
     self.model = program.sap_com_object.SapModel

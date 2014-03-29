@@ -1,7 +1,7 @@
 from visualization import Visualization
 import os
 
-class Open:
+class Open(object):
   def __init__(self,folder):
     self.folder = folder
     self.trials = sorted([name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder,name))])

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
-from sap2000.sap_base import SapBase
+try:
+    from sap_base import SapBase
+except:
+    from sap2000.sap_base import SapBase
 
 
 Group = namedtuple("Group",

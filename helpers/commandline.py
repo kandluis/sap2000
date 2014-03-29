@@ -1,4 +1,7 @@
-from helpers.inout import io
+try:
+  from inout import io
+except: 
+  from helpers.inout import io
 import getopt, sys
 
 def run(input = "", output = ""):

@@ -3,7 +3,7 @@ from robots.modifications import *
 from visual import *
 import construction, variables
 
-class Swarm:
+class Swarm(object):
   def __init__(self,size, structure, program):
     # The number of robots in the swarm
     self.size = size

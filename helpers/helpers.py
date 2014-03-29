@@ -1,5 +1,8 @@
 from sap2000.constants import LOAD_PATTERN_TYPES
-from helpers.vectors import *
+try:
+  from vectors import *
+except:
+  from helpers.vectors import *
 import construction, errno, math, os, pdb, variables
 
 def ratio(deg):

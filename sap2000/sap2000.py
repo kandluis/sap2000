@@ -1,11 +1,32 @@
 import win32com.client as win32
-from sap2000.constants import UNITS
-from sap2000.sap_groups import SapGroups
-from sap2000.sap_areas import SapAreaObjects, SapAreaElements
-from sap2000.sap_points import SapPointObjects, SapPointElements
-from sap2000.sap_lines import SapLineElements
-from sap2000.sap_frames import SapFrameObjects
-from sap2000.sap_analysis import SapAnalysis
+try:
+    from constants import UNITS
+except:
+    from sap2000.constants import UNITS
+try:
+    from sap_groups import SapGroups
+except:
+    from sap2000.sap_groups import SapGroups
+try:
+    from sap_areas import SapAreaObjects, SapAreaElements
+except:
+    from sap2000.sap_areas import SapAreaObjects, SapAreaElements
+try:
+    from sap_lines import SapLineElements
+except:
+    from sap2000.sap_lines import SapLineElements
+try:
+    from sap_frames import SapFrameObjects
+except:
+    from sap2000.sap_frames import SapFrameObjects
+try:
+    from sap2000.sap_points import SapPointElements, SapPointObjects
+except:
+    from sap_points import SapPointElements, SapPointObjects
+try:
+    from sap_analysis import SapAnalysis
+except: 
+    from sap2000.sap_analysis import SapAnalysis
 
 
 class Sap2000(object):
