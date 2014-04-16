@@ -4,14 +4,13 @@ try:
 except:
     from sap2000.constants import UNITS
 try:
-    from elemts import SapGroups, SapAreaObjects, SapAreaObjects, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
+    from elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 except:
-    from sap2000.elements import SapGroups, SapAreaObjects, SapAreaObjects, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
+    from sap2000.elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 try:
-    from sap_analysis import SapAnalysis
+    from analysis import SapAnalysis
 except: 
-    from sap2000.sap_analysis import SapAnalysis
-
+    from sap2000.analysis import SapAnalysis
 
 class Sap2000(object):
   def __init__(self):
