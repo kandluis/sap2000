@@ -4,25 +4,9 @@ try:
 except:
     from sap2000.constants import UNITS
 try:
-    from sap_groups import SapGroups
+    from elemts import SapGroups, SapAreaObjects, SapAreaObjects, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 except:
-    from sap2000.sap_groups import SapGroups
-try:
-    from sap_areas import SapAreaObjects, SapAreaElements
-except:
-    from sap2000.sap_areas import SapAreaObjects, SapAreaElements
-try:
-    from sap_lines import SapLineElements
-except:
-    from sap2000.sap_lines import SapLineElements
-try:
-    from sap_frames import SapFrameObjects
-except:
-    from sap2000.sap_frames import SapFrameObjects
-try:
-    from sap2000.sap_points import SapPointElements, SapPointObjects
-except:
-    from sap_points import SapPointElements, SapPointObjects
+    from sap2000.elements import SapGroups, SapAreaObjects, SapAreaObjects, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 try:
     from sap_analysis import SapAnalysis
 except: 
