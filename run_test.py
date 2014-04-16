@@ -5,7 +5,7 @@ from visualization import Visualization
 view = True
 
 # Run the Simulation, input is the random seed
-sim = Simulation("239thin2$@$$@908i0")
+sim = Simulation("F@st1#lAn3-test")
 sim.start(view,1)
 sim.run_simulation(view,10000)
 
