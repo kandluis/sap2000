@@ -1,13 +1,16 @@
 from main import Simulation
 from visualization import Visualization
 
-# Variables
+# Variables (see Documentation for description)
 view = True
+seed = "F@st1#lAn3-test"
+robot_number = 1
+maxsteps = 10000
 
 # Run the Simulation, input is the random seed
-sim = Simulation("F@st1#lAn3-test")
-sim.start(view,1)
-sim.run_simulation(view,10000)
+sim = Simulation()
+sim.start(view,robot_number)
+sim.run_simulation(view,maxsteps)
 
 # Display the simulation
 sim.run_visualization()
