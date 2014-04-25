@@ -7,7 +7,6 @@ SAP program when absolutely necessary. The following functions are all helpful'
 from Helpers import helpers
 from Helpers.errors import OutofBox
 from visual import *
-
 # defalt python libraries
 import construction, math, pdb, sys, variables
 
