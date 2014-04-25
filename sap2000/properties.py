@@ -2,12 +2,11 @@
 try:
     from sap_base import SapBase
 except:
-    from sap2000.sap_base import SapBase
+    from SAP2000.sap_base import SapBase
 
 class SapPropertiesBase(SapBase):
   def __init__(self, sap_com_object, sap_object):
     super(SapPropertiesBase, self).__init__(sap_com_object,sap_object)
-
 
 class SapAreaProperties(SapPropertiesBase):
   def __init__(self, sap_com_object):

@@ -7,6 +7,8 @@ ten_robots = 'C:\\SAP 2000\\Jul-08\\18_09_43\\'
 to_test = 'C:\\SAP 2000\\Aug-15\\19_39_21\\'
 latest = 'C:\\SAP 2000\\Aug-16\\15_33_11\\'
 
-vis = Visualization(latest)
+spring = 'C:\\SAP 2000\\Apr-25\\00_03_58\\'
+
+vis = Visualization(spring)
 vis.load_data()
 vis.run(False,inverse_speed=.1)

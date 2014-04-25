@@ -1,13 +1,19 @@
-from sap2000 import sap2000
-from sap2000.constants import UNITS
+'''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''
+
+# importing SAP API
+from SAP2000 import sap2000
+from SAP2000.constants import UNITS
+
+# importing helper function for filesystem input/output
 try:
   from helpers import path_exists
 except:
-  from helpers.helpers import path_exists
-import os, variables
+  from Helpers.helpers import path_exists
 
-# temp
-# from sap2000.constants import FRAME_TYPES
+# default Python library
+import os, variables
 
 def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """

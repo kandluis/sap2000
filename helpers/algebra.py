@@ -5,7 +5,11 @@ which contains many helpful functions such as:
 
 normalize()
 '''
-import math, variables
+# Default Python libraries
+import math
+
+# Constants for the simulation are stored in this file
+import variables
 
 def normalize(v,max_val):
   '''

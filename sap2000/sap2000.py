@@ -2,15 +2,15 @@ import win32com.client as win32
 try:
     from constants import UNITS
 except:
-    from sap2000.constants import UNITS
+    from SAP2000.constants import UNITS
 try:
     from elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 except:
-    from sap2000.elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
+    from SAP2000.elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
 try:
     from analysis import SapAnalysis
 except: 
-    from sap2000.analysis import SapAnalysis
+    from SAP2000.analysis import SapAnalysis
 
 class Sap2000(object):
   def __init__(self):

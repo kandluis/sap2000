@@ -1,8 +1,15 @@
+'''
+Contains code for a commandline interface for the Python Simulation
+'''
+
+# default python libraries
+import getopt, sys
+
+# import custom filesystem library - access input and output for SAP 2000
 try:
   from filesystem import io
 except: 
-  from helpers.filesystem import io
-import getopt, sys
+  from Helpers.filesystem import io
 
 def run(input = "", output = ""):
 

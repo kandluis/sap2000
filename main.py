@@ -1,13 +1,25 @@
-from helpers import commandline, helpers
+# Custom Imports for Simulation
+from Helpers import commandline, helpers
 from robots.colony import SmartSwarm
-from structure.structure import Structure
-from sap2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
+from World.structure import Structure
+from SAP2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
+import construction, variables
+
+# Default Python Libraries
 from time import strftime
+import os, pdb,random,sys
+
+# Visualization of the world
 from visual import *
 from visualization import Visualization
-from xlsxwriter.workbook import Workbook
-import construction, os, pdb,random,sys, variables
 
+# for data output to Excel File
+from xlsxwriter.workbook import Workbook
+
+
+'''
+This will likely become the World Object
+'''
 class Simulation(object):
   def __init__(self,seed = None,template="C:\\SAP 2000\\template.sdb"):
     self.SapProgram = None

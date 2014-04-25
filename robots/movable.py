@@ -1,6 +1,6 @@
-from helpers import helpers
+from Helpers import helpers
 from robots.automaton import Automaton
-from sap2000.constants import EOBJECT_TYPES
+from SAP2000.constants import EOBJECT_TYPES
 import construction, pdb, random, variables
 
 # Class of objects that can move around (on the ground and on the structure)

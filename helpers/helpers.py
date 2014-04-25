@@ -1,8 +1,13 @@
-from sap2000.constants import LOAD_PATTERN_TYPES
+# access to Load Patterns Mapping
+from SAP2000.constants import LOAD_PATTERN_TYPES
+
+# linear algebra package
 try:
   from algebra import *
 except:
-  from helpers.algebra import *
+  from Helpers.algebra import *
+
+# Python default libraries
 import construction, errno, math, os, pdb, variables
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

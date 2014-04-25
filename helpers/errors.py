@@ -1,3 +1,6 @@
+'''''''''''''''
+Custom Simulation Errors
+'''''''''''''''
 class OutofBox(Exception):
   def __init__(self, value):
     self.value = value
