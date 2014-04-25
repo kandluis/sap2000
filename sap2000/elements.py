@@ -69,7 +69,7 @@ class SapPointsBase(SapBase):
     assert return_value == 0        # Ensure that everything went as expected
     return x, y, z
 
-  def get_cylindrical(self, name, csys="Global"):
+  def get_cylindricsal(self, name, csys="Global"):
     '''
     The function returns zero if the coordinates are successfully returned; 
     otherwise it returns nonzero. If successful, the function returns the r, 
@@ -182,9 +182,9 @@ class SapAreasBase(SapBase):
     Returns the names of the point elements/objects that define an area
     element/object.
     """
-    return_value, number_of_points, points = self._obj.GetPoints(name, 1, [])
+    return_value, area_name = self._obj.GetProperty(name,[])
     assert return_value == 0        # Ensure that everything went as expected
-    return points
+    return area_name
 
 
 class SapAreaElements(SapAreasBase):

@@ -1,10 +1,14 @@
 from sap2000.constants import LOAD_PATTERN_TYPES
 try:
-  from vectors import *
+  from algebra import *
 except:
-  from helpers.vectors import *
+  from helpers.algebra import *
 import construction, errno, math, os, pdb, variables
 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+General mathematical/geometric functions which shoud probably be moved into the
+algebra.py file to be used in the algebra package
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 def ratio(deg):
   '''
   Returns the tangent ratio of an angle (deg)
@@ -31,30 +35,6 @@ def smallest_angle(v1,v2):
   angle = math.degrees(math.acos(result))
 
   return angle
-
-def check(return_value, robot, error, **data):
-  '''
-  Used to check that the return value of the SAP2000 functions is zero. Provides
-  nice failure in case it's not.
-  '''
-  if return_value != 0:
-    if error == "getting loads":
-      message = "Warning. Was not able to retrieve loads."
-    else:
-      message = "Error occured when {}.".format(error)
-    for name, item in data.items():
-      message += "\n{}::{}".format(name,str(item))
-    robot.error_data += message
-
-def path_exists(path):
-  '''
-  Checks to see if a directory exists, and if it does not, creates it
-  '''
-  try:
-    os.makedirs(path)
-  except OSError as exception:
-    if exception.errno != errno.EEXIST:
-      raise 
 
 def distance_to_line(l1,l2,p):
   '''
@@ -109,16 +89,6 @@ def vector_to_line(l1,l2,p):
 
   # If we get here, the point closes to p is the point of intersection
   return sub_vectors(intersection,p)
-
-def check_location(p):
-  '''
-  Returns whether or not all elements in p are positive and are inside the 
-  restricted coordinates
-  '''
-  x,y,z = p
-  return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or 
-    compare(z,0)) and x < variables.dim_x and y < variables.dim_y and (z < 
-    variables.dim_z)))
 
 def on_line(l1,l2,point,segment = True):
   '''
@@ -199,35 +169,46 @@ def is_vertical(v):
 
   return angle <= construction.beam['verticality_angle']
 
-def correct(l1,l2,point):
-  '''
-  Returns the corrected version of 'point' so that it is within the line spanned
-  by l1, l2
-  '''
-  # split up necessary data
-  lx1,ly1,lz1 = l1
-  lx2, ly2, lz2 = l2
-  x, y, z = point
-  dist = distance(l1,l2)
-
-  # create vectors
-  v1 = (lx2 - lx1) / dist, (ly2 - ly1) / dist, (lz2 - lz1) / dist
-  v2 = (x - lx1), (y - ly1), (z - lz1)
-
-  # use formula to calculate new vector
-  point = sum_vectors(scale(dot(v1,v2),v1),l1)
-
-  return point
-
 def compare_tuple(v1,v2,e=variables.epsilon):
   '''
   Comapres two floats using our compare function
   '''
   return all([compare(x,y,e) for x,y in zip(v1,v2)])
 
-'''
-Helper functions pertaining to the SAP program
-'''
+
+def round_tuple(tup,ndigits=2):
+  '''
+  Rounds every coordinate in a tuple to the specified number of digits
+  '''
+  temp = []
+  for val in tup:
+    temp.append(round(val,ndigits))
+
+  return tuple(temp)
+
+def midpoint(p1,p2):
+  '''
+  Returns the midpoint between p1,p2
+  '''
+  return tuple([(c1 + c2) / 2 for c1,c2 in zip(p1,p2)])
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SAP 2000 Helper Functions;Should Probably be moved into the sap2000 library
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+def check(return_value, robot, error, **data):
+  '''
+  Used to check that the return value of the SAP2000 functions is zero. Provides
+  nice failure in case it's not.
+  '''
+  if return_value != 0:
+    if error == "getting loads":
+      message = "Warning. Was not able to retrieve loads."
+    else:
+      message = "Error occured when {}.".format(error)
+    for name, item in data.items():
+      message += "\n{}::{}".format(name,str(item))
+    robot.error_data += message
 
 def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
   '''
@@ -250,22 +231,92 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
-def round_tuple(tup,ndigits=2):
+def run_analysis(model,output=variables.robot_load_case):
   '''
-  Rounds every coordinate in a tuple to the specified number of digits
+  Runs the analysis, selecting the right cases for output. Returns a string of
+  explanations for any errors that occurred during the analysis process.
   '''
-  temp = []
-  for val in tup:
-    temp.append(round(val,ndigits))
+  combo = variables.wind_combo == output
+  
+  errors = ''
+  try:
+    ret = model.Analyze.RunAnalysis()
+    if ret:
+     errors += "RunAnalysis failed! Value: {}\n".format(str(ret))
+  except:
+    print("Simlation ended when analyzing model.")
+    raise
 
-  return tuple(temp)
+  try:
+    # Deselect all outputs
+    ret = model.Results.Setup.DeselectAllCasesAndCombosForOutput()
+    if ret and debug:
+      errors += "Deselecting Cases failed! Value: {}\n".format(str(ret))
 
-def midpoint(p1,p2):
-  '''
-  Returns the midpoint between p1,p2
-  '''
-  return tuple([(c1 + c2) / 2 for c1,c2 in zip(p1,p2)])
+    # selecting right function
+    set_output = (model.Results.Setup.SetComboSelectedForOutput if combo else 
+      model.Results.Setup.SetCaseSelectedForOutput)
 
+    # Select just the Robot Load Case for Output
+    ret = set_output(output)
+    if ret:
+      errors += "Selecting {} case failed! Value: {}\n".format(
+        output,str(ret))
+  except:
+    print("Simulation ended when setting up output cases.")
+    raise
+
+  return errors 
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Filesystem Helper functions
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+def path_exists(path):
+  '''
+  Checks to see if a directory exists, and if it does not, creates it
+  '''
+  try:
+    os.makedirs(path)
+  except OSError as exception:
+    if exception.errno != errno.EEXIST:
+      raise 
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Simulation Specific Functions
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+def check_location(p):
+  '''
+  Returns whether or not all elements in p are positive and are inside the 
+  restricted coordinates
+  '''
+  x,y,z = p
+  return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or 
+    compare(z,0)) and x < variables.dim_x and y < variables.dim_y and (z < 
+    variables.dim_z)))
+
+def correct(l1,l2,point):
+  '''
+  Returns the corrected version of 'point' so that it is within the line spanned
+  by l1, l2
+  '''
+  # split up necessary data
+  lx1,ly1,lz1 = l1
+  lx2, ly2, lz2 = l2
+  x, y, z = point
+  dist = distance(l1,l2)
+
+  # create vectors
+  v1 = (lx2 - lx1) / dist, (ly2 - ly1) / dist, (lz2 - lz1) / dist
+  v2 = (x - lx1), (y - ly1), (z - lz1)
+
+  # use formula to calculate new vector
+  point = sum_vectors(scale(dot(v1,v2),v1),l1)
+
+  return point
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+THE BELOW NEED TO BE DEBUGGED AND TESTED MORE HEAVILY
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
 Helper functions pertaining to the beams (especially intersections)
 '''
@@ -462,6 +513,7 @@ def sphere_intersection(line, center, radius, segment = True):
 
   dif = sub_vectors(line_origin,center)
   discriminant = dot(unit_line_direction,dif)**2 - dot(dif,dif) + radius**2
+  
   # Value under the square root is negative, so this line does not intersect 
   # the sphere
   if discriminant < 0:
@@ -499,40 +551,3 @@ def sphere_intersection(line, center, radius, segment = True):
           return [p2]
         else:
           return None
-
-def run_analysis(model,output=variables.robot_load_case):
-  '''
-  Runs the analysis, selecting the right cases for output. Returns a string of
-  explanations for any errors that occurred during the analysis process.
-  '''
-  combo = variables.wind_combo == output
-  
-  errors = ''
-  try:
-    ret = model.Analyze.RunAnalysis()
-    if ret:
-     errors += "RunAnalysis failed! Value: {}\n".format(str(ret))
-  except:
-    print("Simlation ended when analyzing model.")
-    raise
-
-  try:
-    # Deselect all outputs
-    ret = model.Results.Setup.DeselectAllCasesAndCombosForOutput()
-    if ret and debug:
-      errors += "Deselecting Cases failed! Value: {}\n".format(str(ret))
-
-    # selecting right function
-    set_output = (model.Results.Setup.SetComboSelectedForOutput if combo else 
-      model.Results.Setup.SetCaseSelectedForOutput)
-
-    # Select just the Robot Load Case for Output
-    ret = set_output(output)
-    if ret:
-      errors += "Selecting {} case failed! Value: {}\n".format(
-        output,str(ret))
-  except:
-    print("Simulation ended when setting up output cases.")
-    raise
-
-  return errors 

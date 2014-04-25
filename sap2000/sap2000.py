@@ -126,7 +126,7 @@ class Sap2000(object):
   def refreshview(self, window = 0, zoom = True):
     '''
     This functions updates the display so it is much faster
-    than refreshwindows())
+    than refreshwindow())
     '''
     return_value = self.sap_com_object.SapModel.View.RefreshView(window, zoom)
 

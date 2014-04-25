@@ -2,10 +2,11 @@ from helpers import helpers
 from collections import namedtuple
 import math, variables,pdb
 
+# name the tuples - easily creating both a Coord Objects and an Endpoint Object
 Coord = namedtuple("Coordinates", ["x", "y", "z"])
 EndPoints = namedtuple("Endpoints", ["i","j"])
 
-class DumbBeam(object):
+class BeamBase(object):
   def __init__(self, name, endpoints,visual_model = None):
     # Each beam has two endpoints (i and j)
     self.endpoints = EndPoints(i=endpoints[0], j=endpoints[1])
@@ -81,7 +82,7 @@ class DumbBeam(object):
           self.joints.pop(coord, None)
         return True
 
-class Beam(DumbBeam):
+class Beam(BeamBase):
   '''
   This class keeps track of both the original design location of the tubes and 
   of the deflected location based on the analysis results
