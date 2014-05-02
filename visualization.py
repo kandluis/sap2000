@@ -2,7 +2,7 @@ from Helpers import helpers
 from visual import *
 import time, re, pdb
 from construction import HOME, CONSTRUCTION
-from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION
+from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION, WORLD
 
 class Visualization(object):
   def __init__(self,outputfolder):

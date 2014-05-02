@@ -92,7 +92,8 @@ Decision Making?
     # Copy the memory so that it is not modified
     memory = self.memory.copy()
 
-    state = { 'step'              : self.step,
+    state = { 'name'              : self.name,
+              'step'              : self.step,
               'location'          : location,
               'deflected_location': deflected_location,
               'ground_direction'  : self.ground_direction,

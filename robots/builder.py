@@ -15,6 +15,7 @@ class Builder(Movable):
     self.num_beams = ROBOT['beam_capacity']
 
     # Whether or not we should start construction
+    ### WILL GO IN MEMORY
     self.start_construction = False
 
     # Set the right weight
@@ -47,9 +48,10 @@ class Builder(Movable):
     self.memory['preferred_direction'] = None
 
     # Modes for supporting structure
+    # WILL GO IN MEMORY
     self.search_mode = False
     self.repair_mode = False
-
+#DONE
   def at_joint(self):
     '''
     Returns whether or not the robot is at a joint
@@ -102,7 +104,7 @@ class Builder(Movable):
         self.ground_direction)
 
       return False
-
+#DONE
   def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
     Pickup beams by adding weight to the robot and by adding num to number 
@@ -114,7 +116,7 @@ class Builder(Movable):
     # Set the direction towards the structure
     self.ground_direction = helpers.make_vector(self.location,
       CONSTRUCTION['center'])
-
+#DONE
   def discard_beams(self,num = 1):
     '''
     Get rid of the specified number of beams by decresing the weight and the 
@@ -122,14 +124,14 @@ class Builder(Movable):
     '''
     self.num_beams = self.num_beams - num
     self.weight = self.weight - MATERIAL['beam_load'] * num
-
+#DONE
   def at_home(self):
     '''
     True if the robot is in the area designated as home (on the ground)
     '''
     return helpers.within(HOME['center'], HOME['size'],
       self.location)
-
+#DONE
   def at_site(self):
     '''
     True if the robot is in the area designated as the construction site 
@@ -781,7 +783,7 @@ class Builder(Movable):
     direction = self.memory['preferred_direction']
 
     # No preferred direction, so beam was vertically above use
-    if xy is None:
+    if direction is None:
       return None
 
     # Add a bit of disturbace
