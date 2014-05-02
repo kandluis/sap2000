@@ -274,7 +274,7 @@ class Structure(object):
     '''
     Traverses the line formed between coord1 and coord2. Returns a list of 
     points on the line that lie in different boxes. This will NOT miss any 
-    points that are in difference boxes. The basic method is to find the 
+    points that are in different boxes. The basic method is to find the 
     intersection of the line with one of the faces of the cube formed by the 
     box. There should not be multiple points, but this has not been proven. It 
     might return two points that are in the same box.

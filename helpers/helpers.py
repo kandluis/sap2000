@@ -11,6 +11,8 @@ except:
 import errno, math, os, pdb
 from variables import BEAM, PROGRAM
 
+from Behaviour import constants as BConstants
+
 ######### THIS IS BEING MOVED OUTTTTTAAA HERE
 def is_vertical(v):
   '''
@@ -20,7 +22,7 @@ def is_vertical(v):
   angle = smallest_angle(v,(0,0,1))
   angle = angle if angle <= 90 else 180 - angle
 
-  return angle <= construction.beam['verticality_angle']
+  return angle <= BConstants.beam['verticality_angle']
 ##########
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

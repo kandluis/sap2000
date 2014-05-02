@@ -5,6 +5,8 @@ import math, pdb, random
 from variables import BEAM, ROBOT
 from construction import CONSTRUCTION
 
+from Behaviour import constants as BConstants
+
 class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
     super(DumbRepairer,self).__init__(name,structure,location,program)
@@ -255,7 +257,7 @@ class DumbRepairer(Worker):
     # Number of steps to search once we find a new beam that is close to
     # parallel to the beam we are repairing (going down, ie NOT support beam)
     length = BEAM['length'] * math.cos(
-      math.radians(Behaviour.constants.beam['support_angle']))
+      math.radians(BConstants.beam['support_angle']))
     self.memory['new_beam_steps'] = math.floor(length/ROBOT['step_length'])+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
       self.ground_direction is None else self.memory['new_beam_steps'] - 1 + math.floor(
@@ -329,7 +331,7 @@ class Repairer(DumbRepairer):
 
       # If below the specified angle, then place the beam directly upwards (no
       # change in xy)
-      if angle < Behaviour.constants.beam['direct_repair_limit']:
+      if angle < BConstants.beam['direct_repair_limit']:
         return None
       else:
         vertical = (0,0,1)
@@ -388,7 +390,7 @@ class Repairer(DumbRepairer):
       angle = helpers.smallest_angle((0,0,1),current_vector)
       rotation_angle = 180 - angle if angle > 90 else angle
 
-      vertical_angle = abs(Behaviour.constants.beam['support_angle'] - rotation_angle)
+      vertical_angle = abs(BConstants.beam['support_angle'] - rotation_angle)
 
       return super(Repairer,self).support_vertical_change(angle=vertical_angle)
 
@@ -454,7 +456,7 @@ class Repairer(DumbRepairer):
         angle = helpers.smallest_angle(beam_vector,support_vector)
         real_angle = abs(90-angle) if angle > 90 else angle
         
-        return simple and real_angle > Behaviour.constants.beam['support_angle_difference']
+        return simple and real_angle > BConstants.beam['support_angle_difference']
 
     return_coord = None
     for coord,angle in sorted_angles:
