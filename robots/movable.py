@@ -7,6 +7,7 @@ from variables import BEAM, ROBOT,PROGRAM, VISUALIZATION
 from construction import CONSTRUCTION
 
 # Class of objects that can move around (on the ground and on the structure)
+# DONE
 class DumbMovable(Automaton):
   def __init__(self,name,structure,location,program):
     super(DumbMovable, self).__init__(name,program)
@@ -35,6 +36,12 @@ class DumbMovable(Automaton):
     self.ground_direction = helpers.make_vector(location,
       CONSTRUCTION['corner'])
 
+  def climb_off(self, loc):
+    '''
+    Decides whether or not the robot should climb off the structure
+    '''
+    return helpers.compare(loc[2],0) and random.int(0,1) == 1
+# DONE
   def current_state(self):
     '''
     Returns the current state of the robot. This is used when we write the 
@@ -59,18 +66,19 @@ class DumbMovable(Automaton):
 
     return state
 
+# DONE
   def need_data(self):
     '''
     Returns whether or not this particular robot needs the structure to be analyzed
     '''
     return self.beam is not None and self.memory['pos_z']
-
+# DONE
   def get_true_location(self):
     '''
     Returns the location of the robot.
     '''
     return self.location
-
+# DONE
   def __addload(self,beam,location,value):
     '''
     Adds a load of the specified value to the named beam at the specific 
@@ -88,7 +96,7 @@ class DumbMovable(Automaton):
       1,10,distance,value,"Global", False, True,0)
     helpers.check(ret,self,"adding new load",beam=beam.name,distance=distance,
       value=value,state=self.current_state())
-
+# DONE
   def change_location_local(self,new_location, first_beam = None):
     '''
     Moves the robot about locally (ie, without worrying about the structure, 
@@ -109,12 +117,7 @@ class DumbMovable(Automaton):
       loc[2] = 0
       self.location = tuple(loc)
 
-  def climb_off(self, loc):
-    '''
-    Decides whether or not the robot should climb off the structure
-    '''
-    return helpers.compare(loc[2],0) and random.int(0,1) == 1
-
+# DONE
   def change_location(self,new_location, new_beam):
     '''
     Function that takes care of changing the location of the robot on the
@@ -196,7 +199,7 @@ class DumbMovable(Automaton):
 
     # Update local location
     self.location = new_location
-
+#DONE
   def get_walkable_directions(self,box):
     '''
     Finds all of the beams in box which intersect the robots location or 
@@ -307,13 +310,13 @@ class DumbMovable(Automaton):
         crawlable[self.beam.name].append(v1)
 
     return crawlable
-
+#DONE
   def get_location(self):
     '''
     Provides easy access to the location.
     '''
     return self.location
-
+#DONE
   def ground(self):
     '''
     This function finds the nearest beam to the robot that is connected 
@@ -460,7 +463,7 @@ class DumbMovable(Automaton):
 
         # Move
         self.change_location_local(new_location)
-
+#DONE
   def move(self, direction, beam):
     '''
     Moves the robot in direction passed in and onto the beam specified
@@ -512,7 +515,7 @@ class DumbMovable(Automaton):
       movement = helpers.scale(self.step, helpers.make_unit(direction))
       new_location = helpers.sum_vectors(self.location, movement)
       self.change_location(new_location, beam)
-
+#DONE
   def get_directions_info(self):
     '''
     Returns a list of triplets with delta x, delta y, and delta z of the 
@@ -568,7 +571,7 @@ class DumbMovable(Automaton):
 
     return {  'beam'      : info['box'][beam_name],
               'direction' : direction }
-
+#DONE
   def on_structure(self):
     '''
     Returns whether or not the robot is on the structure
@@ -637,6 +640,7 @@ class Movable(DumbMovable):
   def __init__(self,name,structure,location,program):
     super(Movable,self).__init__(name,structure,location,program)
 
+#DONE
   def get_true_location(self):
     '''
     Returns the location of the robot on the current beam, accounting for the

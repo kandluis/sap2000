@@ -110,7 +110,7 @@ class Visualization(object):
     Creates a visual for the ground, the construction area, and the home area
     '''
     # Setup the ground
-    dim = PROGRAM['properties']['dim_x'],PROGRAM['properties']['dim_y'],PROGRAM['epsilon']/2
+    dim = WORLD['properties']['dim_x'],WORLD['properties']['dim_y'],PROGRAM['epsilon']/2
     center = tuple([v/2 for v in dim])
     temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
     temp.color = (1,1,1)
