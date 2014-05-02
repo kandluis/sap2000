@@ -65,6 +65,7 @@ class Builder(Movable):
 
     return False
 
+#DONE
   def current_state(self):
     state = super(Builder, self).current_state()
 

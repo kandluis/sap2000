@@ -35,7 +35,7 @@ class DumbMovable(Automaton):
     # The robots all initially move towards the centertower
     self.ground_direction = helpers.make_vector(location,
       CONSTRUCTION['corner'])
-
+# DONE
   def climb_off(self, loc):
     '''
     Decides whether or not the robot should climb off the structure
@@ -372,7 +372,7 @@ class DumbMovable(Automaton):
         return {  'beam'  : beams[0],
                   'distance' : distances[name],
                   'direction' : vectors[name]}
-
+# DONE
   def get_ground_direction(self):
     ''' 
     In future classes, this function can be altered to return a preferred 
@@ -422,7 +422,7 @@ class DumbMovable(Automaton):
     else:
       self.ground_direction = random_direction()
       return self.ground_direction
-
+#DONE
   def wander(self):
     '''
     When a robot is not on a structure, it wanders around randomly. The 
@@ -578,12 +578,14 @@ class DumbMovable(Automaton):
     '''
     return self.beam is not None
 
+#DONE
   def pre_decision(self):
     '''
     Takes care of resetting appropriate values
     '''
     self.step = ROBOT['step_length']
 
+#DONE
   def movable_decide(self):
     '''
     Later classes need direct access to this method
@@ -605,6 +607,7 @@ class DumbMovable(Automaton):
 
       self.next_direction_info = self.get_direction()
 
+#DONE
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
     '''
@@ -617,6 +620,7 @@ class DumbMovable(Automaton):
     self.pre_decision()
     self.movable_decide()
 
+#DONE
   def do_action(self):
     '''
     In movable, simply moves the robot to another location.

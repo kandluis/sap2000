@@ -130,7 +130,7 @@ VISUALIZATION = {
 ######################################################
 
 
-# Wind pattern settings
+# Wind pattern settings (NOT WORKING)
 WIND = {
   '''
   THESE SETTINGS ARE NOW TAKEN CARE OF MANUALLY THROUGH A TEMPLATE LOCATED In

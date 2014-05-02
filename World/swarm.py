@@ -45,7 +45,7 @@ class SmartSwarm(object):
   #####################################################
   def create(self,name,structure,location,program):
     body = Robot.Body(name,structure,location,program)
-    BrainBot = Brains.SimpleBrain(body)
+    BrainBot = Brains.Brain(body)
 
     return BrainBot
   #####################################################
@@ -71,7 +71,7 @@ class SmartSwarm(object):
   def act(self):
     # Tell each robot to act
     for repairer in self.repairers:
-      self.repairers[repairer].do_action()
+      self.repairers[repairer].performAction()
 
   def get_information(self):
     information = {}
