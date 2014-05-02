@@ -47,11 +47,32 @@ class SimpleBrain(BaseBrain):
   def __init__(self,Robot):
     super(ExampleBrain,self).__init__(Robot)
 
+
+'''
+Currently used brain class object.
+'''
 class Brain(objec):
   def __init__(self):
     pass
 
   def decide(self):
+    '''
+    This functions decides what is going to be done next based on the analysis 
+    results of the program. Therefore, this function should be the one that 
+    decides whether to construct or move, based on the local conditions
+    and then stores that information in the robot. The robot will then act 
+    based on that information once the model has been unlocked. 
+    '''
+    self.pre_decision()
+
+    # If we decide to construct, then we store that fact in a bool so action 
+    # knows to wiggle the beam
+    if self.construct():
+      self.start_construction = True
+
+    # Movement decisions
+    else:
+      self.decision_helper();
 
   def performAction(self):
     self.do_action()
@@ -60,6 +81,16 @@ class Brain(objec):
   '''
   Brain Helper functions
   '''
+
+  def pre_decision(self):
+    '''
+    Takes care of resetting appropriate values.
+    '''
+    # We build almost never.
+    self.start_construction = False
+    self.step = ROBOT['step_length']
+    self.memory['broken'] = []
+
   def climb_off(self,loc):
     '''
     Returns whether or not the robot should climb off the structure. Additionally,
@@ -203,7 +234,7 @@ class Brain(objec):
       self.next_direction_info = self.get_direction()
 
   # Model needs to have been analyzed before calling THIS function
-  def decide(self):
+  def decision_helper(self):
     '''
     This functions decides what is going to be done next based on the analysis 
     results of the program. Therefore, this function should be the one that 
