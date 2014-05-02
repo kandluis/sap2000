@@ -3,7 +3,12 @@ from Helpers import commandline, helpers
 from robots.colony import SmartSwarm
 from World.structure import Structure
 from SAP2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
-import construction, variables
+from variables import BEAM, MATERIAL, PROGRAM, WORLD, WIND
+
+# so we can extract variable data
+import variables
+import construction
+from Behaviour import constants as BConstants
 
 # Default Python Libraries
 from time import strftime
@@ -47,7 +52,7 @@ class Simulation(object):
     Function to setup the general settigns for the SAP2000 program
     '''
     # switch to default units HERE
-    ret = self.SapModel.SetPresentUnits(UNITS[variables.program_units])
+    ret = self.SapModel.SetPresentUnits(UNITS[PROGRAM['units']])
     if ret:
       return False
 
@@ -57,7 +62,7 @@ class Simulation(object):
 
     return True
 
-  def __setup_wind(self,name=variables.wind_case):
+  def __setup_wind(self,name=PROGRAM['wind_case']):
     '''
     We initalize the wind based on the information in variables.python
     '''
@@ -106,7 +111,7 @@ class Simulation(object):
       return False
 
     # Set the cases to be analyzed (all cases)
-    ret = self.SapModel.Analyze.SetRunCaseFlag(variables.robot_load_case,True,
+    ret = self.SapModel.Analyze.SetRunCaseFlag(PROGRAM['robot_load_case'],True,
       False)
     if ret:
       print("Failure with run flag.")
@@ -125,7 +130,7 @@ class Simulation(object):
 
     # Set Solver Options (Multithreaded, Auto, 64bit, robot_load_case)
     ret = self.SapModel.Analyze.SetSolverOption_1(2,0,False,
-      variables.robot_load_case)
+      PROGRAM['robot_load_case'])
     if ret:
       print("Failure with solver options")
       return False
@@ -137,17 +142,17 @@ class Simulation(object):
     Sets up our beam materials
     '''
     # Defining our Scaffold Tube Material Property
-    ret, name = self.SapModel.PropMaterial.AddQuick(variables.material_property,
-      MATERIAL_TYPES[variables.material_type],
-      STEEL_SUBTYPES[variables.material_subtype],PLACEHOLDER,PLACEHOLDER,
-      PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,variables.material_property)
-    if ret or name != variables.material_property:
+    ret, name = self.SapModel.PropMaterial.AddQuick(MATERIAL['material_property'],
+      MATERIAL_TYPES[MATERIAL['material_type']],
+      STEEL_SUBTYPES[MATERIAL['material_subtype']],PLACEHOLDER,PLACEHOLDER,
+      PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,MATERIAL['material_property'])
+    if ret or name != MATERIAL['material_property']:
       return False
 
     # Defining the Frame Section. This is the Scaffold Tube
-    ret = self.SapModel.PropFrame.SetPipe(variables.frame_property_name,
-      variables.material_property,variables.outside_diameter,
-      variables.wall_thickness)
+    ret = self.SapModel.PropFrame.SetPipe(MATERIAL['frame_property_name'],
+      MATERIAL['material_property'],MATERIAL['outside_diameter'],
+      MATERIAL['wall_thickness'])
     if ret:
       return False
 
@@ -164,10 +169,13 @@ class Simulation(object):
     construction_text = 'construction', ([(constant, getattr(construction,
       constant)) for constant in dir(construction) if '__' not in constant 
       and '.' not in constant])
+    constants_text = 'behaviour', ([(constant, getattr(BConstants,
+      constant)) for constant in dir(BConstants) if '__' not in constant 
+      and '.' not in constant])
     
     # Cycle through both modules and store information the data
     data = ''
-    for name, file_data in variables_text, construction_text:
+    for name, file_data in variables_text, construction_text, constants_text:
       data += 'Data from the file {}.\n\n'.format(name)
       for var_name, value in file_data:
         data += var_name + ' : ' + str(value) + '\n'
@@ -407,7 +415,7 @@ class Simulation(object):
 
         # Save to a different filename every now and again
         try:
-          if i % variables.analysis_timesteps == 0 and i != 0:
+          if i % PROGRAM['analysis_timesteps'] == 0 and i != 0:
             filename = "tower-" + str(i) + ".sdb"
             self.SapModel.File.Save(outputfolder + filename)
         except:
@@ -486,7 +494,7 @@ class Simulation(object):
           self.Structure.structure_data[-1].sort(key=lambda t: int(t[0]))
 
         # Check height of structure and break out if we will reach maximum
-        if self.Structure.height > variables.dim_z - 2* construction.beam['length']:
+        if self.Structure.height > WORLD['properties']['dim_z'] - 2* BEAM['length']:
           break
 
         with open(self.folder + 'random_seed_results.txt', 'a') as rand_tex:

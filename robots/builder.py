@@ -1,19 +1,25 @@
 from Helpers import helpers
 from robots.movable import Movable
-import construction, math, operator, pdb, random, sys,variables
+import math, operator, pdb, random, sys
+
+from construction import HOME, CONSTRUCTION
+from variables import BEAM, MATERIAL, ROBOT,WORLD
+
+from Behaviour import constants as BConstants
+
 
 class Builder(Movable):
   def __init__(self,name,structure,location,program):
     super(Builder,self).__init__(name,structure,location,program)
     # The number of beams the robot is carrying
-    self.num_beams = variables.beam_capacity
+    self.num_beams = ROBOT['beam_capacity']
 
     # Whether or not we should start construction
     self.start_construction = False
 
     # Set the right weight
-    self.weight = (variables.robot_load + variables.beam_load * 
-      variables.beam_capacity)
+    self.weight = (ROBOT['load'] + MATERIAL['beam_load'] * 
+      ROBOT['beam_capacity'])
 
     # Stores variables for construction algorithm (this is the robots memory)
     self.memory = {}
@@ -83,7 +89,7 @@ class Builder(Movable):
       
       # Not repairing, so calculate direction
       if not self.search_mode:
-        direction = helpers.make_vector(self.location,construction.home)
+        direction = helpers.make_vector(self.location,HOME['center'])
         direction = (direction[0],direction[1],0)
         self.ground_direction = direction
 
@@ -97,17 +103,17 @@ class Builder(Movable):
 
       return False
 
-  def pickup_beams(self,num = variables.beam_capacity):
+  def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
     Pickup beams by adding weight to the robot and by adding num to number 
     carried
     '''
     self.num_beams = self.num_beams + num
-    self.weight = self.weight + variables.beam_load * num
+    self.weight = self.weight + MATERIAL['beam_load'] * num
 
     # Set the direction towards the structure
     self.ground_direction = helpers.make_vector(self.location,
-      construction.construction_location_center)
+      CONSTRUCTION['center'])
 
   def discard_beams(self,num = 1):
     '''
@@ -115,13 +121,13 @@ class Builder(Movable):
     number carried
     '''
     self.num_beams = self.num_beams - num
-    self.weight = self.weight - variables.beam_load * num
+    self.weight = self.weight - MATERIAL['beam_load'] * num
 
   def at_home(self):
     '''
     True if the robot is in the area designated as home (on the ground)
     '''
-    return helpers.within(construction.home, construction.home_size,
+    return helpers.within(HOME['center'], HOME['size'],
       self.location)
 
   def at_site(self):
@@ -129,8 +135,8 @@ class Builder(Movable):
     True if the robot is in the area designated as the construction site 
     (on the ground)
     '''
-    return helpers.within(construction.construction_location, 
-      construction.construction_size, self.location)
+    return helpers.within(CONSTRUCTION['corner'], 
+      CONSTRUCTION['size'], self.location)
 
   def pre_decision(self):
     '''
@@ -138,7 +144,7 @@ class Builder(Movable):
     '''
     # We build almost never.
     self.start_construction = False
-    self.step = variables.step_length
+    self.step = ROBOT['step_length']
     self.memory['broken'] = []
 
   # Model needs to have been analyzed before calling THIS function
@@ -198,7 +204,7 @@ class Builder(Movable):
       return True
 
     return (helpers.smallest_angle((vector[0],vector[1],0),xy) <= 
-      construction.beam['direction_tolerance_angle'])
+      BConstants.beam['direction_tolerance_angle'])
 
   def filter_preferred(self,v):
     '''
@@ -452,11 +458,11 @@ class Builder(Movable):
 
   def joint_check(self,name):
     moment = self.get_moment(name)
-    return moment < construction.beam['joint_limit']
+    return moment < BConstants.beam['joint_limit']
 
   def beam_check(self,name):
     moment = self.get_moment(name)
-    return moment < construction.beam['beam_limit']
+    return moment < BConstants.beam['beam_limit']
 
   def filter_feasable(self,dirs):
     '''
@@ -482,7 +488,7 @@ class Builder(Movable):
 
         # If the name is our beam and we can read moment from beams, 
         # do a structural check instead of a joint check
-        if (variables.read_beam and 
+        if (ROBOT['read_beam'] and 
           ((self.beam.name == name and self.beam_check(name)) or 
           (self.beam.name != name and self.joint_check(name)))):
           results[name] = directions
@@ -508,7 +514,7 @@ class Builder(Movable):
 
 
     # Not at joint, and can read beam moments
-    elif variables.read_beam:
+    elif ROBOT['read_beam']:
 
       # Sanity check (there should only be one beam in the set of directions if
       # We are not at a joint)
@@ -610,7 +616,7 @@ class Builder(Movable):
 
     # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.num_beams == 0:
-      vector = helpers.make_vector(self.location,construction.home_center)
+      vector = helpers.make_vector(self.location,HOME['center'])
       self.ground_direction = (vector if not helpers.compare(helpers.length(
         vector),0) else self.non_zero_xydirection())
 
@@ -640,7 +646,7 @@ class Builder(Movable):
         self.move(direction, close_beam)
 
       # If we can "detect" a beam, change the ground direction to approach it
-      elif self.num_beams > 0 and dist <= variables.local_radius:
+      elif self.num_beams > 0 and dist <= ROBOT['local_radius']:
         self.ground_direction = direction
         new_location = helpers.sum_vectors(self.location, helpers.scale(
           self.step,helpers.make_unit(direction)))
@@ -684,7 +690,7 @@ class Builder(Movable):
     # Add points to SAP Program
     p1_name, p2_name = addpoint(p1), addpoint(p2)
     name = self.program.frame_objects.add(p1_name,p2_name,
-      propName=variables.frame_property_name)
+      propName=MATERIAL['frame_property_name'])
 
     # Skip addition of beam
     if name == '':
@@ -735,7 +741,7 @@ class Builder(Movable):
     '''
     Returns the appropriate ratios for support beam construction
     '''
-    angle = construction.beam[string]
+    angle = BConstants.beam[string]
     return angle
 
   def get_angles(self,support = True):
@@ -786,7 +792,7 @@ class Builder(Movable):
       xy_perp = (-1 * xy[1],xy[0],0)
 
       # Obtain disturbance based on "search_angle"
-      limit = helpers.ratio(construction.beam['direction_tolerance_angle'])
+      limit = helpers.ratio(BConstants.beam['direction_tolerance_angle'])
       scale = random.uniform(-1 * limit,limit)
       disturbance = helpers.scale(scale,xy_perp)
 
@@ -843,7 +849,7 @@ class Builder(Movable):
 
     # Calculate endpoints
     endpoint = helpers.sum_vectors(self.location,helpers.scale(
-      construction.beam['length'],direction))
+      BConstants.beam['length'],direction))
 
     return endpoint
 
@@ -874,7 +880,7 @@ class Builder(Movable):
 
             # If we can actually reach the second point from vertical
             if (not helpers.compare(helpers.distance(pivot,e2),0) and 
-              helpers.distance(pivot,e2) <= variables.beam_length):
+              helpers.distance(pivot,e2) <= BEAM['length']):
 
               # Distance between the two endpoints
               dist = helpers.distance(e1,e2)
@@ -892,7 +898,7 @@ class Builder(Movable):
           # Get the points at which the beam intersects the sphere created by 
           # the vertical beam      
           sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,
-            variables.beam_length)
+            BEAM['length'])
           if sphere_points != None:
 
             # Cycle through intersection points (really, should be two, though 
@@ -916,7 +922,7 @@ class Builder(Movable):
             v = helpers.make_vector(pivot,e)
             l = helpers.length(v)
             if (e not in dictionary and not helpers.compare(l,0) and (
-              helpers.compare(l,variables.beam_length) or l < variables.beam_length)):
+              helpers.compare(l,BEAM['length']) or l < BEAM['length'])):
               angle = helpers.smallest_angle(base_vector,v)
               dictionary[e] = angle
 
@@ -957,7 +963,7 @@ class Builder(Movable):
       if not self.structure.available(i,j):
 
         # Create a small disturbace
-        lim = variables.random
+        lim = BEAM['random']
         f = random.uniform
         disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
 
@@ -994,14 +1000,14 @@ class Builder(Movable):
       joint_coord, dist = min([(coord, helpers.distance(self.location,coord)) for coord in all_joints], key = lambda t: t[1])
       
       # If the nearest joint is within our error, then use it as the pivot
-      if dist <= construction.beam['joint_error']:
+      if dist <= BConstants.beam['joint_error']:
         pivot = joint_coord
 
     # Default vertical endpoint (the ratios are measured from the line created 
     # by pivot -> vertical_endpoint)
     vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
-      variables.beam_length,
-      helpers.make_unit(construction.beam['vertical_dir_set'])))
+      BEAM['length'],
+      helpers.make_unit(BConstants.beam['vertical_dir_set'])))
 
     # Get the ratios
     sorted_angles = self.local_angles(pivot,vertical_endpoint)
@@ -1014,7 +1020,7 @@ class Builder(Movable):
     i, j = check(pivot, default_endpoint)
 
     # Sanity check
-    assert helpers.compare(helpers.distance(i,j),construction.beam['length'])
+    assert helpers.compare(helpers.distance(i,j),BConstants.beam['length'])
 
     return self.addbeam(i,j)
 
@@ -1074,9 +1080,9 @@ class Builder(Movable):
   def get_disturbance(self):
     '''
     Returns the disturbance level for adding a new beam at the tip (in this
-    class, the disturbance is random at a level set in variables.random)
+    class, the disturbance is random at a level set in BEAM['random'])
     '''
-    change = variables.random
+    change = BEAM['random']
     return helpers.make_unit((random.uniform(-change,change),
       random.uniform(-change,change),0))
 

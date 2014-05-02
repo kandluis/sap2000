@@ -1,7 +1,10 @@
 from Helpers import helpers
 from robots.modifications import *
 from visual import *
-import construction, variables
+
+from construction import HOME
+from variables import ROBOT, VISUALIZATION
+
 
 class Swarm(object):
   def __init__(self,size, structure, program):
@@ -9,7 +12,7 @@ class Swarm(object):
     self.size = size
 
     # The location of the swarm.
-    self.home = construction.home
+    self.home = HOME['corner']
 
     # Access to the structure, so we can create repairers
     self.structure = structure
@@ -103,7 +106,7 @@ class ReactiveSwarm(Swarm):
       # Otherwise create a new model for the robot at the current location
       else:
         repairer.simulation_model = sphere(pos=repairer.location,
-          radius=variables.visualization['robot_size']/2,make_trail=False)
+          radius=VISUALIZATION['robot_size']/2,make_trail=False)
         repairer.simulation_model.color = (1,0,1)
 
   def reset(self):
@@ -123,7 +126,7 @@ class ReactiveSwarm(Swarm):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if repairer.need_data() or (variables.collect_data and 
+      if repairer.need_data() or (ROBOT['collect_data'] and 
         repairer.beam is not None):
         return True
 
@@ -147,7 +150,7 @@ class ReactiveSwarm(Swarm):
     Deletes the specified robot from the swarm if it exists
     '''
     if name in self.repairers:
-      self.repairers[name].change_location(construction.home, None)
+      self.repairers[name].change_location(HOME['corner'], None)
       del(self.repairers[name])
       self.size -= 1
       return True

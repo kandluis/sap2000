@@ -8,7 +8,8 @@ from Helpers import helpers
 from Helpers.errors import OutofBox
 from visual import *
 # defalt python libraries
-import construction, math, pdb, sys, variables
+import math, pdb, sys
+from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION, WORLD
 
 # allows easy implementation of Coord and EndPoints
 from collections import namedtuple
@@ -33,7 +34,7 @@ class BeamBase(object):
     self.name = name
 
     # This is how much each beam weighs
-    self.weight = variables.beam_load
+    self.weight = MATERIAL['beam_load']
 
     self.visual_model = visual_model
 
@@ -142,9 +143,9 @@ class Beam(BeamBase):
 
     return (self.previous_write_endpoints is None or helpers.distance(
       self.deflected_endpoints.i,self.previous_write_endpoints.i) 
-      >= variables.visualization['step'] or helpers.distance(
+      >= VISUALIZATION['step'] or helpers.distance(
         self.deflected_endpoints.j,self.previous_write_endpoints.j) >=
-      variables.visualization['step'])
+      VISUALIZATION['step'])
 
   def global_default_axes(self):
     '''
@@ -210,20 +211,20 @@ class Structure(object):
     super(Structure,self).__init__()
 
     # number of boxes
-    self.num = variables.num_x, variables.num_y, variables.num_z
+    self.num = WORLD['properties']['num_x'], WORLD['properties']['num_y'], WORLD['properties']['num_z']
 
     # size of each box
-    self.box_size = (variables.dim_x / variables.num_x, variables.dim_y / 
-      variables.num_y, variables.dim_y / variables.num_y)
+    self.box_size = (WORLD['properties']['dim_x'] / WORLD['properties']['num_x'], WORLD['properties']['dim_y'] / 
+      WORLD['properties']['num_y'], WORLD['properties']['dim_y'] / WORLD['properties']['num_y'])
 
-    self.origin = variables.origin
+    self.origin = WORLD['properties']['origin']
 
     # size of the entire structure
-    self.size = variables.dim_x, variables.dim_y, variables.dim_z
+    self.size = WORLD['properties']['dim_x'], WORLD['properties']['dim_y'], WORLD['properties']['dim_z']
 
     # Storage of information
-    self.model =  ([[[{} for k in range(variables.num_z)] for j in 
-      range(variables.num_y)] for i in range(variables.num_x)])
+    self.model =  ([[[{} for k in range(WORLD['properties']['num_z'])] for j in 
+      range(WORLD['properties']['num_y'])] for i in range(WORLD['properties']['num_x'])])
 
     # Keeps track of how many tubes we have in the structure
     self.tubes = 0
@@ -341,7 +342,7 @@ class Structure(object):
       # the scaled version, exactly the distance we need to move
       move = helpers.scale(distance / abs(line[index]), line)
       # Here we scale the line again by epsilon/2. This is our push
-      push = helpers.scale(variables.epsilon / 2, line)
+      push = helpers.scale(PROGRAM['epsilon'] / 2, line)
       # The total change is the addition of these two
       change = helpers.sum_vectors(move,push)
 
@@ -365,8 +366,8 @@ class Structure(object):
           # positive coordinate
           # Moving negatively, so set to True if our new_point has a smaller 
           # positive coordinate
-          passed = (temp[i] > coord2[i] + variables.epsilon / 2 if signs[i] 
-            else temp[i] < coord2[i] - variables.epsilon / 2)
+          passed = (temp[i] > coord2[i] + PROGRAM['epsilon'] / 2 if signs[i] 
+            else temp[i] < coord2[i] - PROGRAM['epsilon'] / 2)
 
     return points
 
@@ -453,7 +454,7 @@ class Structure(object):
         been. Please check the add function in structure.py".format(point))
       return None
 
-  def get_boxes(self,location,radius=variables.beam_length):
+  def get_boxes(self,location,radius=BEAM['length']):
     '''
     Returns all of the boxes that are within the sphere specified by location
     and radius
@@ -546,7 +547,7 @@ class Structure(object):
     # If showing the visualization, add the cylinder to the structure
     if self.visualization:
       temp = cylinder(pos=p1,axis=helpers.make_vector(p1,p2),
-        radius=variables.outside_diameter)
+        radius=MATERIAL['outside_diameter'])
       temp.color = (0,1,1)
 
     # Safe visualization data
@@ -725,7 +726,7 @@ class Structure(object):
         self.structure_data[-1].append((beam.name,max_val))
 
       # Calculate gradiant color and store
-      ratio = round(max_val/construction.beam['structure_check'],2)
+      ratio = round(max_val/PROGRAM['structure_check'],2)
       color = (ratio,round(max(1-ratio,0),2),0)
       try:
         self.color_data += "{}:{}<>".format(beam.name,str(color)) 
@@ -778,13 +779,13 @@ class Structure(object):
             # Only if this is the first time we are collecting data 
             if name not in seen:
               moment = get_max_moment(beam)
-              if moment > construction.beam['structure_check']:
+              if moment > PROGRAM['structure_check']:
                 data += "Beam {} is structurally unstable with moment {}.\n".format(
                   name,str(moment))
                 bool_data = True
 
               # Update deflection of beams :)
-              if update_deflection(beam) and variables.deflection:
+              if update_deflection(beam) and VISUALIZATION['deflection']:
                 # Add the deflection data for the beam if it's changed significantly
                 # since last time we updated it
                 try:

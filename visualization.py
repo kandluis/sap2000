@@ -1,6 +1,8 @@
 from Helpers import helpers
 from visual import *
-import construction, time, re, pdb, variables
+import time, re, pdb
+from construction import HOME, CONSTRUCTION
+from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION
 
 class Visualization(object):
   def __init__(self,outputfolder):
@@ -89,11 +91,10 @@ class Visualization(object):
     # Set whether the windows will take up entire screen or not
     scene.fullscreen = fullscreen
     # Size of the windows seen is the size of one beam (to begin)
-    scene.range = (variables.beam_length,variables.beam_length,
-      variables.beam_length)
+    scene.range = (BEAM['length'],BEAM['length'],BEAM['length'])
     # The center of the windows exists at the construction location
     scene.center = helpers.scale(.5,helpers.sum_vectors(
-      construction.construction_location,scene.range))
+      CONSTRUCTION['corner'],scene.range))
     # Vector from which the camera start
     scene.forward = (1,0,0)
     # Define up (used for lighting)
@@ -109,20 +110,20 @@ class Visualization(object):
     Creates a visual for the ground, the construction area, and the home area
     '''
     # Setup the ground
-    dim = variables.dim_x,variables.dim_y,variables.epsilon/2
+    dim = PROGRAM['properties']['dim_x'],PROGRAM['properties']['dim_y'],PROGRAM['epsilon']/2
     center = tuple([v/2 for v in dim])
     temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
     temp.color = (1,1,1)
 
     # Setup the Home Plate
-    dim = construction.home_size
-    center = construction.home_center
+    dim = HOME['size']
+    center = HOME['center']
     temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
     temp.color = (1,0,0)
 
     # Setup the construction plate
-    dim = construction.construction_size
-    center = construction.construction_location_center
+    dim = CONSTRUCTION['size']
+    center = CONSTRUCTION['center']
     temp = box(pos=center, length=dim[0],height=dim[1],width=0.1)
     temp.color = (0,1,0)
 
@@ -147,7 +148,7 @@ class Visualization(object):
           # Create the object
           if name not in self.workers:
             self.workers[name] = sphere(pos=locations[0],
-              radius=variables.visualization['robot_size']/2,make_trail=False)
+              radius=VISUALIZATION['robot_size']/2,make_trail=False)
             self.workers[name].color = (1,0,1)
 
           # Change the objects position
@@ -168,7 +169,7 @@ class Visualization(object):
           # Otherwise, this means the beam has deflected, so change the position
           else:
             # Scale visualization
-            scale = variables.visualization['scaling']
+            scale = VISUALIZATION['scaling']
 
             # Old endpoints (we use this to scale at different values each time
             # we run)
@@ -193,7 +194,7 @@ class Visualization(object):
           if limit > max(scene.range):
             scene.range = (limit,limit,limit)
             scene.center = helpers.scale(.5,helpers.sum_vectors(
-              construction.construction_location,scene.range))
+              CONSTRUCTION['corner'],scene.range))
 
         # Change the color of the beams
         for name,colors in struct_color:
@@ -245,10 +246,10 @@ class Visualization(object):
 
     # Create the beam
     self.beams[name] = cylinder(pos=i,axis=unit_axis,
-      radius=variables.outside_diameter,color=(0,1,0))
+      radius=MATERIAL['outside_diameter'],color=(0,1,0))
 
     # Extrude the beam from the robot
-    while scale <= construction.beam['length']:
+    while scale <= BEAM['length']:
       axis = helpers.scale(scale,unit_axis)
       self.beams[name].axis = axis
       scale += change

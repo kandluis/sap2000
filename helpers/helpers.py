@@ -8,7 +8,20 @@ except:
   from Helpers.algebra import *
 
 # Python default libraries
-import construction, errno, math, os, pdb, variables
+import errno, math, os, pdb
+from variables import BEAM, PROGRAM
+
+######### THIS IS BEING MOVED OUTTTTTAAA HERE
+def is_vertical(v):
+  '''
+  Returns whether we consider the vector v to be vertical. This error angle is
+  defined in variables.py
+  '''
+  angle = smallest_angle(v,(0,0,1))
+  angle = angle if angle <= 90 else 180 - angle
+
+  return angle <= construction.beam['verticality_angle']
+##########
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 General mathematical/geometric functions which shoud probably be moved into the
@@ -114,7 +127,7 @@ def on_line(l1,l2,point,segment = True):
   v1 = (lx2 - lx1), (ly2 - ly1), (lz2 - lz1)
   v2 = (x - lx1), (y - ly1), (z - lz1)
 
-  return (compare(length(cross(v1,v2)),0,variables.epsilon * 2) and (between(lx1,lx2,x) and 
+  return (compare(length(cross(v1,v2)),0,PROGRAM['epsilon'] * 2) and (between(lx1,lx2,x) and 
     between(ly1,ly2,y) and between(lz1, lz2, z) or not segment))
 
 def between_points(p1,p2,p3, inclusive = True):
@@ -162,19 +175,9 @@ def collinear(p1,p2,p3):
   v1 = make_vector(p1,p2)
   v2 = make_vector(p1,p3)
   normal = cross(v1,v2)
-  return compare(length(normal),0,variables.epsilon*2)
+  return compare(length(normal),0,PROGRAM['epsilon']*2)
 
-def is_vertical(v):
-  '''
-  Returns whether we consider the vector v to be vertical. This error angle is
-  defined in variables.py
-  '''
-  angle = smallest_angle(v,(0,0,1))
-  angle = angle if angle <= 90 else 180 - angle
-
-  return angle <= construction.beam['verticality_angle']
-
-def compare_tuple(v1,v2,e=variables.epsilon):
+def compare_tuple(v1,v2,e=PROGRAM['epsilon']):
   '''
   Comapres two floats using our compare function
   '''
@@ -236,12 +239,12 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
-def run_analysis(model,output=variables.robot_load_case):
+def run_analysis(model,output=PROGRAM['robot_load_case']):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.
   '''
-  combo = variables.wind_combo == output
+  combo = PROGRAM['wind_combo'] == output
   
   errors = ''
   try:
@@ -296,8 +299,8 @@ def check_location(p):
   '''
   x,y,z = p
   return ((x > 0 or compare(x,0)) and (y > 0 or compare(y,0) and (z >= 0 or 
-    compare(z,0)) and x < variables.dim_x and y < variables.dim_y and (z < 
-    variables.dim_z)))
+    compare(z,0)) and x < PROGRAM['properties']['dim_x'] and y < PROGRAM['properties']['dim_y'] and (z < 
+    PROGRAM['properties']['dim_z'])))
 
 def correct(l1,l2,point):
   '''
@@ -398,7 +401,7 @@ def distance_between_lines(l1,l2):
   #return length of projection onto normal
   return abs(dot(diagonal,normal))
 
-def beam_endpoint(pivot,point,beam_length = construction.beam['length']):
+def beam_endpoint(pivot,point,beam_length = BEAM['length']):
   '''
   Returns the endpoint of a beam which begins at pivot and contains the point
   'point'.

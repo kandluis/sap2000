@@ -9,7 +9,7 @@ normalize()
 import math
 
 # Constants for the simulation are stored in this file
-import variables
+from variables import PROGRAM
 
 def normalize(v,max_val):
   '''
@@ -26,7 +26,7 @@ def normalize(v,max_val):
   # Return normalized vectors
   return scale(scalar,unit)
 
-def compare(x,y,e=variables.epsilon):
+def compare(x,y,e=PROGRAM['epsilon']):
   '''
   Compares two int/floats by taking into account "epsilon"
   '''

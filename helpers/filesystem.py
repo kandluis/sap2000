@@ -13,7 +13,8 @@ except:
   from Helpers.helpers import path_exists
 
 # default Python library
-import os, variables
+import os
+from variables import PROGRAM
 
 def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   """
@@ -44,6 +45,6 @@ def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):
   program.save(outputfile)
 
   # reset the correct units
-  model.SetPresentUnits(UNITS[variables.program_units])
+  model.SetPresentUnits(UNITS[PROGRAM['units']])
 
   return program, model

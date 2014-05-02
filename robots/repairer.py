@@ -1,6 +1,9 @@
 from Helpers import helpers
 from robots.worker import Worker
-import construction, math, pdb,variables, random
+import math, pdb, random
+
+from variables import BEAM, ROBOT
+from construction import CONSTRUCTION
 
 class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
@@ -251,9 +254,9 @@ class DumbRepairer(Worker):
 
     # Number of steps to search once we find a new beam that is close to
     # parallel to the beam we are repairing (going down, ie NOT support beam)
-    length = construction.beam['length'] * math.cos(
-      math.radians(construction.beam['support_angle']))
-    self.memory['new_beam_steps'] = math.floor(length/variables.step_length)+1
+    length = BEAM['length'] * math.cos(
+      math.radians(Behaviour.constants.beam['support_angle']))
+    self.memory['new_beam_steps'] = math.floor(length/ROBOT['step_length'])+1
     self.memory['new_beam_ground_steps'] = (self.memory['new_beam_steps'] if
       self.ground_direction is None else self.memory['new_beam_steps'] - 1 + math.floor(
         math.sin(math.radians(angle_with_vertical)) * self.memory['new_beam_steps']))
@@ -326,7 +329,7 @@ class Repairer(DumbRepairer):
 
       # If below the specified angle, then place the beam directly upwards (no
       # change in xy)
-      if angle < construction.beam['direct_repair_limit']:
+      if angle < Behaviour.constants.beam['direct_repair_limit']:
         return None
       else:
         vertical = (0,0,1)
@@ -385,7 +388,7 @@ class Repairer(DumbRepairer):
       angle = helpers.smallest_angle((0,0,1),current_vector)
       rotation_angle = 180 - angle if angle > 90 else angle
 
-      vertical_angle = abs(construction.beam['support_angle'] - rotation_angle)
+      vertical_angle = abs(Behaviour.constants.beam['support_angle'] - rotation_angle)
 
       return super(Repairer,self).support_vertical_change(angle=vertical_angle)
 
@@ -409,7 +412,7 @@ class Repairer(DumbRepairer):
     midpoint = helpers.midpoint(e2,midpoint1)
 
     # Add an offset to mimick inability to determine location exactly
-    offset = helpers.scale(random.uniform(-1*variables.random,variables.random),v)
+    offset = helpers.scale(random.uniform(-1*BEAM['random'],BEAM['random']),v)
     midpoint = (helpers.sum_vectors(midpoint,offset) if random.randint(0,4) == 1
     else midpoint) 
 
@@ -451,7 +454,7 @@ class Repairer(DumbRepairer):
         angle = helpers.smallest_angle(beam_vector,support_vector)
         real_angle = abs(90-angle) if angle > 90 else angle
         
-        return simple and real_angle > construction.beam['support_angle_difference']
+        return simple and real_angle > Behaviour.constants.beam['support_angle_difference']
 
     return_coord = None
     for coord,angle in sorted_angles:

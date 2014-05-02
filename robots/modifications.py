@@ -1,6 +1,10 @@
 from Helpers import helpers
 from robots.repairer import Repairer
-import construction, math, pdb,variables, random
+import math, pdb, random
+
+from variables import BEAM, PROGRAM
+from Behaviour import constants as BConstants
+
 
 
 class NormalRepairer(Repairer):
@@ -77,7 +81,7 @@ class DeflectionRepairer(NormalRepairer):
     modified so that the disturbance compensates for the angle at which the
     current beam lies (using basic math)
     '''
-    def compensate_change(coord,change = variables.epsilon):
+    def compensate_change(coord,change = PROGRAM['epsilon']):
       '''
       Returns a random direction that is the right sign so that it compensates 
       for the sign of change
@@ -93,7 +97,7 @@ class DeflectionRepairer(NormalRepairer):
     if self.beam is not None:
       i,j = self.beam.endpoints
       v = helpers.make_vector(i,j)
-      const_change = lambda x : compensate_change(x,variables.random)
+      const_change = lambda x : compensate_change(x,BEAM['random'])
       delta_x, delta_y = const_change(v[0]), const_change(v[1])
       return (delta_x,delta_y,0)
     else:
@@ -113,8 +117,8 @@ class SmartRepairer(NormalRepairer):
     moment = self.get_moment(name)
     e1,e2 = self.structure.get_endpoints(name,self.location)
     xy_dist = helpers.distance((e1[0],e1[1],0),(e2[0],e2[1],0))
-    limit = construction.beam['beam_limit'] + (
-      xy_dist / construction.beam['length']) * construction.beam['horizontal_beam_limit']
+    limit = BConstants.beam['beam_limit'] + (
+      xy_dist / BConstants.beam['length']) * BConstants.beam['horizontal_beam_limit']
 
     return (moment < limit or helpers.compare(moment,limit))
 
@@ -139,11 +143,11 @@ class LeanRepairer(NormalRepairer):
     # We need to return one that leans
     else:
       xy_dir = self.non_zero_xydirection()
-      scale = 1 / helpers.ratio(construction.beam['construction_angle'])
-      vertical = helpers.scale(scale,construction.beam['vertical_dir_set'])
+      scale = 1 / helpers.ratio(BConstants.beam['construction_angle'])
+      vertical = helpers.scale(scale,BConstants.beam['vertical_dir_set'])
       direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
       endpoint = helpers.sum_vectors(self.location,helpers.scale(
-        construction.beam['length'],direction))
+        BConstants.beam['length'],direction))
 
       return endpoint
 
@@ -221,11 +225,11 @@ class IntelligentRepairer(NormalRepairer):
     prev_moment = self.memory['previous_moment'][1]
     change = curr_moment - prev_moment if prev_beam == name else 0
 
-    if change >= construction.beam['moment_change_limit']:
+    if change >= BConstants.beam['moment_change_limit']:
       self.special_repair = True
 
-    return (curr_moment < construction.beam['beam_limit'] or 
-      change >= construction.beam['moment_change_limit'])
+    return (curr_moment < BConstants.beam['beam_limit'] or 
+      change >= BConstants.beam['moment_change_limit'])
 
   def pre_decision(self):
     '''
@@ -276,7 +280,7 @@ class SlowBuilder(NormalRepairer):
           for coord in self.beam.joints]))
 
         # Add the current beam to broken because it needs support
-        if distance_to_joint > construction.beam['joint_distance']:
+        if distance_to_joint > BConstants.beam['joint_distance']:
           return True
 
     return False
@@ -367,18 +371,18 @@ class MomentAwareBuilder(NormalRepairer):
       travel = super(MomentAwareBuilder,self).get_preferred_direction(beam)
       
       # Normalize twist to the maximum moment of force -- structure_check
-      normal = helpers.normalize(xy_change,construction.beam['structure_check'])
+      normal = helpers.normalize(xy_change,BConstants.beam['structure_check'])
 
       # The beam is vertical - check to see how large the normalized moment is
       if travel is None:
         # The change is relatively small, so ignore it
-        if helpers.length(normal) <= helpers.ratio(construction.beam['verticality_angle']):
+        if helpers.length(normal) <= helpers.ratio(BConstants.beam['verticality_angle']):
           return travel
         else:
           return helpers.make_unit(normal)
 
       else:
-        scalar = 1 / helpers.ratio(construction.beam['moment_angle_max'])
+        scalar = 1 / helpers.ratio(BConstants.beam['moment_angle_max'])
         scaled_travel = helpers.scale(scalar,travel)
         return helpesr.make_unit(helpers.sum_vectors(normal,scaled_travel))
 

@@ -1,7 +1,10 @@
 from Helpers import helpers
 from robots.automaton import Automaton
 from SAP2000.constants import EOBJECT_TYPES
-import construction, pdb, random, variables
+import pdb, random
+
+from variables import BEAM, ROBOT,PROGRAM, VISUALIZATION
+from construction import CONSTRUCTION
 
 # Class of objects that can move around (on the ground and on the structure)
 class DumbMovable(Automaton):
@@ -11,7 +14,7 @@ class DumbMovable(Automaton):
     self.structure = structure
 
     # Number of steps left in movement
-    self.step = variables.step_length
+    self.step = ROBOT['step_length']
 
     # The current location of the robot on the designed structure
     self.location = location
@@ -20,7 +23,7 @@ class DumbMovable(Automaton):
     self.beam = None
 
     # The weight of the robot
-    self.weight = variables.robot_load
+    self.weight = ROBOT['load']
 
     # The direction in which we should move
     self.next_direction_info = None
@@ -30,7 +33,7 @@ class DumbMovable(Automaton):
 
     # The robots all initially move towards the centertower
     self.ground_direction = helpers.make_vector(location,
-      construction.construction_location)
+      CONSTRUCTION['corner'])
 
   def current_state(self):
     '''
@@ -81,7 +84,7 @@ class DumbMovable(Automaton):
 
     # Find distance and add load
     distance = helpers.distance(beam.endpoints.i,location)
-    ret = self.model.FrameObj.SetLoadPoint(beam.name,variables.robot_load_case,
+    ret = self.model.FrameObj.SetLoadPoint(beam.name,PROGRAM['robot_load_case'],
       1,10,distance,value,"Global", False, True,0)
     helpers.check(ret,self,"adding new load",beam=beam.name,distance=distance,
       value=value,state=self.current_state())
@@ -151,14 +154,14 @@ class DumbMovable(Automaton):
       indeces = []
       index = 0
       for ab_dist in data[8]:  # this provides acces to the absolute_distance 
-        if ((helpers.compare(ab_dist,curr_dist) and variables.robot_load_case == 
-          data[3][index]) or data[3][index] != variables.robot_load_case):
+        if ((helpers.compare(ab_dist,curr_dist) and PROGRAM['robot_load_case'] == 
+          data[3][index]) or data[3][index] != PROGRAM['robot_load_case']):
           indeces.append(index)
         index += 1
 
       # Delete the loads off the beam
       ret = self.model.FrameObj.DeleteLoadPoint(self.beam.name,
-        variables.robot_load_case)
+        PROGRAM['robot_load_case'])
       helpers.check(ret,self,"deleting loads",return_val=ret,
         beam=self.beam.name,distance=curr_dist,previous_loads=data,
         state=self.current_state())
@@ -357,7 +360,7 @@ class DumbMovable(Automaton):
       name = min(distances, key=distances.get)
 
       # So far away that we can't "see it"      
-      if distances[name] > variables.local_radius:
+      if distances[name] > ROBOT['local_radius']:
         return None
       else:
         # All the same beans 
@@ -476,7 +479,7 @@ class DumbMovable(Automaton):
 
       # Reset step in preparation for next timestep
       if helpers.compare(self.step,0):
-        self.step == variables.step_length
+        self.step == ROBOT['step_length']
 
       # We still have steps to go, so run an analysis if necessary
       elif self.beam is not None:
@@ -576,7 +579,7 @@ class DumbMovable(Automaton):
     '''
     Takes care of resetting appropriate values
     '''
-    self.step = variables.step_length
+    self.step = ROBOT['step_length']
 
   def movable_decide(self):
     '''
@@ -641,7 +644,7 @@ class Movable(DumbMovable):
     deflection data from SAP to calculate this location.
     '''
     # Not on the structure, no deflection, or not recording deflection
-    if not self.on_structure() or self.beam.deflection is None or not variables.deflection:
+    if not self.on_structure() or self.beam.deflection is None or not VISUALIZATION['deflection']:
       return super(Movable,self).get_true_location()
 
     else:
@@ -650,7 +653,7 @@ class Movable(DumbMovable):
 
       # Obtain weight of each scale based on location on beam
       i_weight = 1 - (helpers.distance(self.location,self.beam.endpoints.i) / 
-        construction.beam['length'])
+        BEAM['length'])
       j_weight = 1 - i_weight
 
       # Sum the two vectors to obtain general deflection

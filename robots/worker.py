@@ -1,6 +1,10 @@
 from Helpers import helpers
 from robots.builder import Builder
-import construction, math, pdb,variables
+import math, pdb
+
+from Behaviour import constants as BConstants
+
+from variables import ROBOT
 
 class Worker(Builder):
   def __init__(self,name,structure,location,program):
@@ -9,7 +13,7 @@ class Worker(Builder):
     self.num_beams = 0
 
     # Since we aren't carryng any beams
-    self.weight = variables.robot_load
+    self.weight = ROBOT['load']
 
     # Smaller number gives higher priority
     self.memory['dir_priority'] = [0,0,0]
@@ -70,7 +74,7 @@ class Worker(Builder):
     if self.num_beams == 0:
       self.memory['pos_z'] = False
 
-  def pickup_beams(self,num = variables.beam_capacity):
+  def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
     Adding ability to change memory
     '''
@@ -135,7 +139,7 @@ class Worker(Builder):
       Returns index, sorting_angle of vs.
       '''
       angle_list = [abs(helpers.smallest_angle((1,0,0),v) - 
-        construction.beam['support_angle']) for v in vs]
+        BConstants.beam['support_angle']) for v in vs]
       min_val = min(angle_list)
       index = angle_list.index(min_val)
       return index, min_val
