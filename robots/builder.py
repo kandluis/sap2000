@@ -8,6 +8,7 @@ from variables import BEAM, MATERIAL, ROBOT,WORLD
 from Behaviour import constants as BConstants
 
 
+# DONE
 class Builder(Movable):
   def __init__(self,name,structure,location,program):
     super(Builder,self).__init__(name,structure,location,program)
@@ -82,6 +83,7 @@ class Builder(Movable):
     
     return state
 
+# DONE
   def climb_off(self,loc):
     '''
     Returns whether or not the robot should climb off the structure. Additionally,
@@ -172,6 +174,7 @@ class Builder(Movable):
     else:
       super(Builder,self).decide()
 
+# DONE
   # Model needs to be unlocked before running this function! 
   def do_action(self):
     '''
@@ -191,6 +194,7 @@ class Builder(Movable):
     else:
       super(Builder,self).do_action()
 
+# DONE
   def remove_specific(self,dirs):
     '''
     In case we ever need to remove a specific direction for the set of available
@@ -198,6 +202,7 @@ class Builder(Movable):
     '''
     return dirs
 
+# DONE
   def preferred(self,vector):
     '''
     Returns True if vector is preferred, False if it is not
@@ -211,12 +216,14 @@ class Builder(Movable):
     return (helpers.smallest_angle((vector[0],vector[1],0),xy) <= 
       BConstants.beam['direction_tolerance_angle'])
 
+# DONE
   def filter_preferred(self,v):
     '''
     Decided whether or not v is a preferred direction
     '''
     return True
 
+# DONE
   def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
@@ -303,6 +310,7 @@ class Builder(Movable):
     else:
       return new_dirs
 
+# DONE (for SmartRepairer)
   def filter_directions(self,dirs):
     '''
     Filters the available directions and returns those that move us in the 
@@ -324,6 +332,7 @@ class Builder(Movable):
 
     return directions
 
+# DONE
   def no_available_direction(self):
     '''
     This specifies what the robot should do if there are no directions available
@@ -332,6 +341,7 @@ class Builder(Movable):
     '''
     pass
 
+# DONE
   def random_direction(self,directions):
     '''
     Select a random direction from directions
@@ -341,6 +351,7 @@ class Builder(Movable):
 
     return beam_name, direction
 
+# DONE
   def pick_direction(self,directions):
     '''
     Functions to pick a new direction once it is determined that we either have 
@@ -354,6 +365,7 @@ class Builder(Movable):
 
     return direction
 
+# DONE
   def elect_direction(self,directions):
     '''
     Takes the filtered directions and elects the appropriate one. This function
@@ -400,6 +412,7 @@ class Builder(Movable):
     # previous direction, or that previous direction is no longer acceptable
     return self.pick_direction(directions)
 
+# DONE
   def get_moment_magnitudes(self,name,pivot = None):
     '''
     Returns the moment magnitudes (m11,m22,m33) for the local axes u1,u2,u3 at
@@ -449,6 +462,7 @@ class Builder(Movable):
 
     return m11,m22,m33
 
+# DONE
   def get_moment(self,name):
     '''
     Returns the moment for the beam specified by name at the point closest 
@@ -461,14 +475,17 @@ class Builder(Movable):
 
     return total
 
+# DONE
   def joint_check(self,name):
     moment = self.get_moment(name)
     return moment < BConstants.beam['joint_limit']
 
+# DONE
   def beam_check(self,name):
     moment = self.get_moment(name)
     return moment < BConstants.beam['beam_limit']
 
+# DONE
   def filter_feasable(self,dirs):
     '''
     Filters the set of dirs passed in to check that the beam can support a robot
@@ -550,6 +567,7 @@ class Builder(Movable):
 
     return results
 
+# DONE
   def get_direction(self):
     ''' 
     Figures out which direction to move in. This means that if the robot is 
@@ -604,6 +622,7 @@ class Builder(Movable):
     return {  'beam'      : info['box'][beam_name],
               'direction' : direction }
 
+# DONE
   def wander(self):
     '''    
     When a robot is not on a structure, it wanders. The wandering in the working
@@ -742,6 +761,7 @@ class Builder(Movable):
       print("Did not add beam to structure.")
       return False
 
+# DONE
   def get_angle(self,string):
     '''
     Returns the appropriate ratios for support beam construction
@@ -749,6 +769,7 @@ class Builder(Movable):
     angle = BConstants.beam[string]
     return angle
 
+# DONE
   def get_angles(self,support = True):
     if support:
       mini,maxi = (self.get_angle('support_angle_min'), self.get_angle(
@@ -759,6 +780,7 @@ class Builder(Movable):
 
     return mini,maxi
 
+# DONE (MOVED INTO HELPERS MODULE)
   def non_zero_xydirection(self):
     '''
     Returns a non_zero list of random floats with zero z component.
@@ -803,6 +825,7 @@ class Builder(Movable):
 
       return helpers.sum_vectors(disturbance,xy)
 
+# DONE
   def support_xy_direction(self):
     '''
     Returns the direction in which the support beam should be constructed
@@ -820,6 +843,7 @@ class Builder(Movable):
 
     return helpers.make_unit(xy_dir)
 
+# DONE
   def support_vertical_change(self,angle=None):
     '''
     Returns the vertical change for the support endpoint locations
@@ -837,6 +861,7 @@ class Builder(Movable):
 
     return vertical
 
+# DONE
   def support_beam_endpoint(self):
     '''
     Returns the endpoint for construction of a support beam
@@ -858,6 +883,7 @@ class Builder(Movable):
 
     return endpoint
 
+# DONE
   def local_angles(self,pivot,endpoint):
     '''
     Calculates the ratios of a beam if it were to intersect nearby beams. 
@@ -947,6 +973,7 @@ class Builder(Movable):
 
     return sorted(angles.items(), key = operator.itemgetter(1))
 
+# DONE
   def build(self):
     '''
     This functions sets down a beam. This means it "wiggles" it around in the 
@@ -1029,6 +1056,7 @@ class Builder(Movable):
 
     return self.addbeam(i,j)
 
+# DONE
   def find_nearby_beam_coord(self,sorted_angles,pivot):
     '''
     Returns the coordinate of a nearby, reachable beam which results in the
@@ -1048,18 +1076,21 @@ class Builder(Movable):
 
     return None
 
+# DONE
   def support_coordinate(self):
     '''
     Returns whether or not the beam being built should be done so as a support beam.
     '''
     return self.memory['construct_support']
 
+# DONE
   def struck_coordinate(self):
     '''
     Returns whether the struck coordinate of a nearby beam should be used if found
     '''
     return True
 
+# DONE
   def get_default(self,angle_coord,vertical_coord):
     '''
     Returns the coordinate onto which the j-point of the beam to construct 
@@ -1082,6 +1113,7 @@ class Builder(Movable):
       helpers.sum_vectors(vertical_coord,disturbance))
       return new_coord
 
+# DONE
   def get_disturbance(self):
     '''
     Returns the disturbance level for adding a new beam at the tip (in this
@@ -1091,6 +1123,7 @@ class Builder(Movable):
     return helpers.make_unit((random.uniform(-change,change),
       random.uniform(-change,change),0))
 
+# DONE
   def default_probability(self):
     '''
     Returns whether or not the disturbance should be applied to the current 
@@ -1101,6 +1134,7 @@ class Builder(Movable):
     '''
     return (random.randint(0,4) == 1)
 
+# DONE
   def construct(self):
     '''
     Decides whether the local conditions dictate we should build (in which case)

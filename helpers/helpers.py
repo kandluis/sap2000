@@ -8,7 +8,7 @@ except:
   from Helpers.algebra import *
 
 # Python default libraries
-import errno, math, os, pdb
+import errno, math, os, pdb, random
 from variables import BEAM, PROGRAM
 
 from Behaviour import constants as BConstants
@@ -24,6 +24,26 @@ def is_vertical(v):
 
   return angle <= BConstants.beam['verticality_angle']
 ##########
+
+########### THIS IS IS TO BE MOVED IN
+def non_zero_xydirection():
+  '''
+  Returns a non_zero list of random floats with zero z component.
+  The direction returned is a unit vector.
+  '''
+  # Random list
+  tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
+    random.uniform(-1,1)])
+
+  # All are non-zero
+  if all(tuple_list):
+    tuple_list[2] = 0
+    return make_unit(tuple(tuple_list))
+
+  # All are zero - try again
+  else:
+    return non_zero_xydirection()
+###########
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 General mathematical/geometric functions which shoud probably be moved into the

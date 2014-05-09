@@ -20,7 +20,7 @@ class ExampleBrain(BaseBrain):
   def __init__(self,Robot):
     super(ExampleBrain,self).__init__(Robot)
 
-  def decide(self):
+  def performDecision(self):
     '''
     This function is called during the simulation before the act function is called.
     The brain should perform the task of deciding what actions to perform next.
@@ -61,25 +61,58 @@ class Brain(BaseBrain):
     self.Body.addToMemory('start_construction', False)
     self.Body.addToMemory('ground_direction', None)
     self.Body.addToMemory('ground_tendencies', [None, None, None])
+    self.Body.addToMemory('new_beam_steps', 0)
 
-  def decide(self):
-    '''
-    This functions decides what is going to be done next based on the analysis 
-    results of the program. Therefore, this function should be the one that 
-    decides whether to construct or move, based on the local conditions
-    and then stores that information in the robot. The robot will then act 
-    based on that information once the model has been unlocked. 
-    '''
-    self.pre_decision()
+    # Same as above, but on the ground - since the ground is already a horizontal
+    # support beam
+    self.Body.addToMemory('new_beam_ground_steps', 0)
 
-    # If we decide to construct, then we store that fact in a bool so action 
-    # knows to wiggle the beam
-    if self.construct():
-      self.Body.addToMemory('start_construction', True)
+    # Stores name of beam to be reinforced (so we know when we're no longer on it)
+    self.Body.addToMemory('broken_beam_name','')
 
-    # Movement decisions
-    else:
-      self.decision_helper()
+    # Stores the previous beam we were on
+    self.Body.addToMemory('previous_beam',None)
+
+    # Smaller number gives higher priority
+    self.Body.addToMemory('dir_priority',[0,0,0])
+
+    # Move further in the x-direction?
+    self.Body.addToMemory('pos_x', None)
+
+    # Move further in the y-direction?
+    self.Body.addToMemory('pos_y', None)
+
+    self.Body.addToMemory('start_construction', False)
+
+    # Climbing up or down
+    self.Body.addToMemory('pos_z', None)
+    self.Body.addToMemory('dir_priority', [0])
+
+    # Starting defaults
+    self.Body.addToMemory('built', False)
+
+    # Keeps track of the direction we last moved in.
+    self.Body.addToMemory('previous_direction', None)
+
+    # Stores information on beams that need repairing
+    self.Body.addToMemory('broken', [])
+
+    # Stores whether or not we are constructing vertically or at an angle (for 
+    # support)
+    self.Body.addToMemory('construct_support', False)
+
+    # This is the direction towards which the robot looks when searching for a 
+    # support tube.
+    # This is in the form (x,y,z)
+    self.Body.addToMemory('preferred_direction', None)
+
+    # Modes for supporting structure
+    # WILL GO IN MEMORY
+    self.Body.addToMemory('search_mode', False)
+    self.Body.addToMemory('repair_mode', False)
+
+  def performDecision(self):
+    self.decide()
 
   def performAction(self):
     self.do_action()
@@ -87,6 +120,67 @@ class Brain(BaseBrain):
   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Brain Helper functions
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  def decide(self):
+    '''
+    Overwritting to allow for repair work to take place
+    '''
+    if self.Body.readFromMemory('search_mode') and self.readFromMemory('repair_mode'):
+      self.pre_decision()
+
+      # We have moved off the structure entirely, so wander
+      if self.Body.beam is None:
+        self.ground_support()
+
+      # We've moved off the beam, so run the search support routine
+      elif (self.Body.readFromMemory('broken_beam_name') != self.Body.beam.name and 
+        self.Body.readFromMemory('search_mode') and self.Body.readFromMemory('broken_beam_name') != ''):
+
+        # Remember the beam we moved onto right after the broken one
+        if self.Body.reafFromMemory('previous_beam') is None:
+          self.Body.addToMemory('previous_beam',self.Body.beam.name)
+
+        # We have found a support beam, so return to construct mode (the support beam is vertical)
+        if (self.Body.reafFromMemory('previous_beam') != self.Body.beam.name and (
+          self.Body.readFromMemory('previous_direction') is None or 
+          self.Body.readFromMemory('previous_direction')[1][2] > 0 or helpers.compare(
+            self.Body.readFromMemory('previous_direction')[1][2],0))):
+          self.construction_mode()
+
+          # Decide again since we're out of repair mode
+          self.decide()
+
+        else:
+          self.find_support()
+          # Move (don't check construction)
+          self.movable_decide()
+
+      # Simply move
+      else:
+        self.movable_decide()
+
+    
+    # We found a support beam and are on it, planning on construction. If 
+    # we reach the endpoint of the beam (the support beam), then construct.
+    elif self.readFromMemory('repair_mode'):
+      if (helpers.compare(helpers.distance(self.Body.location,
+          self.Body.beam.endpoints.j),self.Body.step / 2)):
+        self.Body.addToMemory('start_contruction', True)
+        self.Body.addToMemory('broken',[])
+
+    # Build Mode
+    else:
+      self.pre_decision()
+
+      # If we decide to construct, then we store that fact in a bool so action 
+      # knows to wiggle the beam
+      if self.construct():
+        self.addToMemory('start_construction', True)
+
+      # Movement decisions
+      else:
+        super(Builder,self).decide()
+
+
   def beam_check(self,name):
     '''
     Checks a beam to see whether it is in a state that requires repair
@@ -142,7 +236,7 @@ class Brain(BaseBrain):
     ''' 
     In future classes, this function can be altered to return a preferred 
     direction,  but currently it only returns a random feasable direction if no
-    direction is assigned for the robot (self.ground_direction)
+    direction is assigned for the robot (self.Body.readFromMemory('ground_direction'))
     '''
     def random_direction():
       '''
@@ -189,48 +283,86 @@ class Brain(BaseBrain):
       self.Body.addToMemory('ground_direction',random_direction())
       return self.Body.readFromMemory('ground_direction')
 
-  def wander(self):
+  def discard_beams(self,num = 1):
     '''
-    When a robot is not on a structure, it wanders around randomly. The 
-    wandering is restricted to the 1st octant in global coordinates. If the 
-    robot is near enough a beam to be on it in the next time step, it jumps on 
-    the beam. The robots have a tendency to scale the structure, per se, but are
-    restricted to their immediate surroundings.
+    Adding ability to change memory
     '''
-    # Check to see if robot is on a beam. If so, pick between moving on it or 
-    # off it.
-    result = self.ground()
+    self.Body.discard_beams(num)
 
-    # Nothign nearby
-    if result is None:
-      # Get direction
+    # Move down
+    if self.Body.num_beams == 0:
+      self.Body.addToMemory('pos_z', False)
+
+  def pickup_beams(self,num = ROBOT['beam_capacity']):
+    '''
+    Adding ability to change memory
+    '''
+    self.Body.pickup_beams(num)
+
+    # Move up when you pick one up
+    self.addToMemory('pos_z', True)
+
+  def wander(self):
+    '''    
+    When a robot is not on a structure, it wanders. The wandering in the working
+    class works as follows. The robot moves around randomly with the following 
+    restrictions:
+      The robot moves towards the home location if it has no beams and 
+        the home location is detected nearby.
+      Otherwise, if it has beams for construction, it moves toward the base 
+      specified construction site. If it finds another beam nearby, it has a 
+      tendency to climb that beam instead.
+    '''
+    # Check to see if robot is at home location and has no beams
+    if self.Body.atHome() and self.Body.num_beams == 0:
+      self.pickup_beams()
+
+    # If we have no beams, set the ground direction to home (TEMP CODE)
+    if self.Body.num_beams == 0:
+      vector = helpers.make_vector(self.Body.location,HOME['center'])
+      self.ground_direction = (vector if not helpers.compare(helpers.length(
+        vector),0) else helpers.non_zero_xydirection())
+
+    # Find nearby beams to climb on
+    result = self.Body.ground()
+
+    # Either there are no nearby beams, we are on repair_mode/search_mode, our beams are 0, or
+    # we are constructing a support - so don't mess with direction
+    if (result == None or self.Body.readFromMemory('repair_mode') or self.Body.readFromMemory('search_mode') or 
+      self.Body.num_beams == 0 or self.Body.readFromMemory('construct_support')):
       direction = self.get_ground_direction()
       new_location = helpers.sum_vectors(self.Body.location,helpers.scale(self.Body.step,
         helpers.make_unit(direction)))
+      self.Body.change_location_local(new_location)
 
-      # Move
-      self.change_location_local(new_location)
-
-    # A beam is nearby
+    # Nearby beam, jump on it
     else:
       dist, close_beam, direction = (result['distance'], result['beam'],
         result['direction'])
+      # If the beam is within steping distance, just jump on it
+      if self.Body.num_beams > 0 and dist <= self.Body.step:
+        # Set the ground direction to None (so we walk randomly if we do get off
+        # the beam again)
+        self.addToMemory('ground_direction', None)
 
-      # If close enough, just jump on it
-      if dist < self.Body.step:
-        self.move(direction,close_beam)
+        # Then move on the beam
+        self.Body.move(direction, close_beam)
 
-      # Otherwise, walk towards it
+      # If we can "detect" a beam, change the ground direction to approach it
+      elif self.Body.num_beams > 0 and dist <= ROBOT['local_radius']:
+        self.addToMemory('ground_direction,' direction)
+        new_location = helpers.sum_vectors(self.Body.location, helpers.scale(
+          self.Body.step,helpers.make_unit(direction)))
+        self.Body.change_location_local(new_location)
+      
+      # Local beams, but could not detect (this is redundant)
       else:
-        # Scale direction to be step_size
-        direction = helpers.scale(self.Body.step,helpers.make_unit(direction))
+        direction = self.get_ground_direction()
         new_location = helpers.sum_vectors(self.Body.location,helpers.scale(
-          self.Body.step, helpers.make_unit(direction)))
-
-        # Move
+          self.Body.step,helpers.make_unit(direction)))
         self.Body.change_location_local(new_location)
 
-    def pre_decision(self):
+  def pre_decision(self):
     '''
     Takes care of resetting appropriate values
     '''
@@ -251,8 +383,8 @@ class Brain(BaseBrain):
       # Before we decide, we need to make sure that we have access to analysis
       # results. Therefore, check to see if the model is locked. If it is not,
       # then execute and analysis.
-      if not self.model.GetModelIsLocked() and self.Body.need_data():
-        errors = helpers.run_analysis(self.model)
+      if not self.Body.model.GetModelIsLocked() and self.Body.need_data():
+        errors = helpers.run_analysis(self.Body.model)
         assert errors == ''
 
       self.Body.addToMemory('next_direction_info', self.get_direction())
@@ -271,20 +403,21 @@ class Brain(BaseBrain):
 
   def do_action(self):
     '''
-    In movable, simply moves the robot to another location.
+    Overwriting the do_action functionality in order to have the robot move up 
+    or downward (depending on whether he is carrying a beam or not), and making 
+    sure that he gets a chance to build part of the structure if the situation 
+    is suitable. This is also to store the decion made based on the analysis 
+    results, so that THEN the model can be unlocked and changed.
     '''
-    # We're on a beam but decided not to build, so get direction we 
-    # decided to move in, and move.
-    if self.Body.beam is not None:
-      next_direction_info = self.Body.readFromMemory('next_direction_info')
-      assert next_direction_info != None
-      self.move(next_direction_info['direction'],
-        next_direction_info['beam'])
-      self.Body.addToMemory('next_direction_info', None)
+    # Check to see if the robot decided to construct based on analysys results
+    if self.Body.readFromMemory('start_construction'):
+      if not self.build():
+        print("Could not build...")
+      self.Body.addToMemory('start_construction', False)
 
-    # We have climbed off, so wander about 
+    # Move around
     else:
-      self.wander()
+      super(Builder,self).do_action()
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Construction Decision Helper functions
@@ -413,7 +546,7 @@ Construction Decision Helper functions
       endpoint),(0,0,1))
 
     # Get angles
-    sorted_angles = self.local_angles(pivot,endpoint)
+    sorted_angles = self.Body.local_angles(pivot,endpoint)
     min_support_angle,max_support_angle = self.get_angles()
     min_constraining_angle,max_constraining_angle = self.get_angles(
       support=False)
@@ -478,9 +611,9 @@ Construction Decision Helper functions
         else:
           new_dirs[beam] = vectors
 
-      return super(Repairer,self).remove_specific(new_dirs)
+      return new_dirs
 
-    return super(Repairer,self).remove_specific(dirs)
+    return dirs
 
 
   def local_rules(self):
@@ -496,7 +629,12 @@ Construction Decision Helper functions
 
     # Local rules as before
     else:
-      return super(DumbRepairer,self).local_rules()
+      if not self.Body.model.GetModelIsLocked():
+        return False
+
+      # Analysis results available
+      else:
+        return False
 
   def get_preferred_ground_direction(self,direction):
     '''
@@ -551,10 +689,855 @@ Construction Decision Helper functions
       math.radians(BConstants.beam['support_angle']))
     self.Body.addToMemory('new_beam_steps',math.floor(length/ROBOT['step_length'])+1)
     groundsteps = self.Body.readFromMemory('new_beam_steps') if
-      self.ground_direction is None else self.memory['new_beam_steps'] - 1 + math.floor(
-        math.sin(math.radians(angle_with_vertical)) * self.memory['new_beam_steps']))
+      self.Body.readFromMemory('ground_direction') is None else self.Body.readFromMemory(
+        'new_beam_steps') - 1 + math.floor(math.sin(math.radians(
+          angle_with_vertical)) * self.Body.readFromMemory('new_beam_steps')))
     self.Body.addToMemory('new_beam_ground_steps',groundsteps)
 
     # So the entire robot knows that we are in repair mode
-    self.repair_mode = True
-    self.search_mode = True
+    self.Body.addToMemory('repair_mode', True)
+    self.Body.addToMemory('search_mode', True)
+
+  def get_preferred_direction(self,beam):
+    '''
+    Returns the preferred direction - this is the direction towards which the 
+    robot wants to move when looking for an already set support tube.
+    The direction is a unit vector
+    '''
+    # Calculate direction of repair (check 0 dist, which means it is perfectly
+    # vertical!)
+    i, j = beam.endpoints.i, beam.endpoints.j
+    v1 = helpers.make_vector(self.Body.location,j)
+    v2 = helpers.make_vector(i,self.Body.location)
+    l1,l2 = helpers.length(v1), helpers.length(v2)
+
+    # v1 is non-zero and it is not vertical
+    if not (helpers.compare(l1,0) or helpers.is_vertical(v1)):
+      return helpers.make_unit(v1)
+
+    # v2 is non-zero and it is not vertical
+    elif not (helpers.compare(l2,0) or helpers.is_vertical(v2)):
+      return helpers.make_unit(v2)
+
+    # No preferred direction because the beam is perfectly vertical
+    else:
+      return None
+
+  def no_available_direction(self):
+    '''
+    No direction takes us where we want to go, so check to see if we need to 
+      a) Construct
+      b) Repair
+    '''
+    # Initialize repair mode if there are broken beams (and you can fix)
+    if self.Body.readFromMemory('broken') != [] and self.Body.num_beams > 0:
+      beam, moment = max(self.Body.readFromMemory('broken'),key=lambda t : t[1])
+
+      # Print to console
+      string = "{} is starting repair of beam {} which has moment {} at {}".format(
+        self.Body.name,beam.name,str(moment),str(self.Body.location))
+
+      # This is a special repair of the moment is zero
+      if moment == 0:
+        string += ". This repair occured due to special rules."
+      print(string)
+
+      # Store, to output into file later
+      self.repair_data = string
+      
+      # switch to repair mode with the beam as the one being repaired
+      self.start_repair(beam)
+
+    elif self.Body.num_beams > 0 and self.Body.atTop():
+      self.Body.addToMemory('start_construction', True)
+      self.Body.addToMemory('broken', [])
+
+  def add_support_mode(self):
+    '''
+    Sets up the construction of a support beam
+    '''
+    # Return to construct mode
+    self.construction_mode()
+
+    # But specify steps, and that we need to construct a support
+    self.Body.addToMemory('broken', [])
+    self.Body.addToMemory('new_beam_steps', 1)
+    self.Body.addToMemory('new_beam_ground_steps', 1)
+    self.Body.addToMemory('construct_support', True)
+
+  def ground_support(self):
+    '''
+    Looks for a support from the ground
+    '''
+    # We have run our course, so add the support
+    if self.Body.readFromMemory('new_beam_ground_steps') == 0:
+      self.add_support_mode()
+      self.Body.addToMemory('ground_direction',helpers.scale(
+        -1,self.readFromMemory('ground_direction')))
+
+    self.Body.addToMemory('new_beam_ground_steps', self.Body.readFromMemory('new_beam_ground_steps') - 1)
+
+  def find_support(self):
+    '''
+    Looks for a support beam on the structure
+    '''
+    # We did not find a beam in the number of steps we wanted (go back to build
+    # mode, but with the condition to build in exactly one timestep)
+    if self.readFromMemory('new_beam_steps') == 0:
+      self.add_support_mode()
+
+    self.addToMemory('new_beam_steps',self.readFromMemory('new_beam_steps') - 1)
+    self.addToMemory('new_beam_ground_steps',self.readFromMemory('new_beam_ground_steps') - 1)
+
+  def construction_mode(self):
+    '''
+    Resets the robot to go back into construction mode (leaves some variables
+     - such as the repair_beam_direction and the broken_beam_name available)
+    '''
+    self.Body.addToMemory('new_beam_steps', 0)
+    self.Body.addToMemory('new_beam_ground_steps', 0)
+    self.Body.addToMemory('previous_beam', None)
+    self.Body.addToMemory('pos_z', True)
+    self.Body.addToMemory('pos_y', None)
+    self.Body.addToMemory('pos_x', None)
+    self.Body.addToMemory('dir_priority', [1,1,0])
+
+    self.Body.addToMemory('repair_mode', False)
+    self.Body.addToMemory('search_mode', False)
+
+  def repairing(self):
+    '''
+    This is run when repairing, so as to set the right values when filtering and
+    when picking directions
+    '''
+    # If we are at a joint, we might move up but MUST move in right x and y
+    if self.Body.atJoint():
+
+      # No longer care if we move up or down
+      self.Body.addToMemory('pos_z', None)
+      self.Body.addToMemory('dir_priority', [1,1,1])
+    else:
+
+      # Want to move down
+      self.Body.addToMemory('pos_z',False)
+      self.Body.addToMemory('dir_priority', [1,1,0])
+
+  def construct(self):
+    '''
+    Decides whether the robot should construct or not based on some local rules.
+    '''
+    return self.basic_rules() or self.local_rules()
+
+  def basic_rules(self):
+    '''
+    Decides whether to build or not. Uses some relatively simple rules to decide.
+    Here is the basic logic it is following.
+    1.  a)  If we are at the top of a beam
+        OR
+        b)  i)  We are at the specified construction site
+            AND
+            ii) There is no beginning tube
+    AND
+    2.  Did not build in the previous timestep
+    AND
+    3.  Still carrying construction material
+    '''
+
+    if (((self.Body.atSite() and not self.Body.structure.started and not self.readFromMemory('search_mode')
+      )) and not self.readFromMemory('built') and self.Body.num_beams > 0):
+
+      self.Body.structure.started = True
+      self.addToMemory('built', True)
+      return True
+    else:
+      self.addToMemory('built', False)
+      return False
+
+  def pick_direction(self,directions):
+    '''
+    Overwritting to pick the direction of steepest descent when climbing down
+    instead of just picking a direction randomly. Also takes into account that 
+    we might want to travel upward when repairing.
+    '''
+    def min_max_dir(vs,get_min=True):
+      unit_list = [helpers.make_unit(v) for v in vs]
+      if get_min:
+        val = min(unit_list,key=lambda t : t[2])
+      else:
+        val = max(unit_list,key=lambda t : t[2])
+
+      index = unit_list.index(val)
+      return index,val
+
+    def pick_support(vs):
+      '''
+      Returns index, sorting_angle of vs.
+      '''
+      angle_list = [abs(helpers.smallest_angle((1,0,0),v) - 
+        BConstants.beam['support_angle']) for v in vs]
+      min_val = min(angle_list)
+      index = angle_list.index(min_val)
+      return index, min_val
+
+    if self.Body.readFromMemory('search_mode') and not self.Body.readFromMemory('construct_support'):
+      self.repairing()
+
+    # Pick the closests direction to a support beam
+    if self.Body.readFromMemory('search_mode') and self.Body.atJoint():
+      #pdb.set_trace()
+      beam, (index,angle) = min([(n, pick_support(vs)) for n,vs in directions.items()],
+        key=lambda t: t[1][1])
+
+    # Pick the smalles pos_z whether moving up or down (modification)
+    else:
+      beam, (index, unit_dir) = min([(n, min_max_dir(vs)) for n,vs in directions.items()],
+        key=lambda t : t[1][1][2])
+
+    # We want to return the original direction vector since it contains both
+    # information on direction and on distance
+
+    direction = beam, directions[beam][index]
+    # Store direction
+    self.Body.addToMemory('previous_direction', direction)
+    
+    return direction
+
+  def preferred(self,vector):
+    '''
+    Returns True if vector is preferred, False if it is not
+    '''
+    xy = self.readFromMemory('preferred_direction')
+    xy = (xy[0],xy[1],0) 
+    if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
+      vector[0],vector[1],0),(0,0,0))):
+      return True
+
+    return (helpers.smallest_angle((vector[0],vector[1],0),xy) <= 
+      BConstants.beam['direction_tolerance_angle'])
+
+  def filter_preferred(self,v):
+    '''
+    Decided whether or not v is a preferred direction
+    '''
+    return True
+
+def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
+    '''
+    Filters a dictinary of directions, taking out all directions not in the 
+    correct directions based on the list of comp_functions (x,y,z).
+
+    Edit: Now also filters on priority. If a direction has priority of 0, then
+    it MUST be in that direction. The only way that it will ever return an empty
+    dictionary is if none of the directions match the direction we want to move
+    in for each coordinate with priority zero. Otherwise, we match as many low
+    priorty numbers as possible. Same priorities must be matched at the same
+    level. 
+
+    Edit: Have done mostly away with priorities, though for compatibility, we
+    still keep them in case we want to use them later. Will probably work on 
+    removing them entirely. 
+
+    Now, we have added a "preferenced" bool which checks to see if the direction
+    is within a specified angle of preferred travel (the angle is dictated in 
+    construction.py). The preference is set to True when we are searching for a
+    support, otherwise to False. We want this direction, but if we can't find it,
+    we reset the variable to False
+    '''
+    # Access items
+    for beam, vectors in dirs.items():
+
+      true_beam = self.Body.structure.get_beam(beam,self.Body.location)
+
+      # If the beam won't be a support beam, pass it..
+      if (preferenced and true_beam.endpoints.j in true_beam.joints and 
+        self.Body.readFromMemory('preferred_direction') is not None):
+        pass 
+
+      # Access each directions
+      for vector in vectors:
+        coord_bool = True
+
+        # Apply each function to the correct coordinates
+        for function, coord in zip(comp_functions,vector):
+          coord_bool = coord_bool and function(coord)
+
+        # Additionally, check the x-y direction if we have a preferenced direction
+        if (preferenced and self.Body.readFromMemory('preferred_directions') is not None and
+          not helpers.is_vertical(vector)):
+          coord_bool = coord_bool and self.filter_preferred(vector)
+
+        # Check to see if the direciton is acceptable and keep if it is
+        if coord_bool:
+          if beam not in new_dirs:
+            new_dirs[beam] = [vector]
+          else:
+            new_dirs[beam].append(vector)
+
+    # Special rules for travelling
+    new_dirs = self.remove_specific(new_dirs)
+
+    # Case is not matched, so obtain keys of max values and remove those
+    # restraints if the value is not 0
+    if new_dirs == {}:
+
+      # We didn't take priorities into account, now we do
+      if priorities == []:
+
+        # COPY the LIST
+        priorities = list(self.Body.readFromMemory('dir_priority'))
+      
+      max_val = max(priorities)
+
+      # Set to -1 so we don't use them next time, and set comp_funs to True
+      for i, val in enumerate(priorities):
+        if val == max_val:
+          priorities[i] = -1
+          comp_functions[i] = lambda a : True
+
+      # We ran out of priorities and we have no preference, so just return the
+      # empty set
+      if max_val <= 0 and not preferenced:
+        return new_dirs
+
+      # We have preference, and/or priorites
+      else:
+        return self.filter_dict(dirs,new_dirs,comp_functions,False,priorities)
+
+    # Non-empty set
+    else:
+      return new_dirs
+
+  def filter_directions(self,dirs):
+    '''
+    Filters the available directions and returns those that move us in the 
+    desired direction. Overwritten to take into account the directions in
+    which we want to move. When climbing down, it will take the steepest path.
+    '''
+    # Change stuff up, depending on whether we are in repair mode (but not 
+    # construct support mode)
+    if self.Body.readFromMemory('search_mode') and not self.Body.readFromMemory('construct_support'):
+      self.repairing()
+
+    def bool_fun(string):
+      '''
+      Returns the correct funtion depending on the information stored in memory
+      '''
+      if self.Body.readFromMemory(string):
+        return (lambda a : a > 0)
+      elif self.Body.readFromMemory(string) is not None:
+        return (lambda a : a < 0)
+      else:
+        return (lambda a : True)
+
+    # direction functions
+    funs = [bool_fun('pos_x'), bool_fun('pos_y'), bool_fun('pos_z')]
+
+    directions =  self.filter_dict(dirs, {}, funs,preferenced=self.Body.readFromMemory('search_mode'))
+
+    return directions
+
+  def construct(self):
+    '''
+    Decides whether the local conditions dictate we should build (in which case)
+    ''' 
+    if ((self.atSite()) and not self.Body.readFromMemory('built') and 
+      self.Body.num_beams > 0):
+      self.Body.addToMemory('built',True)
+      self.Body.addToMemory('constructed', self.Body.readFromMemory('constructed') + 1)
+      return True
+
+    else:
+      self.Body.addToMemory('built',False)
+      return False
+
+  def build(self):
+    '''
+    This functions sets down a beam. This means it "wiggles" it around in the 
+    air until it finds a connection (programatically, it just finds the 
+    connection which makes the smallest angle). Returns false if something went 
+    wrong, true otherwise.
+    '''
+    def check(i,j):
+      '''
+      Checks the endpoints and returns two that don't already exist in the 
+      structure. If they do already exist, then it returns two endpoints that 
+      don't. It does this by changing the j-endpoint. This function also takes 
+      into account making sure that the returned value is still within the 
+      robot's tendency to build up. (ie, it does not return a beam which would 
+      build below the limit angle_constraint)
+      '''
+      # There is already a beam here, so let's move our current beam slightly to
+      # some side
+      if not self.Body.structure.available(i,j):
+
+        # Create a small disturbace
+        lim = BEAM['random']
+        f = random.uniform
+        disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
+
+        # find the new j-point for the beam
+        new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
+
+        return check(i,new_j)
+
+      else:
+
+        # Calculate the actual endpoint of the beam (now that we now direction 
+        # vector)
+        return (i,helpers.beam_endpoint(i,j))
+
+    # Sanitiy check
+    assert (self.Body.num_beams > 0)
+
+    # Default pivot is our location
+    pivot = self.Body.location
+
+    if self.Body.beam is not None:
+
+      # Obtain any nearby joints, and insert the i/j-end if needed
+      all_joints = [coord for coord in self.Body.beam.joints if not helpers.compare(
+        coord[2],0)]
+      if self.Body.beam.endpoints.j not in all_joints and not helpers.compare(
+        self.Body.beam.endpoints.j[2],0):
+        all_joints.append(self.Body.beam.endpoints.j)
+      if self.Body.beam.endpoints.i not in all_joints and not helpers.compare(
+        self.Body.beam.endpoints.i[2],0):
+        all_joints.append(self.Body.beam.endpoints.i)
+
+      # Find the nearest one
+      joint_coord, dist = min([(coord, helpers.distance(self.Body.location,coord)) for coord in all_joints], key = lambda t: t[1])
+      
+      # If the nearest joint is within our error, then use it as the pivot
+      if dist <= BConstants.beam['joint_error']:
+        pivot = joint_coord
+
+    # Default vertical endpoint (the ratios are measured from the line created 
+    # by pivot -> vertical_endpoint)
+    vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
+      BEAM['length'],
+      helpers.make_unit(BConstants.beam['vertical_dir_set'])))
+
+    # Get the ratios
+    sorted_angles = self.Body.local_angles(pivot,vertical_endpoint)
+
+    # Find the most vertical position
+    final_coord = self.find_nearby_beam_coord(sorted_angles,pivot)
+
+    # Obtain the default endpoints
+    default_endpoint = self.get_default(final_coord,vertical_endpoint)
+    i, j = check(pivot, default_endpoint)
+
+    # Sanity check
+    assert helpers.compare(helpers.distance(i,j),BConstants.beam['length'])
+
+    return self.Body.addBeam(i,j)
+
+  def find_nearby_beam_coord(self,sorted_angles,pivot):
+    '''
+    Returns the coordinate of a nearby, reachable beam which results in the
+    angle of construction with the most verticality
+    '''
+    # Limits
+    min_constraining_angle, max_constraining_angle = self.get_angles(False)
+    min_support_angle,max_support_angle = self.get_angles()
+
+    # Cycle through the sorted angles until we find the right coordinate to build
+    for coord, angle in sorted_angles:
+
+      # If the smallest angle is larger than what we've specified as the limit, 
+      # but larger than our tolerence, then build
+      if min_constraining_angle <= angle and angle <= max_constraining_angle:
+        return coord
+
+    return None
+
+  def get_default(self,angle_coord,vertical_coord):
+    '''
+    Returns the coordinate onto which the j-point of the beam to construct 
+    should lie
+    '''
+    # pdb.set_trace()
+    if self.Body.readFromMemory('construct_support'):
+      return self.support_beam_endpoint()
+
+    elif angle_coord is not None and self.struck_coordinate():
+      return angle_coord
+
+    # Retunr the vertical coordinate
+    else:
+      # Create disturbance
+      disturbance = self.get_disturbance()
+      
+      # We add a bit of disturbance every once in a while
+      new_coord = vertical_coord if self.default_probability() else (
+      helpers.sum_vectors(vertical_coord,disturbance))
+      return new_coord
+
+  def get_disturbance(self):
+    '''
+    Returns the disturbance level for adding a new beam at the tip (in this
+    class, the disturbance is random at a level set in BEAM['random'])
+    '''
+    change = BEAM['random']
+    return helpers.make_unit((random.uniform(-change,change),
+      random.uniform(-change,change),0))
+
+  def default_probability(self):
+    '''
+    Returns whether or not the disturbance should be applied to the current 
+    contruction. Realistically, this should be a probabilistic function.
+
+    True means that the disturbance is NOT applied
+    False means that the disturbance is
+    '''
+    return (random.randint(0,4) == 1)
+
+  def support_coordinate(self):
+    '''
+    Returns whether or not the beam being built should be done so as a support beam.
+    '''
+    return self.Body.readFromMemory('construct_support')
+
+  def struck_coordinate(self):
+    '''
+    Returns whether the struck coordinate of a nearby beam should be used if found
+    '''
+    return True
+
+  def support_beam_endpoint(self):
+    '''
+    Returns the endpoint for construction of a support beam
+    '''
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    ratio = helpers.ratio(self.get_angle('support_angle'))
+    vertical = self.support_vertical_change()
+    xy_dir = self.support_xy_direction()
+
+    if xy_dir is None or vertical is None:
+      direction = (0,0,1)
+    else:
+      xy_dir = helpers.make_unit(xy_dir)
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
+
+    # Calculate endpoints
+    endpoint = helpers.sum_vectors(self.Body.location,helpers.scale(
+      BConstants.beam['length'],direction))
+
+    return endpoint
+
+  def support_xy_direction(self):
+    '''
+    Returns the direction in which the support beam should be constructed
+    '''
+    # Check to see if direction is vertical
+    default_direction = self.get_repair_beam_direction()
+
+    # The beam was vertical
+    if default_direction is None:
+      xy_dir = helpers.non_zero_xydirection()
+
+    # Use the default direction
+    else:
+      xy_dir = default_direction
+
+    return helpers.make_unit(xy_dir)
+
+  def support_vertical_change(self,angle=None):
+    '''
+    Returns the vertical change for the support endpoint locations
+    '''
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    if angle is None:
+      ratio = helpers.ratio(self.get_angle('support_angle'))
+
+    # We changed the angle from the default  
+    else:
+      ratio = helpers.ratio(angle)
+
+    # Calculate vertical based on assumption that xy-dir is unit
+    vertical = helpers.scale(1/ratio,(0,0,1)) if ratio != 0 else None
+
+    return vertical
+ 
+  def get_repair_beam_direction(self):
+    '''
+    Returns the xy direction at which the support beam should be set (if none is
+    found). Currently, we just add a bit of disturbace while remaining within 
+    the range that the robot was set to search.
+    '''
+    direction = self.Body.readFromMemory('preferred_direction')
+
+    # No preferred direction, so beam was vertically above use
+    if direction is None:
+      return None
+
+    # Add a bit of disturbace
+    else:
+
+      # Project onto xy_plane and make_unit
+      xy = helpers.make_unit((direction[0],direction[1],0))
+      xy_perp = (-1 * xy[1],xy[0],0)
+
+      # Obtain disturbance based on "search_angle"
+      limit = helpers.ratio(BConstants.beam['direction_tolerance_angle'])
+      scale = random.uniform(-1 * limit,limit)
+      disturbance = helpers.scale(scale,xy_perp)
+
+      return helpers.sum_vectors(disturbance,xy)
+
+  def get_angles(self,support = True):
+    if support:
+      mini,maxi = (self.get_angle('support_angle_min'), self.get_angle(
+        'support_angle_max'))
+    else:
+      mini,maxi = (self.get_angle('min_angle_constraint'), self.get_angle(
+        'max_angle_constraint'))
+
+    return mini,maxi
+
+  def get_angle(self,string):
+    '''
+    Returns the appropriate ratios for support beam construction
+    '''
+    angle = BConstants.beam[string]
+    return angle
+
+  def move(self, direction, beam):
+    '''
+    Moves the robot in direction passed in and onto the beam specified
+    '''
+    length = helpers.length(direction)
+
+    # The direction is smaller than the determined step, so move exactly by 
+    # direction
+    if length < self.Body.step:
+      new_location = helpers.sum_vectors(self.Body.location, direction)
+      self.Body.change_location_structure(new_location, beam)
+
+      # call do_action again since we still have some distance left, and update
+      # step to reflect how much distance is left to cover
+      self.Body.step = self.Body.step - length
+
+      # Reset step in preparation for next timestep
+      if helpers.compare(self.Body.step,0):
+        self.Body.step == ROBOT['step_length']
+
+      # We still have steps to go, so run an analysis if necessary
+      elif self.Body.beam is not None:
+        # Run analysis before deciding to get the next direction
+        if not self.Body.model.GetModelIsLocked() and self.need_data():
+          errors = helpers.run_analysis(self.Body.model)
+          if errors != '':
+            # pdb.set_trace()
+            pass
+
+        # Get next direction
+        self.next_direction_info = self.get_direction()
+
+        # Unlock the results so that we can actually move
+        if self.Body.model.GetModelIsLocked():
+          self.Body.model.SetModelIsLocked(False)
+
+        # Move
+        self.do_action()
+
+      # We climbed off
+      else:
+        assert not self.Body.model.GetModelIsLocked()
+        
+        self.do_action()
+
+    # The direction is larger than the usual step, so move only the step in the 
+    # specified direction
+    else:
+      movement = helpers.scale(self.Body.step, helpers.make_unit(direction))
+      new_location = helpers.sum_vectors(self.Body.location, movement)
+      self.Body.change_location(new_location, beam)
+
+  def get_direction(self):
+    ''' 
+    Figures out which direction to move in. This means that if the robot is 
+    carrying a beam, it wants to move upwards. If it is not, it wants to move 
+    downwards. So basically the direction is picked by filtering by the 
+    z-component
+    '''
+    # Get all the possible directions, as normal
+    info = self.Body.get_directions_info()
+
+    # Filter out directions which are unfeasable if we have an analysis result
+    # available
+    if self.Body.model.GetModelIsLocked():
+      feasable_directions = self.filter_feasable(info['directions'])
+    else:
+      feasable_directions = info['directions']
+
+    # Now filter on based where you want to go
+    directions = self.filter_directions(feasable_directions)
+
+    # This will only occur if no direction takes us where we want to go. If 
+    # that's the case, then just a pick a random direction to go on and run the
+    # routine for when no directions are available.
+    if directions == {}:
+
+      # No direction takes us exactly in the way we want to go, so check if we
+      # might need to construct up or might want to repair
+      self.no_available_direction()
+
+      # Feasable is empty when our own beam is the one that doesn't support us
+      if feasable_directions != {}:
+        beam_name, direction = self.elect_direction(feasable_directions)
+
+      # Refilter original directions (to travel down)
+      else:
+        directions = self.filter_directions(info['directions'])
+
+        # We are on the structure
+        if directions != {}:
+          beam_name,direction = self.elect_direction(self.filter_directions(
+            info['directions']))
+
+        # This happens when we are climbing off the structure
+        else:
+          beam_name, direction = self.elect_direction(info['directions'])
+
+    # Otherwise we do have a set of directions taking us in the right place, so 
+    # randomly pick any of them. We will change this later based on the analysis
+    else:
+      beam_name, direction = self.elect_direction(directions)
+
+    return {  'beam'      : info['box'][beam_name],
+              'direction' : direction }
+
+  def filter_feasable(self,dirs):
+    '''
+    Filters the set of dirs passed in to check that the beam can support a robot
+    + beam load if the robot were to walk in the specified direction to the
+    very tip of the beam.
+    This function is only ever called if an analysis model exists.
+
+    Additionally, this function stores information on the beams that need to be 
+    repaired. This is stored in self.Body.addToMemory('broken'], which is originally set
+    to none.
+    '''
+    # Sanity check
+    assert self.Body.model.GetModelIsLocked()
+
+    results = {}
+    # If at a joint, cycle through possible directions and check that the beams
+    # meet the joint_limit. If they do, keep them. If not, discard them.
+    if self.Body.atJoint():
+      
+      # Cycle through directions
+      for name, directions in dirs.items():
+
+        # If the name is our beam and we can read moment from beams, 
+        # do a structural check instead of a joint check
+        if (ROBOT['read_beam'] and 
+          ((self.Body.beam.name == name and self.beam_check(name)) or 
+          (self.Body.beam.name != name and self.joint_check(name)))):
+          results[name] = directions
+
+        # Otherwise, do a joint_check for all beams
+        elif self.joint_check(name):
+          results[name] = directions
+
+        # It joint check failed, only keep down directions
+        else:
+
+          # Keep only the directions that take us down
+          new_directions = ([direction for direction in directions if 
+            helpers.compare(direction[2],0) or direction[2] < 0])
+          if len(new_directions) > 0:
+            results[name] = new_directions
+
+          # Add beam to broken
+          beam = self.Body.structure.get_beam(name,self.Body.location)
+          if not any(beam in broken for broken in self.Body.readFromMemory('broken')):
+            moment = self.Body.get_moment(name)
+            lst = self.Body.readFromMemory('broken')
+            lst.append((beam,moment))
+            self.Body.addToMemory('broken', lst)
+
+    # Not at joint, and can read beam moments
+    elif ROBOT['read_beam']:
+
+      # Sanity check (there should only be one beam in the set of directions if
+      # We are not at a joint)
+      assert len(dirs) == 1
+
+      # Check beam
+      if self.beam_check(self.Body.beam.name):
+        results = dirs
+
+      # Add the beam to the broken
+      else:
+
+        # Keep only the directions that take us down
+        for name,directions in dirs.items():
+          new_directions = ([direction for direction in directions if 
+            helpers.compare(direction[2],0) or direction[2] < 0])
+          if len(new_directions) > 0:
+            results[name] = new_directions
+
+        # Beam is not already in broken
+        if not any(self.Body.beam in broken for broken in self.Body.readFromMemory('broken')):
+          moment = self.Body.get_moment(name)
+          lst = self.Body.readFromMemory('broken')
+          lst.append((self.Body.beam,moment))
+          self.Body.addToMemory('broken', lst)
+
+    # We aren't reading beams, so we keep all the directions if not at a joint
+    else:
+      results = dirs
+
+    return results
+
+  def joint_check(self,name):
+    moment = self.get_moment(name)
+    return moment < BConstants.beam['joint_limit']
+
+  def elect_direction(self,directions):
+    '''
+    Takes the filtered directions and elects the appropriate one. This function
+    takes care of continuing in a specific direction whenever possible.
+    '''
+    def next_dict(item,dictionary):
+      '''
+      Returns whether or not the value (a direction vector) is found inside of 
+      dictionary (ie, looks for parallel directions)
+      '''
+      key, value = item
+      temp = {}
+      for test_key,test_values in dictionary.items():
+
+        # Keys are the same, vectors are parallel (point in same dir too)
+        if key == test_key:
+          for test_value in test_values:
+            if (helpers.parallel(value,test_value) and 
+              helpers.dot(value,test_value) > 0):
+              if test_key in temp:
+                temp[test_key].append(test_value)
+              else:
+                temp[test_key] = [test_value]
+      
+      # No values are parallel, so return None
+      if temp == {}:
+        return None
+
+      # Pick a direction from those that are parallel (so we continue moving)
+      # in our preferred direction
+      else:
+        return self.pick_direction(temp)
+
+    # We are not at a joint and we have a previous direction - keep direction
+    if not self.Body.atJoint() and self.Body.readFromMemory('previous_direction') is not None:
+
+      # Pull a direction parallel to our current from the set of directions
+      direction_info = next_dict(self.Body.readFromMemory('previous_direction'),directions)
+
+      if direction_info is not None:
+        return direction_info
+
+    # If we get to this point, either we are at a joint, we don't have a 
+    # previous direction, or that previous direction is no longer acceptable
+    return self.pick_direction(directions)

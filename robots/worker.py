@@ -6,6 +6,7 @@ from Behaviour import constants as BConstants
 
 from variables import ROBOT
 
+# DONE (almost)
 class Worker(Builder):
   def __init__(self,name,structure,location,program):
     super(Worker,self).__init__(name,structure,location,program)
@@ -24,9 +25,11 @@ class Worker(Builder):
     # Move further in the y-direction?
     self.memory['pos_y'] = None
 
+# DONE
   def current_state(self):
     return super(Worker,self).current_state()
 
+# DONE
   def at_top(self):
     '''
     Returns if we really are at the top
@@ -64,6 +67,7 @@ class Worker(Builder):
 
     return False
 
+# DONE (RENAMED - A BIT CONFUSION BUT MOVED)
   def discard_beams(self,num = 1):
     '''
     Adding ability to change memory
@@ -74,6 +78,7 @@ class Worker(Builder):
     if self.num_beams == 0:
       self.memory['pos_z'] = False
 
+# DONE (RENAMED - A BIT CONFUSING, BUT MOVED)
   def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
     Adding ability to change memory
@@ -83,12 +88,14 @@ class Worker(Builder):
     # Move up when you pick one up
     self.memory['pos_z'] = True
 
+# DONE
   def repairing(self):
     '''
     Place holder for later access.
     '''
     pass
 
+#DONE
   def filter_directions(self,dirs):
     '''
     Filters the available directions and returns those that move us in the 
@@ -118,6 +125,7 @@ class Worker(Builder):
 
     return directions
 
+# DONE
   def pick_direction(self,directions):
     '''
     Overwritting to pick the direction of steepest descent when climbing down
@@ -177,6 +185,7 @@ class Worker(Builder):
     else:
       super(Worker,self).no_available_direction()
 
+#DONE
   def basic_rules(self):
     '''
     Decides whether to build or not. Uses some relatively simple rules to decide.
@@ -202,6 +211,7 @@ class Worker(Builder):
       self.memory['built'] = False
       return False
 
+#DONE
   def local_rules(self):
     '''
     Uses the information from SAP2000 to decide what needs to be done. This 

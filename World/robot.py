@@ -662,58 +662,6 @@ Decision Making?
                   'distance' : distances[name],
                   'direction' : vectors[name]}
 
-  def move(self, direction, beam):
-    '''
-    Moves the robot in direction passed in and onto the beam specified
-    '''
-    length = helpers.length(direction)
-
-    # The direction is smaller than the determined step, so move exactly by 
-    # direction
-    if length < self.step:
-      new_location = helpers.sum_vectors(self.location, direction)
-      self.change_location_structure(new_location, beam)
-
-      # call do_action again since we still have some distance left, and update
-      # step to reflect how much distance is left to cover
-      self.step = self.step - length
-
-      # Reset step in preparation for next timestep
-      if helpers.compare(self.step,0):
-        self.step == ROBOT['step_length']
-
-      # We still have steps to go, so run an analysis if necessary
-      elif self.beam is not None:
-        # Run analysis before deciding to get the next direction
-        if not self.model.GetModelIsLocked() and self.need_data():
-          errors = helpers.run_analysis(self.model)
-          if errors != '':
-            # pdb.set_trace()
-            pass
-
-        # Get next direction
-        self.next_direction_info = self.get_direction()
-
-        # Unlock the results so that we can actually move
-        if self.model.GetModelIsLocked():
-          self.model.SetModelIsLocked(False)
-
-        # Move
-        self.do_action()
-
-      # We climbed off
-      else:
-        assert not self.model.GetModelIsLocked()
-        
-        self.do_action()
-
-    # The direction is larger than the usual step, so move only the step in the 
-    # specified direction
-    else:
-      movement = helpers.scale(self.step, helpers.make_unit(direction))
-      new_location = helpers.sum_vectors(self.location, movement)
-      self.change_location(new_location, beam)
-
 
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Action functions which affect the structure.
@@ -819,107 +767,6 @@ Decision Making?
       print("Did not add beam to structure.")
       return False
 
-  def build(self):
-    '''
-    This functions sets down a beam. This means it "wiggles" it around in the 
-    air until it finds a connection (programatically, it just finds the 
-    connection which makes the smallest angle). Returns false if something went 
-    wrong, true otherwise.
-    '''
-    def check(i,j):
-      '''
-      Checks the endpoints and returns two that don't already exist in the 
-      structure. If they do already exist, then it returns two endpoints that 
-      don't. It does this by changing the j-endpoint. This function also takes 
-      into account making sure that the returned value is still within the 
-      robot's tendency to build up. (ie, it does not return a beam which would 
-      build below the limit angle_constraint)
-      '''
-      # There is already a beam here, so let's move our current beam slightly to
-      # some side
-      if not self.structure.available(i,j):
-
-        # Create a small disturbace
-        lim = BEAM['random']
-        f = random.uniform
-        disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
-
-        # find the new j-point for the beam
-        new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
-
-        return check(i,new_j)
-
-      else:
-
-        # Calculate the actual endpoint of the beam (now that we now direction 
-        # vector)
-        return (i,helpers.beam_endpoint(i,j))
-
-    # Sanitiy check
-    assert (self.num_beams > 0)
-
-    # Default pivot is our location
-    pivot = self.location
-
-    if self.beam is not None:
-
-      # Obtain any nearby joints, and insert the i/j-end if needed
-      all_joints = [coord for coord in self.beam.joints if not helpers.compare(
-        coord[2],0)]
-      if self.beam.endpoints.j not in all_joints and not helpers.compare(
-        self.beam.endpoints.j[2],0):
-        all_joints.append(self.beam.endpoints.j)
-      if self.beam.endpoints.i not in all_joints and not helpers.compare(
-        self.beam.endpoints.i[2],0):
-        all_joints.append(self.beam.endpoints.i)
-
-      # Find the nearest one
-      joint_coord, dist = min([(coord, helpers.distance(self.location,coord)) for coord in all_joints], key = lambda t: t[1])
-      
-      # If the nearest joint is within our error, then use it as the pivot
-      if dist <= BConstants.beam['joint_error']:
-        pivot = joint_coord
-
-    # Default vertical endpoint (the ratios are measured from the line created 
-    # by pivot -> vertical_endpoint)
-    vertical_endpoint = helpers.sum_vectors(pivot,helpers.scale(
-      BEAM['length'],
-      helpers.make_unit(BConstants.beam['vertical_dir_set'])))
-
-    # Get the ratios
-    sorted_angles = self.local_angles(pivot,vertical_endpoint)
-
-    # Find the most vertical position
-    final_coord = self.find_nearby_beam_coord(sorted_angles,pivot)
-
-    # Obtain the default endpoints
-    default_endpoint = self.get_default(final_coord,vertical_endpoint)
-    i, j = check(pivot, default_endpoint)
-
-    # Sanity check
-    assert helpers.compare(helpers.distance(i,j),BConstants.beam['length'])
-
-    return self.addbeam(i,j)
-
-  def find_nearby_beam_coord(self,sorted_angles,pivot):
-    '''
-    Returns the coordinate of a nearby, reachable beam which results in the
-    angle of construction with the most verticality
-    '''
-    # Limits
-    min_constraining_angle, max_constraining_angle = self.get_angles(False)
-    min_support_angle,max_support_angle = self.get_angles()
-
-    # Cycle through the sorted angles until we find the right coordinate to build
-    for coord, angle in sorted_angles:
-
-      # If the smallest angle is larger than what we've specified as the limit, 
-      # but larger than our tolerence, then build
-      if min_constraining_angle <= angle and angle <= max_constraining_angle:
-        return coord
-
-    return None
-
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Actions performable by the robot body
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -942,3 +789,96 @@ Decision Making?
     '''
     self.num_beams = self.num_beams - num
     self.weight = self.weight - MATERIAL['beam_load'] * num
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Helper functions for construction
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  def local_angles(self,pivot,endpoint):
+    '''
+    Calculates the ratios of a beam if it were to intersect nearby beams. 
+    Utilizes the line defined by pivot -> endpoint as the base for the ratios 
+    '''
+    # We place it here in order to have access to the pivot and to the vertical 
+    # point
+
+    def add_angles(box,dictionary):
+      for name, beam in box.items():
+
+        # Ignore the beam you're on.
+        if self.beam == None or self.beam.name != name:
+
+          # Base vector (from which angles are measured)
+          base_vector = helpers.make_vector(pivot,endpoint)
+
+          # Get the closest points between the beam we want to construct and the
+          # current beam
+          points = helpers.closest_points(beam.endpoints,(pivot,endpoint))
+          if points != None:
+
+            # Endpoints (e1 is on a vertical beam, e2 is on the tilted one)
+            e1,e2 = points
+
+            # If we can actually reach the second point from vertical
+            if (not helpers.compare(helpers.distance(pivot,e2),0) and 
+              helpers.distance(pivot,e2) <= BEAM['length']):
+
+              # Distance between the two endpoints
+              dist = helpers.distance(e1,e2)
+
+              # Vector of beam we want to construct and angle from base_vector
+              construction_vector = helpers.make_vector(pivot,e2)
+              angle = helpers.smallest_angle(base_vector,construction_vector)
+
+              # Add to dictionary
+              if e2 in dictionary:
+                assert helpers.compare(dictionary[e2],angle)
+              else:
+                dictionary[e2] = angle
+
+          # Get the points at which the beam intersects the sphere created by 
+          # the vertical beam      
+          sphere_points = helpers.sphere_intersection(beam.endpoints,pivot,
+            BEAM['length'])
+          if sphere_points != None:
+
+            # Cycle through intersection points (really, should be two, though 
+            # it is possible for it to be one, in
+            # which case, we would have already taken care of this). Either way,
+            # we just cycle
+            for point in sphere_points:
+
+              # Vector to the beam we want to construct
+              construction_vector = helpers.make_vector(pivot,point)
+              angle = helpers.smallest_angle(base_vector,construction_vector)
+
+              # Add to dictionary
+              if point in dictionary:
+                assert helpers.compare(dictionary[point],angle)
+              else:
+                dictionary[point] = angle
+
+          # Endpoints are also included
+          for e in beam.endpoints:
+            v = helpers.make_vector(pivot,e)
+            l = helpers.length(v)
+            if (e not in dictionary and not helpers.compare(l,0) and (
+              helpers.compare(l,BEAM['length']) or l < BEAM['length'])):
+              angle = helpers.smallest_angle(base_vector,v)
+              dictionary[e] = angle
+
+      return dictionary
+
+    # get all beams nearby (ie, all the beams in the current box and possible 
+    # those further above)
+    boxes = self.structure.get_boxes(self.location)
+    '''
+    The dictionary is indexed by the point, and each point is 
+    associated with one angle. The angle is measured from the pivot->endpoint
+    line passed into the function.
+    '''
+    angles = {}
+    for box in boxes:
+      angles = add_angles(box,angles)
+
+    return sorted(angles.items(), key = operator.itemgetter(1))
+

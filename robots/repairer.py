@@ -7,6 +7,7 @@ from construction import CONSTRUCTION
 
 from Behaviour import constants as BConstants
 
+#DONE
 class DumbRepairer(Worker):
   def __init__(self,name,structure,location,program):
     super(DumbRepairer,self).__init__(name,structure,location,program)
@@ -49,6 +50,7 @@ class DumbRepairer(Worker):
       self.memory['pos_z'] = False
       self.memory['dir_priority'] = [1,1,0]
 
+# DONE
   def construction_mode(self):
     '''
     Resets the robot to go back into construction mode (leaves some variables
@@ -64,6 +66,7 @@ class DumbRepairer(Worker):
     self.repair_mode = False
     self.search_mode = False
 
+# DONE
   def add_support_mode(self):
     '''
     Sets up the construction of a support beam
@@ -77,6 +80,7 @@ class DumbRepairer(Worker):
     self.memory['new_beam_ground_steps'] = 1
     self.memory['construct_support'] = True
 
+# DONE
   def ground_support(self):
     '''
     Looks for a support from the ground
@@ -88,6 +92,7 @@ class DumbRepairer(Worker):
 
     self.memory['new_beam_ground_steps'] -= 1
 
+# DONE
   def find_support(self):
     '''
     Looks for a support beam on the structure
@@ -100,7 +105,7 @@ class DumbRepairer(Worker):
     self.memory['new_beam_steps'] -= 1
     self.memory['new_beam_ground_steps'] -= 1
 
-
+# DONE
   def decide(self):
     '''
     Overwritting to allow for repair work to take place
@@ -152,6 +157,7 @@ class DumbRepairer(Worker):
     else:
       super(DumbRepairer,self).decide()
 
+# DONE
   def no_available_direction(self):
     '''
     No direction takes us where we want to go, so check to see if we need to 
@@ -182,6 +188,7 @@ class DumbRepairer(Worker):
       # Do parent's work
       super(DumbRepairer,self).no_available_direction()
 
+# DONE
   def get_preferred_direction(self,beam):
     '''
     Returns the preferred direction - this is the direction towards which the 
@@ -207,6 +214,7 @@ class DumbRepairer(Worker):
     else:
       return None
 
+# DONE
   def get_preferred_ground_direction(self,direction):
     '''
     Returns the direction of preffered travel if we reach the ground when repairing

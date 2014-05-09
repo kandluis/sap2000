@@ -108,6 +108,9 @@ PROGRAM = {
 
   # The number of timesteps before an analysis model is saved.
   'analysis_timesteps' : 200
+
+  # the output folder for saving files
+  'root_folder' : 'C:\SAP 2000\\'
 }
 
 
@@ -126,6 +129,8 @@ VISUALIZATION = {
   # should the visualization record data for deflection?
   'deflection' : True,
 } 
+
+# This stores information for the simulation - for example, output folder
 
 ######################################################
 

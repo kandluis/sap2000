@@ -257,8 +257,8 @@ class Simulation(object):
       self.SapProgram.reset(template=self.template)
 
       # Creating new SAP Files
-      outputfolder = ('C:\SAP 2000\\' +strftime("%b-%d") + "\\" + 
-        strftime("%H_%M_%S") + comment + "\\")
+      outputfolder = (PROGRAM['root_folder'] + "\\" strftime("%Y-%b") + "\\" +
+        strftime("%d") + "\\" + strftime("%H_%M_%S") + comment + "\\")
       outputfilename = "tower.sdb"
       outputfile = outputfolder + outputfilename
 
