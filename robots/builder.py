@@ -141,6 +141,7 @@ class Builder(Movable):
     return helpers.within(CONSTRUCTION['corner'], 
       CONSTRUCTION['size'], self.location)
 
+# DONE
   def pre_decision(self):
     '''
     Takes care of resetting appropriate values.
@@ -150,6 +151,7 @@ class Builder(Movable):
     self.step = ROBOT['step_length']
     self.memory['broken'] = []
 
+# DONE
   # Model needs to have been analyzed before calling THIS function
   def decide(self):
     '''

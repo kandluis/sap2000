@@ -1,3 +1,5 @@
+from Helpers.errors import MemoryError
+
 # Basic class for any automatic object that needs access to the SAP program
 class Body(object):
   def __init__(self,name,program,location,program):
@@ -48,7 +50,8 @@ class Body(object):
     '''''''''''''''''''''''''''''''''
     # Contains Errors from SAP 2000
     self.error_data = ''
-    self.repar_data = ''
+    self.repair_data = ''
+    self.read_moment = 0
 
 
 '''
@@ -101,6 +104,7 @@ Decision Making?
               'weight'            : self.weight,
               'next_direction'    : self.next_direction_info,
               'num_beams'         : self.num_beams,
+              'read_moment'       : self.read_moment,
               'memory'            : memory }
 
     return state
@@ -217,13 +221,37 @@ Decision Making?
 
     return False
 
-  def addToMemory(self,key,value):
+  def addToMemory(self,key,value,mult=False):
     '''
     Adds into the robot memory the information specified by value accessible 
-    throught the key
+    throught the key. If the key already exists, it simply replaces the value.
     '''
     self.memory.update({key : value})
     return True
+
+  def popFromMemory(self,key):
+    '''
+    Returns the value associated with the key from memory and removes it from 
+    memory. If no value is associated with key, raises a MemoryError(key)
+    '''
+    try:
+      val = self.memory[key]
+      del(self.memory[key])
+      return val
+    except KeyError:
+      raise MemoryError(key)
+
+
+  def readFromMemory(self,key):
+    '''
+    Returns the value associated with key from memory. If no value is associated
+    with key, raises a MemoryError(key)
+    '''
+    try:
+      return self.memory[key]
+    except KeyError:
+      raise MemoryError(key)
+
 
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Mobility functions for the robot body.
@@ -350,8 +378,11 @@ Decision Making?
         # If we're at a joint to another beam
         if helpers.compare(helpers.distance(self.location,joint),0):
           return True
-
-    return False
+      
+      return helpers.compare(self.location[2],0)
+    
+    else:
+      return False
 
   def getMoment(self,name):
     return self.get_moment
@@ -365,6 +396,9 @@ Decision Making?
 
     # Find magnitude
     total = math.sqrt(m22**2 + m33**2)
+
+    # Store it to read out every timestep
+    self.read_moment = total
 
     return total
   def getMomentMagnitudes(self,name,pivot=None):
@@ -908,17 +942,3 @@ Decision Making?
     '''
     self.num_beams = self.num_beams - num
     self.weight = self.weight - MATERIAL['beam_load'] * num
-
-
-
-  def decide(self):
-    '''
-    Makes decisions based on available data
-    '''
-    pass
-
-  def do_action(self):
-    '''
-    Acts based on decisions made
-    '''
-    pass

@@ -3,7 +3,7 @@ from visualization import Visualization
 
 # Variables (see Documentation for description)
 view = True
-seed = "F@st1#lAn3-new"
+seed = "F@st1#lAn3-three"
 robot_number = 1
 maxsteps = 10000
 

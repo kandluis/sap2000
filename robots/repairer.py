@@ -267,6 +267,7 @@ class DumbRepairer(Worker):
     self.repair_mode = True
     self.search_mode = True
 
+# DONE
   def local_rules(self):
     '''
     Overriding so we can build support beam
@@ -287,6 +288,7 @@ class Repairer(DumbRepairer):
   Fixes the way that beams are constructed. This is the class where we clear up
   behavioural bugs
   '''
+#DONE
   def __init__(self,name,structure,location,program):
     super(Repairer,self).__init__(name,structure,location,program)
 
@@ -302,6 +304,7 @@ class Repairer(DumbRepairer):
 
     super(Repairer,self).pickup_beams()
 
+# DONE
   def support_xy_direction(self):
     '''
     Improves the construction direction so that we take into account the angle
@@ -366,6 +369,7 @@ class Repairer(DumbRepairer):
         else:
           return super(Repairer,self).support_xy_direction()
 
+# DONE
   def support_vertical_change(self):
     # Get vertical vector 
     change_vector = super(Repairer,self).support_vertical_change()
@@ -394,6 +398,7 @@ class Repairer(DumbRepairer):
 
       return super(Repairer,self).support_vertical_change(angle=vertical_angle)
 
+# DONE
   def support_beam_endpoint(self):
     '''
     Returns the endpoint for a support beam
@@ -472,6 +477,7 @@ class Repairer(DumbRepairer):
       # Otherwise, do default behaviour
       return super(Repairer,self).support_beam_endpoint()
 
+# DONE
   def remove_specific(self,dirs):
     '''
     We don't want to move UP along our own beam when we are repairing and at a
