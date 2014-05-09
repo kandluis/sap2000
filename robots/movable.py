@@ -422,7 +422,7 @@ class DumbMovable(Automaton):
     else:
       self.ground_direction = random_direction()
       return self.ground_direction
-#DONE
+#DONE (for SMART REPAIRER)
   def wander(self):
     '''
     When a robot is not on a structure, it wanders around randomly. The 
@@ -463,6 +463,7 @@ class DumbMovable(Automaton):
 
         # Move
         self.change_location_local(new_location)
+
 #DONE
   def move(self, direction, beam):
     '''
@@ -515,6 +516,7 @@ class DumbMovable(Automaton):
       movement = helpers.scale(self.step, helpers.make_unit(direction))
       new_location = helpers.sum_vectors(self.location, movement)
       self.change_location(new_location, beam)
+
 #DONE
   def get_directions_info(self):
     '''
@@ -552,6 +554,7 @@ class DumbMovable(Automaton):
     return {  'box'         : box,
               'directions'  : directions_info }
 
+# DONE FOR SMARTREPAIRER
   def get_direction(self):
     ''' 
     Figures out which direction to move in. In this class, it simply picks a 

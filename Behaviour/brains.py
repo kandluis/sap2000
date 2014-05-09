@@ -417,7 +417,16 @@ class Brain(BaseBrain):
 
     # Move around
     else:
-      super(Builder,self).do_action()
+      if self.Body.beam is not None:
+      assert self.Body.readFromMemory('next_direction_info') != None
+      self.move(self.Body.readFromMemory('next_direction_info')['direction'],
+        self.Body.readFromMemory('next_direction_info')['beam'])
+      self.Body.addToMemory('next_direction_info', None)
+      self.next_direction_info = None
+
+    # We have climbed off, so wander about 
+    else:
+      self.wander()
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Construction Decision Helper functions
