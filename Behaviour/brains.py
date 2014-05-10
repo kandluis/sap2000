@@ -111,6 +111,13 @@ class Brain(BaseBrain):
     self.Body.addToMemory('search_mode', False)
     self.Body.addToMemory('repair_mode', False)
 
+    # The robots all initially move towards the centertower
+    self.Body.addToMemory('ground_direction', helpers.make_vector(location,
+      CONSTRUCTION['corner']))
+
+    # The direction in which we should move
+    self.Body.addToMemory('next_direction_info', None)
+
   def performDecision(self):
     self.decide()
 
@@ -178,7 +185,8 @@ class Brain(BaseBrain):
 
       # Movement decisions
       else:
-        super(Builder,self).decide()
+        self.pre_decision()
+        self.movable_decide()
 
 
   def beam_check(self,name):
@@ -422,7 +430,6 @@ class Brain(BaseBrain):
       self.move(self.Body.readFromMemory('next_direction_info')['direction'],
         self.Body.readFromMemory('next_direction_info')['beam'])
       self.Body.addToMemory('next_direction_info', None)
-      self.next_direction_info = None
 
     # We have climbed off, so wander about 
     else:

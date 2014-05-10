@@ -107,7 +107,7 @@ PROGRAM = {
     (MATERIAL['outside_diameter'] / 2),
 
   # The number of timesteps before an analysis model is saved.
-  'analysis_timesteps' : 200
+  'analysis_timesteps' : 200,
 
   # the output folder for saving files
   'root_folder' : 'C:\SAP 2000\\'

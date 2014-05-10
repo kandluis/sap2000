@@ -247,6 +247,9 @@ class Simulation(object):
     self.excel['header'] = []
     self.excel['data'] = [[]]
 
+  def makeOutputFolder(comment):
+    return (PROGRAM['root_folder'] + "\\" + strftime("%Y-%b") + "\\" +
+        strftime("%d") + "\\" + strftime("%H_%M_%S") + comment + "\\")
 
   def reset(self, comment = ""):
     '''
@@ -257,8 +260,7 @@ class Simulation(object):
       self.SapProgram.reset(template=self.template)
 
       # Creating new SAP Files
-      outputfolder = (PROGRAM['root_folder'] + "\\" strftime("%Y-%b") + "\\" +
-        strftime("%d") + "\\" + strftime("%H_%M_%S") + comment + "\\")
+      outputfolder = makeOutputFolder(comment)
       outputfilename = "tower.sdb"
       outputfile = outputfolder + outputfilename
 
@@ -293,8 +295,7 @@ class Simulation(object):
     if self.started:
       print("Simulation has already been started")
     else:
-      outputfolder = ('C:\SAP 2000\\' +strftime("%b-%d") + "\\" + 
-        strftime("%H_%M_%S") + comment + "\\")
+      outputfolder = makeOutputFolder(comment)
       outputfilename = "tower.sdb"
       self.SapProgram, self.SapModel = commandline.run(model,
         outputfolder + outputfilename)
