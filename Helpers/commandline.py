@@ -3,13 +3,11 @@ Contains code for a commandline interface for the Python Simulation
 '''
 
 # default python libraries
-import getopt, sys
+import getopt
+import sys
 
 # import custom filesystem library - access input and output for SAP 2000
-try:
-  from filesystem import io
-except: 
-  from Helpers.filesystem import io
+from Helpers.filesystem import io
 
 def run(input = "", output = ""):
 

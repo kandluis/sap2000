@@ -1,9 +1,11 @@
-from Helpers import helpers
-from robots.automaton import Automaton
-from SAP2000.constants import EOBJECT_TYPES
-import pdb, random
+# Python default libraries
+import random
 
+# Local imports
+from Helpers import helpers
+# constants for simulation
 from variables import BEAM, ROBOT,PROGRAM, VISUALIZATION
+# constants for construction
 from construction import CONSTRUCTION
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

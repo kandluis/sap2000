@@ -1,19 +1,18 @@
 '''''''''''''''''''''''''''''''''
-
+Files for dealing with input/output in the simulation
 '''''''''''''''''''''''''''''''''
+# local python files
+import os
+
 
 # importing SAP API
 from SAP2000 import sap2000
 from SAP2000.constants import UNITS
 
 # importing helper function for filesystem input/output
-try:
-  from helpers import path_exists
-except:
-  from Helpers.helpers import path_exists
+from Helpers.helpers import path_exists
 
-# default Python library
-import os
+# program constants
 from variables import PROGRAM
 
 def io(inputfile = "", outputfile = "C:\SAP 2000\output.sdb"):

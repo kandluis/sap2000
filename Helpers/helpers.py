@@ -1,29 +1,16 @@
+# Python default libraries
+import errno,
+import math
+import os
+import random
+
 # access to Load Patterns Mapping
 from SAP2000.constants import LOAD_PATTERN_TYPES
-
 # linear algebra package
-try:
-  from algebra import *
-except:
-  from Helpers.algebra import *
-
-# Python default libraries
-import errno, math, os, pdb, random
+from Helpers.algebra import *
+# import constants
 from variables import BEAM, PROGRAM
 
-from Behaviour import constants as BConstants
-
-######### THIS IS BEING MOVED OUTTTTTAAA HERE
-def is_vertical(v):
-  '''
-  Returns whether we consider the vector v to be vertical. This error angle is
-  defined in variables.py
-  '''
-  angle = smallest_angle(v,(0,0,1))
-  angle = angle if angle <= 90 else 180 - angle
-
-  return angle <= BConstants.beam['verticality_angle']
-##########
 
 ########### THIS IS IS TO BE MOVED IN
 def non_zero_xydirection():
@@ -43,6 +30,16 @@ def non_zero_xydirection():
   # All are zero - try again
   else:
     return non_zero_xydirection()
+
+def is_vertical(v):
+  '''
+  Returns whether we consider the vector v to be vertical. This error angle is
+  defined in variables.py
+  '''
+  angle = smallest_angle(v,(0,0,1))
+  angle = angle if angle <= 90 else 180 - angle
+
+  return angle <= BEAM['verticality_angle']
 ###########
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

@@ -1,3 +1,5 @@
+
+# constants used to calculate behaviour parameters
 from variables import BEAM,ROBOT,MATERIAL, PROGRAM
 
 joint_limit = BEAM['length'] * MATERIAL['beam_load'] / 2
@@ -68,10 +70,6 @@ beam = {
   # This is how far a support beam construction from our current beam must
   # occur in order for the beam to be considered acceptable
   'support_angle_difference' : 10,
-
-  # If a beam is within this angle from vertical, it is considered vertical for 
-  # the purpose of determining the direction we wish to travel in
-  'verticality_angle'        :  5,
 
   # If a direction is within this angle of the direction of the beam we want to
   # repair, then we consider it a preferred location.

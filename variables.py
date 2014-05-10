@@ -52,6 +52,10 @@ ROBOT = {
 BEAM = {
   # Length of each beam (in the units specified by program_units)
   'length' : 120, # 10ft or 120in
+
+  # If a beam is within this angle from vertical, it is considered vertical for 
+  # the purpose of determining the direction we wish to travel in
+  'verticality_angle' :  5
 }
 
 BEAM.update({
