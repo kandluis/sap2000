@@ -1,7 +1,7 @@
 # Python default libraries
 import operator
 import math
-from abc import ABCMeta, abstractmetho
+from abc import ABCMeta, abstractmethod
 
 # import errors
 from Helpers.errors import InvalidMemory
@@ -99,7 +99,7 @@ class BaseBody(metaclass=ABCMeta):
     pass
 
   @abstractmethod
-  def discardBeam(self,num=1):
+  def discardBeams(self,num=1):
     pass
 
   @abstractmethod

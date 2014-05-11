@@ -53,7 +53,7 @@ BEAM = {
 
 BEAM.update({
   # This dictates the maximum randomness when setting a new beam
-  'random' : BEAM['length'] / 10,
+  'random' : BEAM['length'] / 25,
 
   # percent of randomness for the beam
   'random_percentage' : 0.33
