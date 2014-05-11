@@ -11,14 +11,13 @@ Importing Necessary Modules.
   See the OAPI for SAP from more clarification, though most variables are self
   explanatory. 
 '''
-import win32com.client as win32
-try:
-  from constants import UNITS
-except:
-  from SAP2000.constants import UNITS
-
 # allows easy creation of Endpoints and Coordinates data type
 from collections import namedtuple
+
+# access to unit mappings
+from SAP2000.constants import UNITS
+
+
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Base Structure for SAP Element API access. This is the base class for wrappers

@@ -1,12 +1,16 @@
+# import helper functions
 from Helpers import helpers
-from visual import *
 
+# import brain module, we need it to add into the robot body when making robots
 from Behaviour import brains as Brains
 from World import robot as Robot
 
+# import construction constants and robot/visualization constants
 from construction import HOME
 from variables import ROBOT, VISUALIZATION
 
+# for visualization
+import visual
 
 class SmartSwarm(object):
   def __init__(self,size, structure, program):
@@ -53,16 +57,20 @@ class SmartSwarm(object):
   def decide(self):
     # Tell each robot to make the decion
     for repairer in self.repairers:
-      self.repairers[repairer].decide()
+      self.repairers[repairer].performDecision()
 
       # Add location data for visualization of simulation
-      loc = self.repairers[repairer].get_true_location()
+      loc = self.repairers[repairer].Body.get_true_location()
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
       self.visualization_data += "{}:{}<>".format(repairer,str(
         helpers.round_tuple(location,3)))
 
       # Get color data based on what the robot is doing
-      color = (1,0,1) if not self.repairers[repairer].repair_mode else (0,1,0)
+      try:
+        color = (1,0,1) if not self.repairers[repairer].Body.readFromMemory('repair_mode') else (0,1,0)
+      except:
+        color = (0,1,0)\
+
       self.color_data += "{}:{}<>".format(repairer,str(color))
 
     self.visualization_data += "\n"
@@ -76,24 +84,24 @@ class SmartSwarm(object):
   def get_information(self):
     information = {}
     for name, repairer in self.repairers.items():
-      information[name] = repairer.current_state()
+      information[name] = repairer.Body.current_state()
 
     return information
 
   def get_errors(self):
     data = ''
     for name,repairer in self.repairers.items():
-      if repairer.error_data != '':
-        data += "{}\n".format(repairer.error_data)
-        repairer.error_data = ''
+      if repairer.Body.error_data != '':
+        data += "{}\n".format(repairer.Body.error_data)
+        repairer.Body.error_data = ''
     return data
 
   def get_repair_data(self):
     data = ''
     for name,repairer in self.repairers.items():
-      if repairer.repair_data != '':
-        data += "{},".format(repairer.repair_data)
-        repairer.repair_data = ''
+      if repairer.Body.repair_data != '':
+        data += "{},".format(repairer.Body.repair_data)
+        repairer.Body.repair_data = ''
     return data
 
   def show(self):
@@ -104,14 +112,14 @@ class SmartSwarm(object):
     # Cycle through repairers
     for smartrepairer_name, repairer in self.repairers.items():
       # If model exists, move it to new location
-      if repairer.simulation_model is not None:
-        repairer.simulation_model.pos = repairer.location
+      if repairer.Body.simulation_model is not None:
+        repairer.Body.simulation_model.pos = repairer.Body.location
     
       # Otherwise create a new model for the robot at the current location
       else:
-        repairer.simulation_model = sphere(pos=repairer.location,
+        repairer.Body.simulation_model = visual.sphere(pos=repairer.Body.location,
           radius=VISUALIZATION['robot_size']/2,make_trail=False)
-        repairer.simulation_model.color = (1,0,1)
+        repairer.Body.simulation_model.color = (1,0,1)
 
   def reset(self):
     '''
@@ -130,8 +138,8 @@ class SmartSwarm(object):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if repairer.need_data() or (ROBOT['collect_data'] and 
-        repairer.beam is not None):
+      if repairer.Body.need_data() or (ROBOT['collect_data'] and 
+        repairer.Body.beam is not None):
         return True
 
     return False
@@ -154,7 +162,10 @@ class SmartSwarm(object):
     Deletes the specified robot from the swarm if it exists
     '''
     if name in self.repairers:
-      self.repairers[name].change_location(HOME['corner'], None)
+      # change robot location
+      self.repairers[name].Body.change_location(HOME['corner'], None)
+      # delete visualization
+      self.repairers[name].Body.simulation_model.visible = False
       del(self.repairers[name])
       self.size -= 1
       return True

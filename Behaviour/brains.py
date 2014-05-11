@@ -1,27 +1,29 @@
 # Python default libraries
 import random
+import math
+import pdb
+from abc import ABCMeta, abstractmethod
 
 # Local imports
 from Helpers import helpers
 # constants for simulation
 from variables import BEAM, ROBOT,PROGRAM, VISUALIZATION
 # constants for construction
-from construction import CONSTRUCTION
+from construction import HOME,CONSTRUCTION
+# constants for behaviour
+from Behaviour import constants as BConstants
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Implementation of different robot brains. 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-class BaseBrain(object):
+class BaseBrain(metaclass=ABCMeta):
+  @abstractmethod
   def __init__(self,Robot):
     # access to the robot body; functions are detailed in the documentation file
     # Code for the robot can be found in /World/robot.py
     self.Body = Robot
 
-
-class ExampleBrain(BaseBrain):
-  def __init__(self,Robot):
-    super(ExampleBrain,self).__init__(Robot)
-
+  @abstractmethod
   def performDecision(self):
     '''
     This function is called during the simulation before the act function is called.
@@ -32,6 +34,7 @@ class ExampleBrain(BaseBrain):
     '''
     pass
 
+  @abstractmethod
   def performAction(self):
     '''
     Perform the action that should occur after each timestep. This actions should be 
@@ -41,13 +44,14 @@ class ExampleBrain(BaseBrain):
     '''
     pass
 
+
 '''
 Example brain model. Does some simple movements on the structure to demonstrate
 how to access the API for the body. This implements a robot which moves.
 '''
 class MovingBrain(BaseBrain):
   def __init__(self,Robot):
-    super(ExampleBrain,self).__init__(Robot)
+    super(MovingBrain,self).__init__(Robot)
 
 
 '''
@@ -55,7 +59,7 @@ Currently used brain class object. This is the final implementation of the summe
 simulation that have here.
 '''
 class Brain(BaseBrain):
-  def __init__(selfm,Robot):
+  def __init__(self,Robot):
     super(Brain,self).__init__(Robot)
 
     # Setup default values for memory storage
@@ -92,6 +96,7 @@ class Brain(BaseBrain):
 
     # Starting defaults
     self.Body.addToMemory('built', False)
+    self.Body.addToMemory('constructed', 0)
 
     # Keeps track of the direction we last moved in.
     self.Body.addToMemory('previous_direction', None)
@@ -114,16 +119,23 @@ class Brain(BaseBrain):
     self.Body.addToMemory('repair_mode', False)
 
     # The robots all initially move towards the centertower
-    self.Body.addToMemory('ground_direction', helpers.make_vector(location,
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
       CONSTRUCTION['corner']))
 
     # The direction in which we should move
     self.Body.addToMemory('next_direction_info', None)
 
+    # The robots all initially move towards the centertower
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
+      CONSTRUCTION['corner']))
+
+
   def performDecision(self):
+    #pdb.set_trace()
     self.decide()
 
   def performAction(self):
+    #pdb.set_trace()
     self.do_action()
 
   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -133,7 +145,8 @@ class Brain(BaseBrain):
     '''
     Overwritting to allow for repair work to take place
     '''
-    if self.Body.readFromMemory('search_mode') and self.readFromMemory('repair_mode'):
+    #pdb.set_trace()
+    if self.Body.readFromMemory('search_mode') and self.Body.readFromMemory('repair_mode'):
       self.pre_decision()
 
       # We have moved off the structure entirely, so wander
@@ -145,11 +158,11 @@ class Brain(BaseBrain):
         self.Body.readFromMemory('search_mode') and self.Body.readFromMemory('broken_beam_name') != ''):
 
         # Remember the beam we moved onto right after the broken one
-        if self.Body.reafFromMemory('previous_beam') is None:
+        if self.Body.readFromMemory('previous_beam') is None:
           self.Body.addToMemory('previous_beam',self.Body.beam.name)
 
         # We have found a support beam, so return to construct mode (the support beam is vertical)
-        if (self.Body.reafFromMemory('previous_beam') != self.Body.beam.name and (
+        if (self.Body.readFromMemory('previous_beam') != self.Body.beam.name and (
           self.Body.readFromMemory('previous_direction') is None or 
           self.Body.readFromMemory('previous_direction')[1][2] > 0 or helpers.compare(
             self.Body.readFromMemory('previous_direction')[1][2],0))):
@@ -170,7 +183,7 @@ class Brain(BaseBrain):
     
     # We found a support beam and are on it, planning on construction. If 
     # we reach the endpoint of the beam (the support beam), then construct.
-    elif self.readFromMemory('repair_mode'):
+    elif self.Body.readFromMemory('repair_mode'):
       if (helpers.compare(helpers.distance(self.Body.location,
           self.Body.beam.endpoints.j),self.Body.step / 2)):
         self.Body.addToMemory('start_contruction', True)
@@ -183,7 +196,7 @@ class Brain(BaseBrain):
       # If we decide to construct, then we store that fact in a bool so action 
       # knows to wiggle the beam
       if self.construct():
-        self.addToMemory('start_construction', True)
+        self.Body.addToMemory('start_construction', True)
 
       # Movement decisions
       else:
@@ -236,8 +249,8 @@ class Brain(BaseBrain):
     else:
 
       # Resetting to None if not in search_mode
-      groundirection = None if not self.Body.readFromMemory('search_mode')
-       else self.Body.readFromMemory('ground_direction')
+      groundirection = (None if not self.Body.readFromMemory('search_mode') 
+        else self.Body.readFromMemory('ground_direction'))
       self.Body.addToMemory('ground_direction', groundirection)
 
       return False
@@ -293,24 +306,18 @@ class Brain(BaseBrain):
       self.Body.addToMemory('ground_direction',random_direction())
       return self.Body.readFromMemory('ground_direction')
 
-  def discard_beams(self,num = 1):
-    '''
-    Adding ability to change memory
-    '''
-    self.Body.discard_beams(num)
-
-    # Move down
-    if self.Body.num_beams == 0:
-      self.Body.addToMemory('pos_z', False)
-
   def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
     Adding ability to change memory
     '''
     self.Body.pickup_beams(num)
 
+    # Set the direction towards the structure
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
+      CONSTRUCTION['center']))
+
     # Move up when you pick one up
-    self.addToMemory('pos_z', True)
+    self.Body.addToMemory('pos_z', True)
 
   def wander(self):
     '''    
@@ -330,8 +337,8 @@ class Brain(BaseBrain):
     # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.Body.num_beams == 0:
       vector = helpers.make_vector(self.Body.location,HOME['center'])
-      self.ground_direction = (vector if not helpers.compare(helpers.length(
-        vector),0) else helpers.non_zero_xydirection())
+      self.Body.addToMemory('ground_direction', (vector if not helpers.compare(helpers.length(
+        vector),0) else helpers.non_zero_xydirection())) 
 
     # Find nearby beams to climb on
     result = self.Body.ground()
@@ -353,14 +360,14 @@ class Brain(BaseBrain):
       if self.Body.num_beams > 0 and dist <= self.Body.step:
         # Set the ground direction to None (so we walk randomly if we do get off
         # the beam again)
-        self.addToMemory('ground_direction', None)
+        self.Body.addToMemory('ground_direction', None)
 
         # Then move on the beam
-        self.Body.move(direction, close_beam)
+        self.move(direction, close_beam)
 
       # If we can "detect" a beam, change the ground direction to approach it
       elif self.Body.num_beams > 0 and dist <= ROBOT['local_radius']:
-        self.addToMemory('ground_direction,' direction)
+        self.Body.addToMemory('ground_direction', direction)
         new_location = helpers.sum_vectors(self.Body.location, helpers.scale(
           self.Body.step,helpers.make_unit(direction)))
         self.Body.change_location_local(new_location)
@@ -426,8 +433,7 @@ class Brain(BaseBrain):
       self.Body.addToMemory('start_construction', False)
 
     # Move around
-    else:
-      if self.Body.beam is not None:
+    elif self.Body.beam is not None:
       assert self.Body.readFromMemory('next_direction_info') != None
       self.move(self.Body.readFromMemory('next_direction_info')['direction'],
         self.Body.readFromMemory('next_direction_info')['beam'])
@@ -437,9 +443,64 @@ class Brain(BaseBrain):
     else:
       self.wander()
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Construction Decision Helper functions
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  Construction Decision Helper functions
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  def support_xy_default(self):
+    '''
+    Returns the direction in which the support beam should be constructed
+    '''
+    # Check to see if direction is vertical
+    default_direction = self.get_repair_beam_direction()
+
+    # The beam was vertical
+    if default_direction is None:
+      xy_dir = self.non_zero_xydirection()
+
+    # Use the default direction
+    else:
+      xy_dir = default_direction
+
+    return helpers.make_unit(xy_dir)
+
+  def support_vertical_default(self,angle=None):
+    '''
+    Returns the vertical change for the support endpoint locations
+    '''
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    if angle is None:
+      ratio = helpers.ratio(self.get_angle('support_angle'))
+
+    # We changed the angle from the default  
+    else:
+      ratio = helpers.ratio(angle)
+
+    # Calculate vertical based on assumption that xy-dir is unit
+    vertical = helpers.scale(1/ratio,(0,0,1)) if ratio != 0 else None
+
+    return vertical
+
+  def support_beam_default(self):
+    '''
+    Returns the endpoint for construction of a support beam
+    '''
+    # Add beam_directions plus vertical change based on angle ratio (tan)
+    ratio = helpers.ratio(self.get_angle('support_angle'))
+    vertical = self.support_vertical_change()
+    xy_dir = self.support_xy_direction()
+
+    if xy_dir is None or vertical is None:
+      direction = (0,0,1)
+    else:
+      xy_dir = helpers.make_unit(xy_dir)
+      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
+
+    # Calculate endpoints
+    endpoint = helpers.sum_vectors(self.location,helpers.scale(
+      BConstants.beam['length'],direction))
+
+    return endpoint
+
   def support_xy_direction(self):
     '''
     Improves the construction direction so that we take into account the angle
@@ -448,7 +509,7 @@ Construction Decision Helper functions
     '''
     # If we're on the ground, then continue doing as before
     if self.Body.beam is None:
-      return super(Repairer,self).support_xy_direction()
+      return self.support_xy_default()
 
     else:
       # Get repair beam vector
@@ -477,7 +538,7 @@ Construction Decision Helper functions
 
         # We can't get a direction based on beam locations
         if helpers.parallel(vertical,v1) and helpers.parallel(vertical,v2):
-          return super(Repairer,self).support_xy_direction()
+          return self.support_xy_default()
 
         # We can use the current beam to decide the direction
         elif not helpers.parallel(vertical,current_vector):
@@ -499,14 +560,14 @@ Construction Decision Helper functions
           return result
 
         elif not helpers.parallel(vertical,repair_vector):
-          return super(Repairer,self).support_xy_direction()
+          return self.support_xy_default()
 
         else:
-          return super(Repairer,self).support_xy_direction()
+          return self.support_xy_default()
 
-  def support_vertical_change(self):
+  def support_vertical_change(self,angle=None):
     # Get vertical vector 
-    change_vector = super(Repairer,self).support_vertical_change()
+    change_vector = self.support_vertical_default()
 
     # If we're on the ground, just return (no rotation necessary)
     if self.Body.beam is None:
@@ -516,7 +577,7 @@ Construction Decision Helper functions
     else:
       # Debugging
       # pdb.set_trace()
-      if self.readFromMemory('previous_direction') is None:
+      if self.Body.readFromMemory('previous_direction') is None:
         #pdb.set_trace()
         pass
 
@@ -530,7 +591,7 @@ Construction Decision Helper functions
 
       vertical_angle = abs(BConstants.beam['support_angle'] - rotation_angle)
 
-      return super(Repairer,self).support_vertical_change(angle=vertical_angle)
+      return self.support_vertical_default(angle=vertical_angle)
   
   def support_beam_endpoint(self):
     '''
@@ -608,7 +669,7 @@ Construction Decision Helper functions
       return return_coord
     else:  
       # Otherwise, do default behaviour
-      return super(Repairer,self).support_beam_endpoint()
+      return self.support_beam_default()
 
   def remove_specific(self,dirs):
     '''
@@ -647,12 +708,7 @@ Construction Decision Helper functions
 
     # Local rules as before
     else:
-      if not self.Body.model.GetModelIsLocked():
-        return False
-
-      # Analysis results available
-      else:
-        return False
+      return False
 
   def get_preferred_ground_direction(self,direction):
     '''
@@ -692,8 +748,8 @@ Construction Decision Helper functions
 
     # Get direction of travel if on the ground based on preferred direction on
     # the structure
-    self.Body.addToMemory('ground_direction',self.get_preferred_direction(
-      self.readFromMemory('preferred_direction')))
+    self.Body.addToMemory('ground_direction',self.get_preferred_ground_direction(
+      self.Body.readFromMemory('preferred_direction')))
 
     # Travel down !
     self.Body.addToMemory('pos_z',False)
@@ -706,7 +762,7 @@ Construction Decision Helper functions
     length = BEAM['length'] * math.cos(
       math.radians(BConstants.beam['support_angle']))
     self.Body.addToMemory('new_beam_steps',math.floor(length/ROBOT['step_length'])+1)
-    groundsteps = self.Body.readFromMemory('new_beam_steps') if
+    groundsteps = (self.Body.readFromMemory('new_beam_steps') if
       self.Body.readFromMemory('ground_direction') is None else self.Body.readFromMemory(
         'new_beam_steps') - 1 + math.floor(math.sin(math.radians(
           angle_with_vertical)) * self.Body.readFromMemory('new_beam_steps')))
@@ -791,7 +847,7 @@ Construction Decision Helper functions
     if self.Body.readFromMemory('new_beam_ground_steps') == 0:
       self.add_support_mode()
       self.Body.addToMemory('ground_direction',helpers.scale(
-        -1,self.readFromMemory('ground_direction')))
+        -1,self.Body.readFromMemory('ground_direction')))
 
     self.Body.addToMemory('new_beam_ground_steps', self.Body.readFromMemory('new_beam_ground_steps') - 1)
 
@@ -801,11 +857,11 @@ Construction Decision Helper functions
     '''
     # We did not find a beam in the number of steps we wanted (go back to build
     # mode, but with the condition to build in exactly one timestep)
-    if self.readFromMemory('new_beam_steps') == 0:
+    if self.Body.readFromMemory('new_beam_steps') == 0:
       self.add_support_mode()
 
-    self.addToMemory('new_beam_steps',self.readFromMemory('new_beam_steps') - 1)
-    self.addToMemory('new_beam_ground_steps',self.readFromMemory('new_beam_ground_steps') - 1)
+    self.Body.addToMemory('new_beam_steps',self.Body.readFromMemory('new_beam_steps') - 1)
+    self.Body.addToMemory('new_beam_ground_steps',self.Body.readFromMemory('new_beam_ground_steps') - 1)
 
   def construction_mode(self):
     '''
@@ -861,14 +917,14 @@ Construction Decision Helper functions
     3.  Still carrying construction material
     '''
 
-    if (((self.Body.atSite() and not self.Body.structure.started and not self.readFromMemory('search_mode')
-      )) and not self.readFromMemory('built') and self.Body.num_beams > 0):
+    if (((self.Body.atSite() and not self.Body.structure.started and not self.Body.readFromMemory('search_mode')
+      )) and not self.Body.readFromMemory('built') and self.Body.num_beams > 0):
 
       self.Body.structure.started = True
-      self.addToMemory('built', True)
+      self.Body.addToMemory('built', True)
       return True
     else:
-      self.addToMemory('built', False)
+      self.Body.addToMemory('built', False)
       return False
 
   def pick_direction(self,directions):
@@ -924,7 +980,7 @@ Construction Decision Helper functions
     '''
     Returns True if vector is preferred, False if it is not
     '''
-    xy = self.readFromMemory('preferred_direction')
+    xy = self.Body.readFromMemory('preferred_direction')
     xy = (xy[0],xy[1],0) 
     if (helpers.compare_tuple(xy,(0,0,0)) or helpers.compare_tuple((
       vector[0],vector[1],0),(0,0,0))):
@@ -939,7 +995,7 @@ Construction Decision Helper functions
     '''
     return True
 
-def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
+  def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
     correct directions based on the list of comp_functions (x,y,z).
@@ -980,7 +1036,7 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
           coord_bool = coord_bool and function(coord)
 
         # Additionally, check the x-y direction if we have a preferenced direction
-        if (preferenced and self.Body.readFromMemory('preferred_directions') is not None and
+        if (preferenced and self.Body.readFromMemory('preferred_direction') is not None and
           not helpers.is_vertical(vector)):
           coord_bool = coord_bool and self.filter_preferred(vector)
 
@@ -1053,20 +1109,6 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     directions =  self.filter_dict(dirs, {}, funs,preferenced=self.Body.readFromMemory('search_mode'))
 
     return directions
-
-  def construct(self):
-    '''
-    Decides whether the local conditions dictate we should build (in which case)
-    ''' 
-    if ((self.atSite()) and not self.Body.readFromMemory('built') and 
-      self.Body.num_beams > 0):
-      self.Body.addToMemory('built',True)
-      self.Body.addToMemory('constructed', self.Body.readFromMemory('constructed') + 1)
-      return True
-
-    else:
-      self.Body.addToMemory('built',False)
-      return False
 
   def build(self):
     '''
@@ -1148,7 +1190,13 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     # Sanity check
     assert helpers.compare(helpers.distance(i,j),BConstants.beam['length'])
 
-    return self.Body.addBeam(i,j)
+    result = self.Body.addBeam(i,j)
+
+    # no beams, we want to travel down
+    if self.Body.num_beams == 0:
+      self.Body.addToMemory('pos_z', False)
+
+    return result
 
   def find_nearby_beam_coord(self,sorted_angles,pivot):
     '''
@@ -1330,7 +1378,9 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     # direction
     if length < self.Body.step:
       new_location = helpers.sum_vectors(self.Body.location, direction)
-      self.Body.change_location_structure(new_location, beam)
+      # decide if we're climbing off the structure
+      newbeam = None if self.climb_off(new_location) else beam
+      self.Body.change_location_structure(new_location, newbeam)
 
       # call do_action again since we still have some distance left, and update
       # step to reflect how much distance is left to cover
@@ -1343,14 +1393,14 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
       # We still have steps to go, so run an analysis if necessary
       elif self.Body.beam is not None:
         # Run analysis before deciding to get the next direction
-        if not self.Body.model.GetModelIsLocked() and self.need_data():
+        if not self.Body.model.GetModelIsLocked() and self.Body.need_data():
           errors = helpers.run_analysis(self.Body.model)
           if errors != '':
             # pdb.set_trace()
             pass
 
         # Get next direction
-        self.next_direction_info = self.get_direction()
+        self.Body.addToMemory('next_direction_info', self.get_direction())
 
         # Unlock the results so that we can actually move
         if self.Body.model.GetModelIsLocked():
@@ -1370,7 +1420,8 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     else:
       movement = helpers.scale(self.Body.step, helpers.make_unit(direction))
       new_location = helpers.sum_vectors(self.Body.location, movement)
-      self.Body.change_location(new_location, beam)
+      newbeam = None if self.climb_off(new_location) else beam
+      self.Body.change_location_structure(new_location, newbeam)
 
   def get_direction(self):
     ''' 
@@ -1511,7 +1562,7 @@ def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     return results
 
   def joint_check(self,name):
-    moment = self.get_moment(name)
+    moment = self.Body.get_moment(name)
     return moment < BConstants.beam['joint_limit']
 
   def elect_direction(self,directions):

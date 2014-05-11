@@ -1,16 +1,12 @@
+# pyWin file
 import win32com.client as win32
-try:
-    from constants import UNITS
-except:
-    from SAP2000.constants import UNITS
-try:
-    from elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
-except:
-    from SAP2000.elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
-try:
-    from analysis import SapAnalysis
-except: 
-    from SAP2000.analysis import SapAnalysis
+
+# access to unit mappings
+from SAP2000.constants import UNITS
+# import SAP2000 element classes
+from SAP2000.elements import SapGroups, SapAreaObjects, SapAreaElements, SapLineElements, SapFrameObjects, SapPointObjects, SapPointElements
+# import SAP2000 analysis class
+from SAP2000.analysis import SapAnalysis
 
 class Sap2000(object):
   def __init__(self):

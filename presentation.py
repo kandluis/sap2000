@@ -1,5 +1,5 @@
-from visualization import Visualization
 import os
+from visualization import Visualization
 
 class Open(object):
   def __init__(self,folder):

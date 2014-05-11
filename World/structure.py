@@ -3,16 +3,20 @@ This file establishes the structure and keeps track of all beam elements added
 to it. This is done for the sake of efficiency, as we only want to query the 
 SAP program when absolutely necessary. The following functions are all helpful'
 '''
-# Importing Helpers
-from Helpers import helpers
-from Helpers.errors import OutofBox
-from visual import *
-# defalt python libraries
-import math, pdb, sys
-from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION, WORLD
-
+# Python libraries
+import math
+import sys
 # allows easy implementation of Coord and EndPoints
 from collections import namedtuple
+
+# Importing helper functions
+from Helpers import helpers
+from Helpers.errors import OutofBox
+# importing simulation constants
+from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION, WORLD
+
+# importing visualization library
+import visual
 
 # name the tuples - easily creating both a Coord Objects and an Endpoint Object
 Coord = namedtuple("Coordinates", ["x", "y", "z"])
@@ -51,7 +55,7 @@ class BeamBase(object):
           joints[coord] = [beam.name]
 
     return {  'endpoints' : self.endpoints,
-              'joints'    : joints,
+               'joints'    : joints,
               'weight'    : self.weight  }
 
   def addjoint(self, coord, beam):
@@ -546,7 +550,7 @@ class Structure(object):
 
     # If showing the visualization, add the cylinder to the structure
     if self.visualization:
-      temp = cylinder(pos=p1,axis=helpers.make_vector(p1,p2),
+      temp = visual.cylinder(pos=p1,axis=helpers.make_vector(p1,p2),
         radius=MATERIAL['outside_diameter'])
       temp.color = (0,1,1)
 

@@ -48,6 +48,8 @@ class Builder(Movable):
     # This is in the form (x,y,z)
     self.memory['preferred_direction'] = None
 
+    self.memory['constructed'] = 0
+
     # Modes for supporting structure
     # WILL GO IN MEMORY
     self.search_mode = False

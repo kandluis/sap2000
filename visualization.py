@@ -1,8 +1,63 @@
+# python libraries
+import time
+import re
+
+# third party libraries
+import visual
+
+#local libraries
 from Helpers import helpers
-from visual import *
-import time, re, pdb
 from construction import HOME, CONSTRUCTION
 from variables import BEAM, MATERIAL, PROGRAM, VISUALIZATION, WORLD
+
+def setup_scene(fullscreen):
+  '''
+  Sets up the scene for the display output.
+  '''
+  # Set title and background color (white)
+  scene = visual.display(title="Robot Simulation",background=(1,1,1))
+  # Automatically center
+  scene.autocenter = True
+  # Removing autoscale
+  scene.autoscale = 0
+  # Set whether the windows will take up entire screen or not
+  scene.fullscreen = fullscreen
+  # Size of the windows seen is the size of one beam (to begin)
+  scene.range = (BEAM['length'],BEAM['length'],BEAM['length'])
+  # The center of the windows exists at the construction location
+  scene.center = helpers.scale(.5,helpers.sum_vectors(
+    CONSTRUCTION['corner'],scene.range))
+  # Vector from which the camera start
+  scene.forward = (1,0,0)
+  # Define up (used for lighting)
+  scene.up = (0,0,1)
+  # Defines whether or not we exit the program when we exit the screen
+  # visualization
+  scene.exit = False
+
+  return scene
+
+def setup_base():
+  '''
+  Creates a visual for the ground, the construction area, and the home area
+  '''
+  # Setup the ground
+  dim = WORLD['properties']['dim_x'],WORLD['properties']['dim_y'],PROGRAM['epsilon']/2
+  center = tuple([v/2 for v in dim])
+  temp = visual.box(pos=center,length=dim[0],height=dim[1],width=0.05)
+  temp.color = (1,1,1)
+
+  # Setup the Home Plate
+  dim = HOME['size']
+  center = HOME['center']
+  temp = visual.box(pos=center,length=dim[0],height=dim[1],width=0.1)
+  temp.color = (1,0,0)
+
+  # Setup the construction plate
+  dim = CONSTRUCTION['size']
+  center = CONSTRUCTION['center']
+  temp = visual.box(pos=center, length=dim[0],height=dim[1],width=0.1)
+  temp.color = (0,1,0)
 
 class Visualization(object):
   def __init__(self,outputfolder):
@@ -78,55 +133,6 @@ class Visualization(object):
       struct_color = load_file(stc_file,False)
       self.data = list(zip(swarm_loc,swarm_colors,struct_loc,struct_color))
 
-  def setup_scene(self,fullscreen):
-    '''
-    Sets up the scene for the display output.
-    '''
-    # Set title and background color (white)
-    scene = display(title="Robot Simulation",background=(1,1,1))
-    # Automatically center
-    scene.autocenter = True
-    # Removing autoscale
-    scene.autoscale = 0
-    # Set whether the windows will take up entire screen or not
-    scene.fullscreen = fullscreen
-    # Size of the windows seen is the size of one beam (to begin)
-    scene.range = (BEAM['length'],BEAM['length'],BEAM['length'])
-    # The center of the windows exists at the construction location
-    scene.center = helpers.scale(.5,helpers.sum_vectors(
-      CONSTRUCTION['corner'],scene.range))
-    # Vector from which the camera start
-    scene.forward = (1,0,0)
-    # Define up (used for lighting)
-    scene.up = (0,0,1)
-    # Defines whether or not we exit the program when we exit the screen
-    # visualization
-    scene.exit = False
-
-    return scene
-
-  def setup_base(self):
-    '''
-    Creates a visual for the ground, the construction area, and the home area
-    '''
-    # Setup the ground
-    dim = WORLD['properties']['dim_x'],WORLD['properties']['dim_y'],PROGRAM['epsilon']/2
-    center = tuple([v/2 for v in dim])
-    temp = box(pos=center,length=dim[0],height=dim[1],width=0.05)
-    temp.color = (1,1,1)
-
-    # Setup the Home Plate
-    dim = HOME['size']
-    center = HOME['center']
-    temp = box(pos=center,length=dim[0],height=dim[1],width=0.1)
-    temp.color = (1,0,0)
-
-    # Setup the construction plate
-    dim = CONSTRUCTION['size']
-    center = CONSTRUCTION['center']
-    temp = box(pos=center, length=dim[0],height=dim[1],width=0.1)
-    temp.color = (0,1,0)
-
   def run(self,fullscreen = True, inverse_speed=.25):
     if self.data == []:
       print("No data has been loaded. Cannot run simulation.")
@@ -135,10 +141,10 @@ class Visualization(object):
       self.inverse_speed = inverse_speed
 
       # Setup the scene
-      scene = self.setup_scene(fullscreen)
+      scene = setup_scene(fullscreen)
 
       # Setup basic
-      self.setup_base()
+      setup_base()
 
       # Cycle through timestep data
       timestep = 1
@@ -147,7 +153,7 @@ class Visualization(object):
 
           # Create the object
           if name not in self.workers:
-            self.workers[name] = sphere(pos=locations[0],
+            self.workers[name] = visual.sphere(pos=locations[0],
               radius=VISUALIZATION['robot_size']/2,make_trail=False)
             self.workers[name].color = (1,0,1)
 
@@ -245,7 +251,7 @@ class Visualization(object):
     unit_axis = helpers.make_unit(helpers.make_vector(i,j))
 
     # Create the beam
-    self.beams[name] = cylinder(pos=i,axis=unit_axis,
+    self.beams[name] = visual.cylinder(pos=i,axis=unit_axis,
       radius=MATERIAL['outside_diameter'],color=(0,1,0))
 
     # Extrude the beam from the robot

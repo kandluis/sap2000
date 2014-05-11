@@ -1,30 +1,31 @@
-# Custom Imports for Simulation
-from Helpers import commandline, helpers
-from robots.colony import SmartSwarm
-from World.structure import Structure
-from SAP2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
-from variables import BEAM, MATERIAL, PROGRAM, WORLD, WIND
-
-# so we can extract variable data
-import variables
-import construction
-from Behaviour import constants as BConstants
-
-# Default Python Libraries
+# import python libraries
+import os
+import random
+import sys
+import pdb
 from time import strftime
-import os, pdb,random,sys
-
-# Visualization of the world
-from visual import *
-from visualization import Visualization
 
 # for data output to Excel File
 from xlsxwriter.workbook import Workbook
 
+# import local libraries
+# Commandline provides access to functions for running simulation from commandline
+from Helpers import commandline
+from Helpers import helpers
+# import simulation objects
+from World.swarm import SmartSwarm
+from World.structure import Structure
+from SAP2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
+from variables import BEAM, MATERIAL, PROGRAM, WORLD, WIND
+# import third party libraries
+import visualization as Visual
+from visualization import Visualization
 
-'''
-This will likely become the World Object
-'''
+# import entire libraries so we can extra data from them and export them
+import variables
+import construction
+from Behaviour import constants as BConstants
+
 class Simulation(object):
   def __init__(self,seed = None,template="C:\\SAP 2000\\template.sdb"):
     self.SapProgram = None
@@ -247,9 +248,9 @@ class Simulation(object):
     self.excel['header'] = []
     self.excel['data'] = [[]]
 
-  def makeOutputFolder(comment):
+  def makeOutputFolder(self,comment):
     return (PROGRAM['root_folder'] + "\\" + strftime("%Y-%b") + "\\" +
-        strftime("%d") + "\\" + strftime("%H_%M_%S") + comment + "\\")
+        strftime("%b-%d") + "\\" + strftime("%H_%M_%S") + comment + "\\")
 
   def reset(self, comment = ""):
     '''
@@ -260,7 +261,7 @@ class Simulation(object):
       self.SapProgram.reset(template=self.template)
 
       # Creating new SAP Files
-      outputfolder = makeOutputFolder(comment)
+      outputfolder = self.makeOutputFolder(comment)
       outputfilename = "tower.sdb"
       outputfile = outputfolder + outputfilename
 
@@ -295,7 +296,7 @@ class Simulation(object):
     if self.started:
       print("Simulation has already been started")
     else:
-      outputfolder = makeOutputFolder(comment)
+      outputfolder = self.makeOutputFolder(comment)
       outputfilename = "tower.sdb"
       self.SapProgram, self.SapModel = commandline.run(model,
         outputfolder + outputfilename)
@@ -355,7 +356,7 @@ class Simulation(object):
       print("The visualization cannot be started becase simulation has not run.")
 
   def run_simulation(self,visualization = False, timesteps = 10, debug = True,
-    comment = ""):
+    comment = "",writeOut=True):
     '''
     Runs the simulation according to the variables passed in.
     '''
@@ -398,9 +399,15 @@ class Simulation(object):
       # Write variables
       self.__push_information(run_text)
 
+      if debug:
+        print(PROGRAM['debug_message'])
+      # setup a nice visual 
+      if visualization:
+        scene = Visual.setup_scene(False)
+        Visual.setup_base()
+
       # Run the simulation!
       for i in range(timesteps):
-
         if visualization:
           self.Swarm.show()
 
@@ -421,7 +428,7 @@ class Simulation(object):
             self.SapModel.File.Save(outputfolder + filename)
         except:
           print("Simulation ended when saving output.")
-          if debug:
+          if writeOut:
             swarm_data = self.Swarm.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
@@ -434,7 +441,7 @@ class Simulation(object):
           try:
             sap_failures.write(helpers.run_analysis(self.SapModel))
           except:
-            if debug:
+            if writeOut:
               swarm_data = self.Swarm.get_information()
               self.__add_excel(swarm_data)
               self.__push_data(swarm_data,loc_text,i+1)
@@ -447,12 +454,16 @@ class Simulation(object):
             print(failed)
             break
 
+        # debuggin here for quick access to decide/act methods
+        if debug <= i and debug:
+          pdb.set_trace()
+
         # Make the decision based on analysis results
         try:
           self.Swarm.decide()
         except:
           print("Simulation ended at decision.")
-          if debug:
+          if writeOut:
             swarm_data = self.Swarm.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
@@ -468,7 +479,7 @@ class Simulation(object):
           self.Swarm.act()
         except:
           print("Simulation ended at act.")
-          if debug:
+          if writeOut:
             swarm_data = self.Swarm.get_information()
             self.__add_excel(swarm_data)
             self.__push_data(swarm_data,loc_text,i+1)
@@ -488,7 +499,7 @@ class Simulation(object):
               str(i+1),repair_data))
 
         # Give a status update if necessary
-        print("Finished timestep {}\r".format(str(i + 1)))
+        commandline.status("Finished timestep {}.".format(str(i + 1)))
 
         # Sort beam data
         if self.Structure.structure_data[-1] != []:
@@ -518,7 +529,7 @@ class Simulation(object):
           self.__push_excel(self.folder + "locations-{}.xlsx".format(str(i)))
 
         # This section writes the robots decisions out to a file
-        if debug:
+        if writeOut:
           swarm_data = self.Swarm.get_information()
           self.__add_excel(swarm_data)
           self.__push_data(swarm_data,loc_text,i+1)

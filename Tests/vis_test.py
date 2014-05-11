@@ -1,3 +1,4 @@
+# TEMP FILE - NOT USED
 from visualization import Visualization
 
 one_thousand = 'C:\\SAP 2000\\Jul-08\\14_53_17\\'

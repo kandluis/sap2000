@@ -1,8 +1,18 @@
-from Helpers.errors import MemoryError
+# Python default libraries
+import operator
+import math
+
+# import errors
+from Helpers.errors import InvalidMemory
+from Helpers import helpers
+
+# import constants
+from variables import BEAM, MATERIAL, PROGRAM, ROBOT, VISUALIZATION
+from construction import HOME, CONSTRUCTION
 
 # Basic class for any automatic object that needs access to the SAP program
 class Body(object):
-  def __init__(self,name,program,location,program):
+  def __init__(self,name,structure,location,program):
 
     '''''''''''''''''''''''''''''
     SAP 2000 API Access Variables
@@ -53,18 +63,6 @@ class Body(object):
     self.repair_data = ''
     self.read_moment = 0
 
-
-'''
-Decision Making?
-'''
-    # The robots all initially move towards the centertower
-    self.ground_direction = helpers.make_vector(location,
-      CONSTRUCTION['corner'])
-
-    # The direction in which we should move
-    self.next_direction_info = None
-
-
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   State gathering functions (for information purposes).
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -99,10 +97,8 @@ Decision Making?
               'step'              : self.step,
               'location'          : location,
               'deflected_location': deflected_location,
-              'ground_direction'  : self.ground_direction,
               'beam'              : beam,
               'weight'            : self.weight,
-              'next_direction'    : self.next_direction_info,
               'num_beams'         : self.num_beams,
               'read_moment'       : self.read_moment,
               'memory'            : memory }
@@ -167,12 +163,18 @@ Decision Making?
     '''
     return self.beam is not None
 
+  def atHome(self):
+    return self.at_home()
+
   def at_home(self):
     '''
     True if the robot is in the area designated as home (on the ground)
     '''
-    return helpers.within(HOME['center'], HOME['size'],
+    return helpers.within(HOME['corner'], HOME['size'],
       self.location)
+
+  def atSite(self):
+    return self.at_site()
 
   def at_site(self):
     '''
@@ -232,33 +234,28 @@ Decision Making?
   def popFromMemory(self,key):
     '''
     Returns the value associated with the key from memory and removes it from 
-    memory. If no value is associated with key, raises a MemoryError(key)
+    memory. If no value is associated with key, raises a InvalidMemory(key)
     '''
     try:
       val = self.memory[key]
       del(self.memory[key])
       return val
     except KeyError:
-      raise MemoryError(key)
-
+      raise InvalidMemory(key)
 
   def readFromMemory(self,key):
     '''
     Returns the value associated with key from memory. If no value is associated
-    with key, raises a MemoryError(key)
+    with key, raises a InvalidMemory(key)
     '''
     try:
       return self.memory[key]
     except KeyError:
-      raise MemoryError(key)
-
+      raise InvalidMemory(key)
 
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Mobility functions for the robot body.
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  def changeLocation(self,new_location):
-    pass
-
   def change_location_local(self,new_location, first_beam = None):
     '''
     Moves the robot about locally (ie, without worrying about the structure, 
@@ -347,10 +344,6 @@ Decision Making?
     if self.beam is not None:
       removeload(self.location)
 
-    # Check to see if we will be moving off a beam and onto the ground
-    if self.climb_off(new_location):
-      new_beam = None
-
     # Don't add the load if there is no beam
     if new_beam is not None:
       self.addload(new_beam, new_location, self.weight)
@@ -385,7 +378,7 @@ Decision Making?
       return False
 
   def getMoment(self,name):
-    return self.get_moment
+    return self.get_moment(name)
 
   def get_moment(self,name):
     '''
@@ -401,6 +394,7 @@ Decision Making?
     self.read_moment = total
 
     return total
+
   def getMomentMagnitudes(self,name,pivot=None):
     return self.get_moment_magnitudes(name,pivot)
 
@@ -778,10 +772,6 @@ Decision Making?
     self.num_beams = self.num_beams + num
     self.weight = self.weight + MATERIAL['beam_load'] * num
 
-    # Set the direction towards the structure
-    self.ground_direction = helpers.make_vector(self.location,
-      CONSTRUCTION['center'])
-
   def discard_beams(self,num = 1):
     '''
     Get rid of the specified number of beams by decresing the weight and the 
@@ -790,9 +780,9 @@ Decision Making?
     self.num_beams = self.num_beams - num
     self.weight = self.weight - MATERIAL['beam_load'] * num
 
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Helper functions for construction
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  Helper functions for construction
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   def local_angles(self,pivot,endpoint):
     '''
     Calculates the ratios of a beam if it were to intersect nearby beams. 

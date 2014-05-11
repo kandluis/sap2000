@@ -14,14 +14,7 @@ WORLD = {
     'dim_x' : 1700, # 100 ft
     'dim_y' : 1700,
     'dim_z' : 170000
-  },
-  'origin' : (0,0,0),
-  'num_x' : 10,
-  'num_y' : 10,
-  'num_z' : 100,
-  'dim_x' : 1700, # 100 ft
-  'dim_y' : 1700,
-  'dim_z' : 170000
+  }
 }
 
 ROBOT = {
@@ -114,7 +107,12 @@ PROGRAM = {
   'analysis_timesteps' : 200,
 
   # the output folder for saving files
-  'root_folder' : 'C:\SAP 2000\\'
+  'root_folder' : 'C:\SAP 2000\\',
+
+  # mesagge instructions for debugging
+  'debug_message' :   ("You are in debugging mode. Press n to continue to the next line.\n"+
+            "Press s to step into the current function. Press c to go to next timestep.\n"+ 
+            "Ctrl+c to exit.\n\n" + "Brought to you by Luis Perez!\n")
 }
 
 

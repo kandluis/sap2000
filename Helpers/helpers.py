@@ -1,5 +1,5 @@
 # Python default libraries
-import errno,
+import errno
 import math
 import os
 import random

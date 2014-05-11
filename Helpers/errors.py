@@ -11,7 +11,7 @@ class OutofBox(Exception):
   def __str__(self):
     return repr(self.value)
 
-class MememoryError(Exception):
+class InvalidMemory(Exception):
   '''
   Raised if the item that is being searched for is not in the robot's memory
   '''

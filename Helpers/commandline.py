@@ -9,6 +9,13 @@ import sys
 # import custom filesystem library - access input and output for SAP 2000
 from Helpers.filesystem import io
 
+def status(msg):
+  '''
+  Used to print out the status without using a newline
+  '''
+  sys.stdout.write(str(msg)+ "\n")
+  sys.stdout.flush()
+
 def run(input = "", output = ""):
 
   # use default output file if none or empty given

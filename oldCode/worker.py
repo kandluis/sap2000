@@ -147,7 +147,7 @@ class Worker(Builder):
       Returns index, sorting_angle of vs.
       '''
       angle_list = [abs(helpers.smallest_angle((1,0,0),v) - 
-        BConstants.beam['support_angle']) for v in vs]
+        BConstants.beam['angle']) for v in vs]
       min_val = min(angle_list)
       index = angle_list.index(min_val)
       return index, min_val
