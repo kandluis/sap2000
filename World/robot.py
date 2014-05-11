@@ -23,10 +23,6 @@ class BaseBody(metaclass=ABCMeta):
     pass
 
   @abstractmethod
-  def myType(self):
-    pass
-
-  @abstractmethod
   def currentState(self):
     pass
 
@@ -50,7 +46,65 @@ class BaseBody(metaclass=ABCMeta):
   def atHome(self):
     pass
 
+  @abstractmethod
+  def atSite(self):
+    pass
 
+  @abstractmethod
+  def atTop(self):
+    pass
+
+  @abstractmethod
+  def addToMemory(self,key,value):
+    pass
+
+  @abstractmethod
+  def popFromMemory(self,key):
+    pass
+
+  @abstractmethod
+  def readFromMemory(self,key):
+    pass
+
+  @abstractmethod
+  def changeLocalLocation(self,new_location,first_beam = None):
+    pass
+
+  @abstractmethod
+  def changeLocationOnStructure(self,new_location,new_beam):
+    pass
+
+  @abstractmethod
+  def atJoint(self):
+    pass
+
+  @abstractmethod
+  def getMoment(self,name):
+    pass
+
+  @abstractmethod
+  def getAvailableDirections(self):
+   pass
+
+  @abstractmethod
+  def ground(self):
+    pass
+
+  @abstractmethod
+  def addBeam(self,p1,p2):
+    pass
+
+  @abstractmethod
+  def pickupBeams(self,num=ROBOT['beam_capacity']):
+    pass
+
+  @abstractmethod
+  def discardBeam(self,num=1):
+    pass
+
+  @abstractmethod
+  def localAngles(self,pivot,endpoint):
+    pass
 
 # Basic class for any automatic object that needs access to the SAP program
 class Body(BaseBody):
