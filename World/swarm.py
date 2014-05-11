@@ -1,3 +1,5 @@
+from abc import ABCMeta, abstractmethod
+
 # import helper functions
 from Helpers import helpers
 
@@ -12,7 +14,40 @@ from variables import ROBOT, VISUALIZATION
 # for visualization
 import visual
 
-class SmartSwarm(object):
+class BaseSwarm(metaclass=ABCMeta):
+  '''
+  Interface abstraction for Swarm. See implementation and documentation for
+  explanation of class methods
+  '''
+  @abstractmethod
+  def __init__(self,size,structure,program):
+    pass
+
+  @abstractmethod
+  def decide(self):
+    pass
+
+  @abstractmethod
+  def act(self):
+    pass
+
+  @abstractmethod
+  def get_information(self):
+    pass
+
+  @abstractmethod
+  def get_repair_data(self):
+    pass
+
+  @abstractmethod
+  def show(self):
+    pass
+
+  @abstractmethod
+  def reset(self):
+    pass
+
+class SmartSwarm(BaseSwarm):
   def __init__(self,size, structure, program):
     # The number of robots in the swarm
     self.size = size
@@ -200,9 +235,9 @@ class SmartSwarm(object):
     Deletes the specified robots from the swarm (if found). If no name is passed
     in, it deletes nothing. Returns the number of robots successfully deleted.
     '''
-    deleted = 0
+    delete = 0
     for name in names:
       if delete_robot(name):
-        deleted += 1
+        delete += 1
 
-    return deleted
+    return delete
