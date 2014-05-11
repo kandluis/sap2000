@@ -866,4 +866,3 @@ class Body(object):
       angles = add_angles(box,angles)
 
     return sorted(angles.items(), key = operator.itemgetter(1))
-

@@ -200,7 +200,6 @@ class Brain(BaseBrain):
 
       # Movement decisions
       else:
-        self.pre_decision()
         self.movable_decide()
 
 
@@ -315,6 +314,8 @@ class Brain(BaseBrain):
     # Set the direction towards the structure
     self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
       CONSTRUCTION['center']))
+    self.Body.addToMemory('broken', [])
+    self.Body.addToMemory('broken_beam_name', '')
 
     # Move up when you pick one up
     self.Body.addToMemory('pos_z', True)
@@ -1273,61 +1274,6 @@ class Brain(BaseBrain):
     Returns whether the struck coordinate of a nearby beam should be used if found
     '''
     return True
-
-  def support_beam_endpoint(self):
-    '''
-    Returns the endpoint for construction of a support beam
-    '''
-    # Add beam_directions plus vertical change based on angle ratio (tan)
-    ratio = helpers.ratio(self.get_angle('support_angle'))
-    vertical = self.support_vertical_change()
-    xy_dir = self.support_xy_direction()
-
-    if xy_dir is None or vertical is None:
-      direction = (0,0,1)
-    else:
-      xy_dir = helpers.make_unit(xy_dir)
-      direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
-
-    # Calculate endpoints
-    endpoint = helpers.sum_vectors(self.Body.location,helpers.scale(
-      BConstants.beam['length'],direction))
-
-    return endpoint
-
-  def support_xy_direction(self):
-    '''
-    Returns the direction in which the support beam should be constructed
-    '''
-    # Check to see if direction is vertical
-    default_direction = self.get_repair_beam_direction()
-
-    # The beam was vertical
-    if default_direction is None:
-      xy_dir = helpers.non_zero_xydirection()
-
-    # Use the default direction
-    else:
-      xy_dir = default_direction
-
-    return helpers.make_unit(xy_dir)
-
-  def support_vertical_change(self,angle=None):
-    '''
-    Returns the vertical change for the support endpoint locations
-    '''
-    # Add beam_directions plus vertical change based on angle ratio (tan)
-    if angle is None:
-      ratio = helpers.ratio(self.get_angle('support_angle'))
-
-    # We changed the angle from the default  
-    else:
-      ratio = helpers.ratio(angle)
-
-    # Calculate vertical based on assumption that xy-dir is unit
-    vertical = helpers.scale(1/ratio,(0,0,1)) if ratio != 0 else None
-
-    return vertical
  
   def get_repair_beam_direction(self):
     '''
