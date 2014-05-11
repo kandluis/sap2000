@@ -1,6 +1,7 @@
 # Python default libraries
 import operator
 import math
+from abc import ABCMeta, abstractmetho
 
 # import errors
 from Helpers.errors import InvalidMemory
@@ -10,8 +11,49 @@ from Helpers import helpers
 from variables import BEAM, MATERIAL, PROGRAM, ROBOT, VISUALIZATION
 from construction import HOME, CONSTRUCTION
 
+class BaseBody(metaclass=ABCMeta):
+  '''
+  These are the methods that need to be implemented in order for the
+  current brains to continue functioning correctly. Look at comments on
+  implementation of Body below or take a look at the documentation for more
+  information on what each of these functions does
+  '''
+  @abstractmethod
+  def __init__(self,Robot):
+    pass
+
+  @abstractmethod
+  def myType(self):
+    pass
+
+  @abstractmethod
+  def currentState(self):
+    pass
+
+  @abstractmethod
+  def needData(self):
+    pass
+
+  @abstractmethod
+  def getGenuineLocation(self):
+    pass
+
+  @abstractmethod
+  def getLocation(self):
+    pass
+
+  @abstractmethod
+  def onStructure(self):
+    pass
+
+  @abstractmethod
+  def atHome(self):
+    pass
+
+
+
 # Basic class for any automatic object that needs access to the SAP program
-class Body(object):
+class Body(BaseBody):
   def __init__(self,name,structure,location,program):
 
     '''''''''''''''''''''''''''''
@@ -238,7 +280,9 @@ class Body(object):
     '''
     # When we move onto our first beam, add the load
     if first_beam != None:
-      self.addload(first_beam,new_location,self.weight)
+      # Jump on beam
+      self.beam = first_beam
+      self.addLoad(first_beam,new_location,self.weight)
     self.location = new_location
 
     # Check that we are on the first octant
@@ -321,7 +365,9 @@ class Body(object):
 
     # Don't add the load if there is no beam
     if new_beam is not None:
-      self.addload(new_beam, new_location, self.weight)
+      # Jump on beam
+      self.beam = new_beam
+      self.addLoad(new_beam, new_location, self.weight)
     else:
       self.beam = new_beam
 
@@ -623,18 +669,12 @@ class Body(object):
   Action functions which affect the structure.
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   def addLoad(self,beam,location,value):
-    return self.addload(beam,location,value)
-
-  def addload(self,beam,location,value):
     '''
     Adds a load of the specified value to the named beam at the specific 
     location
     '''
     # Sanity check
     assert not self.model.GetModelIsLocked()
-
-    # Jump on beam
-    self.beam = beam
 
     # Find distance and add load
     distance = helpers.distance(beam.endpoints.i,location)
@@ -644,8 +684,6 @@ class Body(object):
       value=value,state=self.currentState())
 
   def addBeam(self,p1,p2):
-    return self.addbeam(p1,p2)
-  def addbeam(self,p1,p2):
     '''
     Adds the beam to the SAP program and to the Python Structure. Might have to 
     add joints for the intersections here in the future too. Removes the beam 
@@ -689,7 +727,7 @@ class Body(object):
       return False
 
     # Get rid of one beam
-    self.discard_beams()
+    self.discardBeams()
 
     # Successfully added at least one box
     if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
@@ -721,7 +759,7 @@ class Body(object):
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Actions performable by the robot body
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  def pickup_beams(self,num = ROBOT['beam_capacity']):
+  def pickupBeams(self,num = ROBOT['beam_capacity']):
     '''
     Pickup beams by adding weight to the robot and by adding num to number 
     carried
@@ -729,7 +767,7 @@ class Body(object):
     self.num_beams = self.num_beams + num
     self.weight = self.weight + MATERIAL['beam_load'] * num
 
-  def discard_beams(self,num = 1):
+  def discardBeams(self,num = 1):
     '''
     Get rid of the specified number of beams by decresing the weight and the 
     number carried
@@ -740,7 +778,7 @@ class Body(object):
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Helper functions for construction
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  def local_angles(self,pivot,endpoint):
+  def localAngles(self,pivot,endpoint):
     '''
     Calculates the ratios of a beam if it were to intersect nearby beams. 
     Utilizes the line defined by pivot -> endpoint as the base for the ratios 

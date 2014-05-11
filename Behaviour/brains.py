@@ -309,7 +309,7 @@ class Brain(BaseBrain):
     '''
     Adding ability to change memory
     '''
-    self.Body.pickup_beams(num)
+    self.Body.pickupBeams(num)
 
     # Set the direction towards the structure
     self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
@@ -626,7 +626,7 @@ class Brain(BaseBrain):
       endpoint),(0,0,1))
 
     # Get angles
-    sorted_angles = self.Body.local_angles(pivot,endpoint)
+    sorted_angles = self.Body.localAngles(pivot,endpoint)
     min_support_angle,max_support_angle = self.get_angles()
     min_constraining_angle,max_constraining_angle = self.get_angles(
       support=False)
@@ -1180,7 +1180,7 @@ class Brain(BaseBrain):
       helpers.make_unit(BConstants.beam['vertical_dir_set'])))
 
     # Get the ratios
-    sorted_angles = self.Body.local_angles(pivot,vertical_endpoint)
+    sorted_angles = self.Body.localAngles(pivot,vertical_endpoint)
 
     # Find the most vertical position
     final_coord = self.find_nearby_beam_coord(sorted_angles,pivot)

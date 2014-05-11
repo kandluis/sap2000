@@ -60,7 +60,7 @@ class SmartSwarm(object):
       self.repairers[repairer].performDecision()
 
       # Add location data for visualization of simulation
-      loc = self.repairers[repairer].Body.get_true_location()
+      loc = self.repairers[repairer].Body.getGenuineLocation()
       location = (loc[0], loc[1], 0) if helpers.compare(loc[2],0) else loc
       self.visualization_data += "{}:{}<>".format(repairer,str(
         helpers.round_tuple(location,3)))
@@ -84,7 +84,7 @@ class SmartSwarm(object):
   def get_information(self):
     information = {}
     for name, repairer in self.repairers.items():
-      information[name] = repairer.Body.current_state()
+      information[name] = repairer.Body.currentState()
 
     return information
 
@@ -138,7 +138,7 @@ class SmartSwarm(object):
     they don't need data.
     '''
     for name, repairer in self.repairers.items():
-      if repairer.Body.need_data() or (ROBOT['collect_data'] and 
+      if repairer.Body.needData() or (ROBOT['collect_data'] and 
         repairer.Body.beam is not None):
         return True
 
