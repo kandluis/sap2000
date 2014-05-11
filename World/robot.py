@@ -718,8 +718,6 @@ class Body(object):
 
     # Skip addition of beam
     if name == '':
-      # Set to false if we were constructing support
-      self.memory['construct_support'] = False
       return False
 
     # Set the output statios
@@ -730,10 +728,7 @@ class Body(object):
 
     # Get rid of one beam
     self.discard_beams()
-
-    # Set to false if we were constructing support
-    self.memory['construct_support'] = False
-
+    
     # Successfully added at least one box
     if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
       

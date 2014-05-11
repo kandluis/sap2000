@@ -1192,6 +1192,9 @@ class Brain(BaseBrain):
 
     result = self.Body.addBeam(i,j)
 
+    # Set to false if we were constructing support
+    self.Body.addToMemory('construct_support', False)
+
     # no beams, we want to travel down
     if self.Body.num_beams == 0:
       self.Body.addToMemory('pos_z', False)
@@ -1331,6 +1334,7 @@ class Brain(BaseBrain):
     found). Currently, we just add a bit of disturbace while remaining within 
     the range that the robot was set to search.
     '''
+    pdb.set_trace()
     direction = self.Body.readFromMemory('preferred_direction')
 
     # No preferred direction, so beam was vertically above use
