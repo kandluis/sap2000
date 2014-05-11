@@ -3,6 +3,7 @@ import os
 import random
 import sys
 import pdb
+import pprint
 from time import strftime
 
 # for data output to Excel File
@@ -193,7 +194,7 @@ class Simulation(object):
     for name, state in data.items():
       to_write += "{} = \n\n".format(name)
       for key, temp_data in state.items():
-        to_write += "{} : {}\n".format(str(key),str(temp_data))
+        to_write += "{} : {}\n".format(str(key),pprint.pformat(temp_data))
       to_write += "\n"
     file_obj.write(to_write + "\n")
 

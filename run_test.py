@@ -7,7 +7,7 @@ from visualization import Visualization
 
 # Variables (see Documentation for description)
 view = True
-seed = "F@st1#lAn3"
+seed = "F@st1#lAn3-new"
 robot_number = 1
 maxsteps = 10000
 debug = 0 # begin debugging after this timestep. 0 turns off debugging

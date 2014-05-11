@@ -119,14 +119,14 @@ class Brain(BaseBrain):
     self.Body.addToMemory('repair_mode', False)
 
     # The robots all initially move towards the centertower
-    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
       CONSTRUCTION['corner']))
 
     # The direction in which we should move
     self.Body.addToMemory('next_direction_info', None)
 
     # The robots all initially move towards the centertower
-    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
       CONSTRUCTION['corner']))
 
 
@@ -184,7 +184,7 @@ class Brain(BaseBrain):
     # We found a support beam and are on it, planning on construction. If 
     # we reach the endpoint of the beam (the support beam), then construct.
     elif self.Body.readFromMemory('repair_mode'):
-      if (helpers.compare(helpers.distance(self.Body.location,
+      if (helpers.compare(helpers.distance(self.Body.getLocation(),
           self.Body.beam.endpoints.j),self.Body.step / 2)):
         self.Body.addToMemory('start_contruction', True)
         self.Body.addToMemory('broken',[])
@@ -210,7 +210,7 @@ class Brain(BaseBrain):
     moment = self.Body.getMoment(name)
 
     ##### THIS SHOULDN"T BE HERE
-    e1,e2 = self.Body.structure.get_endpoints(name,self.Body.location)
+    e1,e2 = self.Body.structure.get_endpoints(name,self.Body.getLocation())
     #####
 
     xy_dist = helpers.distance((e1[0],e1[1],0),(e2[0],e2[1],0))
@@ -239,7 +239,7 @@ class Brain(BaseBrain):
       
       # Not repairing, so calculate direction
       if not self.Body.readFromMemory('search_mode'):
-        direction = helpers.make_vector(self.Body.location,HOME['center'])
+        direction = helpers.make_vector(self.Body.getLocation(),HOME['center'])
         direction = (direction[0],direction[1],0)
         self.Body.addToMemory('ground_direction', direction)
 
@@ -273,7 +273,7 @@ class Brain(BaseBrain):
         return random_direction()
       else:
         step = helpers.scale(self.Body.step,helpers.make_unit(direction))
-        predicted_location = helpers.sum_vectors(step, self.Body.location)
+        predicted_location = helpers.sum_vectors(step, self.Body.getLocation())
 
         # Check the location
         if helpers.check_location(predicted_location):
@@ -286,7 +286,7 @@ class Brain(BaseBrain):
     if self.Body.readFromMemory('ground_direction') != None:
       step = helpers.scale(self.Body.step,helpers.make_unit(
         self.Body.readFromMemory('ground_direction')))
-      predicted_location = helpers.sum_vectors(step, self.Body.location)
+      predicted_location = helpers.sum_vectors(step, self.Body.getLocation())
 
       # We are going out of bounds, so set the direction to none and call 
       # yourself again (to find a new location)
@@ -312,7 +312,7 @@ class Brain(BaseBrain):
     self.Body.pickup_beams(num)
 
     # Set the direction towards the structure
-    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.location,
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
       CONSTRUCTION['center']))
     self.Body.addToMemory('broken', [])
     self.Body.addToMemory('broken_beam_name', '')
@@ -337,7 +337,7 @@ class Brain(BaseBrain):
 
     # If we have no beams, set the ground direction to home (TEMP CODE)
     if self.Body.num_beams == 0:
-      vector = helpers.make_vector(self.Body.location,HOME['center'])
+      vector = helpers.make_vector(self.Body.getLocation(),HOME['center'])
       self.Body.addToMemory('ground_direction', (vector if not helpers.compare(helpers.length(
         vector),0) else helpers.non_zero_xydirection())) 
 
@@ -349,9 +349,9 @@ class Brain(BaseBrain):
     if (result == None or self.Body.readFromMemory('repair_mode') or self.Body.readFromMemory('search_mode') or 
       self.Body.num_beams == 0 or self.Body.readFromMemory('construct_support')):
       direction = self.get_ground_direction()
-      new_location = helpers.sum_vectors(self.Body.location,helpers.scale(self.Body.step,
+      new_location = helpers.sum_vectors(self.Body.getLocation(),helpers.scale(self.Body.step,
         helpers.make_unit(direction)))
-      self.Body.change_location_local(new_location)
+      self.Body.changeLocalLocation(new_location)
 
     # Nearby beam, jump on it
     else:
@@ -369,16 +369,16 @@ class Brain(BaseBrain):
       # If we can "detect" a beam, change the ground direction to approach it
       elif self.Body.num_beams > 0 and dist <= ROBOT['local_radius']:
         self.Body.addToMemory('ground_direction', direction)
-        new_location = helpers.sum_vectors(self.Body.location, helpers.scale(
+        new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale(
           self.Body.step,helpers.make_unit(direction)))
-        self.Body.change_location_local(new_location)
+        self.Body.changeLocalLocation(new_location)
       
       # Local beams, but could not detect (this is redundant)
       else:
         direction = self.get_ground_direction()
-        new_location = helpers.sum_vectors(self.Body.location,helpers.scale(
+        new_location = helpers.sum_vectors(self.Body.getLocation(),helpers.scale(
           self.Body.step,helpers.make_unit(direction)))
-        self.Body.change_location_local(new_location)
+        self.Body.changeLocalLocation(new_location)
 
   def pre_decision(self):
     '''
@@ -401,7 +401,7 @@ class Brain(BaseBrain):
       # Before we decide, we need to make sure that we have access to analysis
       # results. Therefore, check to see if the model is locked. If it is not,
       # then execute and analysis.
-      if not self.Body.model.GetModelIsLocked() and self.Body.need_data():
+      if not self.Body.model.GetModelIsLocked() and self.Body.needData():
         errors = helpers.run_analysis(self.Body.model)
         assert errors == ''
 
@@ -456,7 +456,7 @@ class Brain(BaseBrain):
 
     # The beam was vertical
     if default_direction is None:
-      xy_dir = self.non_zero_xydirection()
+      xy_dir = helpers.non_zero_xydirection()
 
     # Use the default direction
     else:
@@ -497,7 +497,7 @@ class Brain(BaseBrain):
       direction = helpers.make_unit(helpers.sum_vectors(xy_dir,vertical))
 
     # Calculate endpoints
-    endpoint = helpers.sum_vectors(self.location,helpers.scale(
+    endpoint = helpers.sum_vectors(self.Body.getLocation(),helpers.scale(
       BConstants.beam['length'],direction))
 
     return endpoint
@@ -515,7 +515,7 @@ class Brain(BaseBrain):
     else:
       # Get repair beam vector
       b_i,b_j = self.Body.structure.get_endpoints(self.Body.readFromMemory('broken_beam_name'),
-        self.Body.location)
+        self.Body.getLocation())
       repair_vector = helpers.make_vector(b_i,b_j)
 
       # Get the correct vector for the current beam
@@ -601,13 +601,13 @@ class Brain(BaseBrain):
     #pdb.set_trace()
     # Get broken beam
     e1,e2 = self.Body.structure.get_endpoints(self.Body.readFromMemory('broken_beam_name'),
-      self.Body.location)
+      self.Body.getLocation())
 
     # Direction
     v = helpers.make_unit(helpers.make_vector(e1,e2))
 
     # Get pivot and repair beam midpoint
-    pivot = self.Body.location
+    pivot = self.Body.getLocation()
     midpoint1 = helpers.midpoint(e1,e2)
 
     # Upper midpoint to encourate upward building
@@ -652,7 +652,7 @@ class Brain(BaseBrain):
       else:
         beam_vector = helpers.make_vector(self.Body.beam.endpoints.i,
           self.Body.beam.endpoints.j)
-        support_vector = helpers.make_vector(self.Body.location,coord)
+        support_vector = helpers.make_vector(self.Body.getLocation(),coord)
         angle = helpers.smallest_angle(beam_vector,support_vector)
         real_angle = abs(90-angle) if angle > 90 else angle
         
@@ -702,7 +702,7 @@ class Brain(BaseBrain):
     '''
     # If we ran our course with the support, construct it
     if (((self.Body.beam is not None and self.Body.readFromMemory('new_beam_steps') == 0) or (
-      helpers.compare(self.Body.location[2],0) and 
+      helpers.compare(self.Body.getLocation()[2],0) and 
       self.Body.readFromMemory('new_beam_ground_steps') == 0)) and 
       self.Body.readFromMemory('construct_support')):
       return True
@@ -779,12 +779,12 @@ class Brain(BaseBrain):
     robot wants to move when looking for an already set support tube.
     The direction is a unit vector
     '''
-    pdb.set_trace()
+    #pdb.set_trace()
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
     i, j = beam.endpoints.i, beam.endpoints.j
-    v1 = helpers.make_vector(self.Body.location,j)
-    v2 = helpers.make_vector(i,self.Body.location)
+    v1 = helpers.make_vector(self.Body.getLocation(),j)
+    v2 = helpers.make_vector(i,self.Body.getLocation())
     l1,l2 = helpers.length(v1), helpers.length(v2)
 
     # v1 is non-zero and it is not vertical
@@ -811,7 +811,7 @@ class Brain(BaseBrain):
 
       # Print to console
       string = "{} is starting repair of beam {} which has moment {} at {}".format(
-        self.Body.name,beam.name,str(moment),str(self.Body.location))
+        self.Body.name,beam.name,str(moment),str(self.Body.getLocation()))
 
       # This is a special repair of the moment is zero
       if moment == 0:
@@ -1022,7 +1022,7 @@ class Brain(BaseBrain):
     # Access items
     for beam, vectors in dirs.items():
 
-      true_beam = self.Body.structure.get_beam(beam,self.Body.location)
+      true_beam = self.Body.structure.get_beam(beam,self.Body.getLocation())
 
       # If the beam won't be a support beam, pass it..
       if (preferenced and true_beam.endpoints.j in true_beam.joints and 
@@ -1152,7 +1152,7 @@ class Brain(BaseBrain):
     assert (self.Body.num_beams > 0)
 
     # Default pivot is our location
-    pivot = self.Body.location
+    pivot = self.Body.getLocation()
 
     if self.Body.beam is not None:
 
@@ -1167,7 +1167,7 @@ class Brain(BaseBrain):
         all_joints.append(self.Body.beam.endpoints.i)
 
       # Find the nearest one
-      joint_coord, dist = min([(coord, helpers.distance(self.Body.location,coord)) for coord in all_joints], key = lambda t: t[1])
+      joint_coord, dist = min([(coord, helpers.distance(self.Body.getLocation(),coord)) for coord in all_joints], key = lambda t: t[1])
       
       # If the nearest joint is within our error, then use it as the pivot
       if dist <= BConstants.beam['joint_error']:
@@ -1328,10 +1328,10 @@ class Brain(BaseBrain):
     # The direction is smaller than the determined step, so move exactly by 
     # direction
     if length < self.Body.step:
-      new_location = helpers.sum_vectors(self.Body.location, direction)
+      new_location = helpers.sum_vectors(self.Body.getLocation(), direction)
       # decide if we're climbing off the structure
       newbeam = None if self.climb_off(new_location) else beam
-      self.Body.change_location_structure(new_location, newbeam)
+      self.Body.changeLocationOnStructure(new_location, newbeam)
 
       # call do_action again since we still have some distance left, and update
       # step to reflect how much distance is left to cover
@@ -1344,7 +1344,7 @@ class Brain(BaseBrain):
       # We still have steps to go, so run an analysis if necessary
       elif self.Body.beam is not None:
         # Run analysis before deciding to get the next direction
-        if not self.Body.model.GetModelIsLocked() and self.Body.need_data():
+        if not self.Body.model.GetModelIsLocked() and self.Body.needData():
           errors = helpers.run_analysis(self.Body.model)
           if errors != '':
             # pdb.set_trace()
@@ -1370,9 +1370,9 @@ class Brain(BaseBrain):
     # specified direction
     else:
       movement = helpers.scale(self.Body.step, helpers.make_unit(direction))
-      new_location = helpers.sum_vectors(self.Body.location, movement)
+      new_location = helpers.sum_vectors(self.Body.getLocation(), movement)
       newbeam = None if self.climb_off(new_location) else beam
-      self.Body.change_location_structure(new_location, newbeam)
+      self.Body.changeLocationOnStructure(new_location, newbeam)
 
   def get_direction(self):
     ''' 
@@ -1382,7 +1382,7 @@ class Brain(BaseBrain):
     z-component
     '''
     # Get all the possible directions, as normal
-    info = self.Body.get_directions_info()
+    info = self.Body.getAvailableDirections()
 
     # Filter out directions which are unfeasable if we have an analysis result
     # available
@@ -1471,9 +1471,9 @@ class Brain(BaseBrain):
             results[name] = new_directions
 
           # Add beam to broken
-          beam = self.Body.structure.get_beam(name,self.Body.location)
+          beam = self.Body.structure.get_beam(name,self.Body.getLocation())
           if not any(beam in broken for broken in self.Body.readFromMemory('broken')):
-            moment = self.Body.get_moment(name)
+            moment = self.Body.getMoment(name)
             lst = self.Body.readFromMemory('broken')
             lst.append((beam,moment))
             self.Body.addToMemory('broken', lst)
@@ -1501,7 +1501,7 @@ class Brain(BaseBrain):
 
         # Beam is not already in broken
         if not any(self.Body.beam in broken for broken in self.Body.readFromMemory('broken')):
-          moment = self.Body.get_moment(name)
+          moment = self.Body.getMoment(name)
           lst = self.Body.readFromMemory('broken')
           lst.append((self.Body.beam,moment))
           self.Body.addToMemory('broken', lst)
@@ -1513,7 +1513,7 @@ class Brain(BaseBrain):
     return results
 
   def joint_check(self,name):
-    moment = self.Body.get_moment(name)
+    moment = self.Body.getMoment(name)
     return moment < BConstants.beam['joint_limit']
 
   def elect_direction(self,directions):

@@ -67,18 +67,12 @@ class Body(object):
   State gathering functions (for information purposes).
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   def myType(self):
-    return self.my_type()
-
-  def my_type(self):
     '''
     Returns the class name.
     '''
     return self.__class__.name
 
   def currentState(self):
-    return current_state()
-
-  def current_state(self):
     '''
     Returns the current state of the robot. This is used when we write the 
     information to the logs
@@ -88,7 +82,7 @@ class Body(object):
 
     # Round location to prevent decimal runoff in Excel
     location = [round(coord,2) for coord in self.location]
-    deflected_location = [round(coord,2) for coord in self.get_true_location()]
+    deflected_location = [round(coord,2) for coord in self.getGenuineLocation()]
     
     # Copy the memory so that it is not modified
     memory = self.memory.copy()
@@ -106,25 +100,19 @@ class Body(object):
     return state
 
   def needData(self):
-    return need_data()
-
-  def need_data(self):
     '''
     Returns whether or not this particular robot needs the structure to be analyzed
     '''
-    return self.beam is not None
+    return self.onStructure()
 
   def getGenuineLocation(self):
-    return get_true_location()
-
-  def get_true_location(self):
     '''
     Returns the location of the robot on the current beam, accounting for the
     deflections that the beam has undergone. Uses the design location and the 
     deflection data from SAP to calculate this location.
     '''
     # Not on the structure, no deflection, or not recording deflection
-    if not self.on_structure() or self.beam.deflection is None or not VISUALIZATION['deflection']:
+    if not self.onStructure() or self.beam.deflection is None or not VISUALIZATION['deflection']:
       return self.location
 
     else:
@@ -146,27 +134,18 @@ class Body(object):
       return helpers.sum_vectors(self.location,deflection)
 
   def getLocation(self):
-    return get_location
-
-  def get_location(self):
     '''
     Provides easy access to the location.
     '''
     return self.location
 
   def onStructure(self):
-    return on_structure()
-
-  def on_structure(self):
     '''
     Returns whether or not the robot is on the structure
     '''
     return self.beam is not None
 
   def atHome(self):
-    return self.at_home()
-
-  def at_home(self):
     '''
     True if the robot is in the area designated as home (on the ground)
     '''
@@ -174,9 +153,6 @@ class Body(object):
       self.location)
 
   def atSite(self):
-    return self.at_site()
-
-  def at_site(self):
     '''
     True if the robot is in the area designated as the construction site 
     (on the ground)
@@ -185,8 +161,6 @@ class Body(object):
       CONSTRUCTION['size'], self.location)
 
   def atTop(self):
-    return self.at_top()
-  def at_top(self):
     '''
     Returns if we really are at the top
     '''
@@ -223,12 +197,13 @@ class Body(object):
 
     return False
 
-  def addToMemory(self,key,value,mult=False):
+  def addToMemory(self,key,value,mult={}):
     '''
     Adds into the robot memory the information specified by value accessible 
     throught the key. If the key already exists, it simply replaces the value.
     '''
-    self.memory.update({key : value})
+    mult.update({key : value})
+    self.memory.update(mult)
     return True
 
   def popFromMemory(self,key):
@@ -256,7 +231,7 @@ class Body(object):
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Mobility functions for the robot body.
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  def change_location_local(self,new_location, first_beam = None):
+  def changeLocalLocation(self,new_location, first_beam = None):
     '''
     Moves the robot about locally (ie, without worrying about the structure, 
     except for when it moves onto the first beam)
@@ -276,7 +251,7 @@ class Body(object):
       loc[2] = 0
       self.location = tuple(loc)
 
-  def change_location_structure(self,new_location, new_beam):
+  def changeLocationOnStructure(self,new_location, new_beam):
     '''
     Function that takes care of changing the location of the robot on the
     SAP2000 program. Removes the current load from the previous location (ie,
@@ -302,7 +277,7 @@ class Body(object):
       assert data[0] == 0 
       if data[1] == 0:
         helpers.check(1,self,"getting loads",beam=self.beam.name,
-          return_data=data,state=self.current_state())
+          return_data=data,state=self.currentState())
         return;
 
       # Find location of load
@@ -325,7 +300,7 @@ class Body(object):
         PROGRAM['robot_load_case'])
       helpers.check(ret,self,"deleting loads",return_val=ret,
         beam=self.beam.name,distance=curr_dist,previous_loads=data,
-        state=self.current_state())
+        state=self.currentState())
 
       # add the loads we want back to the frame (automatically deletes all 
       # previous loads)
@@ -337,7 +312,7 @@ class Body(object):
           helpers.check(ret,self,"adding back loads",return_val=ret,
             beam=self.beam.name,load_pat=data[3][i],type=data[4][i],
             direction=data[6][i],rel_dist=data[7][i],load_val=data[9][i],
-            state=self.current_state())
+            state=self.currentState())
 
     # Move the load off the current location and to the new one (if still on 
     # beam), then change the locations
@@ -359,13 +334,10 @@ class Body(object):
   to what the robot knows. These are like the sensors
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   def atJoint(self):
-    return self.at_joint()
-
-  def at_joint(self):
     '''
     Returns whether or not the robot is at a joint
     '''
-    if self.on_structure():
+    if self.onStructure():
 
       for joint in self.beam.joints:
         # If we're at a joint to another beam
@@ -378,14 +350,11 @@ class Body(object):
       return False
 
   def getMoment(self,name):
-    return self.get_moment(name)
-
-  def get_moment(self,name):
     '''
     Returns the moment for the beam specified by name at the point closest 
     to the robot itself
     '''
-    m11,m22,m33 = self.get_moment_magnitudes(name)
+    m11,m22,m33 = self.getMomentMagnitudes(name)
 
     # Find magnitude
     total = math.sqrt(m22**2 + m33**2)
@@ -396,9 +365,6 @@ class Body(object):
     return total
 
   def getMomentMagnitudes(self,name,pivot=None):
-    return self.get_moment_magnitudes(name,pivot)
-
-  def get_moment_magnitudes(self,name,pivot = None):
     '''
     Returns the moment magnitudes (m11,m22,m33) for the local axes u1,u2,u3 at
     the output station closest to the pivot. If there is no pivot, it returns
@@ -414,7 +380,7 @@ class Body(object):
     if results[0] != 0:
       # pdb.set_trace()
       helpers.check(results[0],self,"getting frame forces",results=results,
-        state=self.current_state())
+        state=self.currentState())
       return 0
 
     # Find index of closest data_point
@@ -447,10 +413,7 @@ class Body(object):
 
     return m11,m22,m33
 
-  def getAvailableDirection(self):
-    return self.get_direction_info()
-
-  def get_directions_info(self):
+  def getAvailableDirections(self):
     '''
     Returns a list of triplets with delta x, delta y, and delta z of the 
     direction the robot can move in. These directions constitute the locations 
@@ -460,33 +423,32 @@ class Body(object):
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
     # Run analysys before deciding to get the next direction
-    if not self.model.GetModelIsLocked() and self.need_data():
+    if not self.model.GetModelIsLocked() and self.needData():
       errors = helpers.run_analysis(self.model)
       if errors != '':
-        # pdb.set_trace()
-        pass
+        self.error_data += "getAvailableDirections(): " + errors + "\n"
 
     # Verify that the robot is on its beam and correct if necessary. 
     # This is done so that floating-point arithmethic errors don't add up.
     (e1, e2) = self.beam.endpoints
     if not (helpers.on_line (e1,e2,self.location)):
-      self.change_location(helpers.correct(e1,e2,self.location), self.beam)
+      self.changeLocationOnStructure(helpers.correct(e1,e2,self.location), self.beam)
 
     # Obtain all local objects
     box = self.structure.get_box(self.location)
 
     # Debugging
     if box == {}:
-      # pdb.set_trace()
+      pdb.set_trace()
       pass
 
     # Find the beams and directions (ie, where can he walk?)
-    directions_info = self.get_walkable_directions(box)
+    directions_info = self.getWalkableDirections(box)
 
     return {  'box'         : box,
               'directions'  : directions_info }
 
-  def get_walkable_directions(self,box):
+  def getWalkableDirections(self,box):
     '''
     Finds all of the beams in box which intersect the robots location or 
     to which the robot can walk onto. Returns delta x, delta y, and delta z
@@ -545,7 +507,7 @@ class Body(object):
                     endpoints were ignored.")
 
           except IndexError:
-            print ("The beam {} seems to have a joint with {}, but it is not in\
+            raise Exception("The beam {} seems to have a joint with {}, but it is not in\
               the box?".format(name,self.beam.name))
       
       # For all joints within the timestep, return a direction that is exactly 
@@ -679,7 +641,7 @@ class Body(object):
     ret = self.model.FrameObj.SetLoadPoint(beam.name,PROGRAM['robot_load_case'],
       1,10,distance,value,"Global", False, True,0)
     helpers.check(ret,self,"adding new load",beam=beam.name,distance=distance,
-      value=value,state=self.current_state())
+      value=value,state=self.currentState())
 
   def addBeam(self,p1,p2):
     return self.addbeam(p1,p2)
