@@ -112,7 +112,7 @@ class Body(object):
     '''
     Returns whether or not this particular robot needs the structure to be analyzed
     '''
-    return self.beam is not None and self.memory['pos_z']
+    return self.beam is not None
 
   def getGenuineLocation(self):
     return get_true_location()
@@ -728,7 +728,7 @@ class Body(object):
 
     # Get rid of one beam
     self.discard_beams()
-    
+
     # Successfully added at least one box
     if self.structure.add_beam(p1,p1_name,p2,p2_name,name) > 0:
       

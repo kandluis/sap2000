@@ -778,6 +778,7 @@ class Brain(BaseBrain):
     robot wants to move when looking for an already set support tube.
     The direction is a unit vector
     '''
+    pdb.set_trace()
     # Calculate direction of repair (check 0 dist, which means it is perfectly
     # vertical!)
     i, j = beam.endpoints.i, beam.endpoints.j
@@ -1334,7 +1335,7 @@ class Brain(BaseBrain):
     found). Currently, we just add a bit of disturbace while remaining within 
     the range that the robot was set to search.
     '''
-    pdb.set_trace()
+    #pdb.set_trace()
     direction = self.Body.readFromMemory('preferred_direction')
 
     # No preferred direction, so beam was vertically above use
