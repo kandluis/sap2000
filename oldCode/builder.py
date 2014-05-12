@@ -1,5 +1,5 @@
 from Helpers import helpers
-from robots.movable import Movable
+from oldCode.movable import Movable
 import math, operator, pdb, random, sys
 
 from construction import HOME, CONSTRUCTION
@@ -134,7 +134,7 @@ class Builder(Movable):
     '''
     True if the robot is in the area designated as home (on the ground)
     '''
-    return helpers.within(HOME['center'], HOME['size'],
+    return helpers.within(HOME['corner'], HOME['size'],
       self.location)
 #DONE
   def at_site(self):

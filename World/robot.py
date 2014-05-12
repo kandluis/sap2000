@@ -437,7 +437,11 @@ class Body(BaseBody):
     '''
     Returns whether or not the robot is at a joint
     '''
-    if self.onStructure():
+    if self.onStructure() and helpers.compare(self.location[2],0):
+      return True
+
+    # super section
+    elif self.onStructure():
 
       for joint in self.beam.joints:
         # If we're at a joint to another beam

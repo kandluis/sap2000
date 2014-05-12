@@ -309,7 +309,6 @@ class Brain(BaseBrain):
     '''
     Adding ability to change memory
     '''
-    self.Body.pickupBeams(num)
 
     # Set the direction towards the structure
     self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
@@ -319,6 +318,8 @@ class Brain(BaseBrain):
 
     # Move up when you pick one up
     self.Body.addToMemory('pos_z', True)
+
+    self.Body.pickupBeams(num)
 
   def wander(self):
     '''    
@@ -339,7 +340,7 @@ class Brain(BaseBrain):
     if self.Body.num_beams == 0:
       vector = helpers.make_vector(self.Body.getLocation(),HOME['center'])
       self.Body.addToMemory('ground_direction', (vector if not helpers.compare(helpers.length(
-        vector),0) else helpers.non_zero_xydirection())) 
+        vector),0) else self.non_zero_xydirection())) 
 
     # Find nearby beams to climb on
     result = self.Body.ground()
@@ -456,7 +457,7 @@ class Brain(BaseBrain):
 
     # The beam was vertical
     if default_direction is None:
-      xy_dir = helpers.non_zero_xydirection()
+      xy_dir = self.non_zero_xydirection()
 
     # Use the default direction
     else:
@@ -827,6 +828,8 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.atTop():
       self.Body.addToMemory('start_construction', True)
       self.Body.addToMemory('broken', [])
+    else:
+      pass
 
   def add_support_mode(self):
     '''
@@ -1275,6 +1278,24 @@ class Brain(BaseBrain):
     '''
     return True
  
+  def non_zero_xydirection(self):
+    '''
+    Returns a non_zero list of random floats with zero z component.
+    The direction returned is a unit vector.
+    '''
+    # Random list
+    tuple_list = ([random.uniform(-1,1),random.uniform(-1,1),
+      random.uniform(-1,1)])
+
+    # All are non-zero
+    if all(tuple_list):
+      tuple_list[2] = 0
+      return helpers.make_unit(tuple(tuple_list))
+
+    # All are zero - try again
+    else:
+      return self.non_zero_xydirection()
+
   def get_repair_beam_direction(self):
     '''
     Returns the xy direction at which the support beam should be set (if none is

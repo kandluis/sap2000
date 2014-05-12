@@ -1,17 +1,21 @@
 import pdb
 import traceback
 import sys
+import random
 
 from main import Simulation
 from visualization import Visualization
 
 # Variables (see Documentation for description)
 view = True
-seed = "r@nd0M"
+seed = "r@nd0M2"
 robot_number = 1
 maxsteps = 10000
-debug = 0 # begin debugging after this timestep. 0 turns off debugging
+debug = 4000 # begin debugging after this timestep. 0 turns off debugging
 comment = seed
+
+# seeding the simulation
+random.seed(seed)
 
 # Run the Simulation, input is the random seed
 Sim = Simulation()

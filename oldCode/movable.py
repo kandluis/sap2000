@@ -1,5 +1,5 @@
 from Helpers import helpers
-from robots.automaton import Automaton
+from oldCode.automaton import Automaton
 from SAP2000.constants import EOBJECT_TYPES
 import pdb, random
 

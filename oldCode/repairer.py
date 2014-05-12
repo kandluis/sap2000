@@ -1,5 +1,5 @@
 from Helpers import helpers
-from robots.worker import Worker
+from oldCode.worker import Worker
 import math, pdb, random
 
 from variables import BEAM, ROBOT
@@ -29,10 +29,12 @@ class DumbRepairer(Worker):
     # Constains repair data so we can write it out to file in main.py
     self.repair_data = ''
 
+# Done
   def current_state(self):
     state = super(DumbRepairer,self).current_state()
     return state
 
+# DONE
   def repairing(self):
     '''
     This is run when repairing, so as to set the right values when filtering and
@@ -303,6 +305,7 @@ class Repairer(DumbRepairer):
     # Robots have a tendency to return to the previous area of repair
     self.memory['ground_tendencies'] = [None,None,None]
 
+# DONE
   def pickup_beams(self):
     '''
     Resets the robot's broken settings. Might change this later
