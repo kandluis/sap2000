@@ -125,10 +125,6 @@ class Brain(BaseBrain):
     # The direction in which we should move
     self.Body.addToMemory('next_direction_info', None)
 
-    # The robots all initially move towards the centertower
-    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
-      CONSTRUCTION['corner']))
-
 
   def performDecision(self):
     #pdb.set_trace()

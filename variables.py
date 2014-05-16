@@ -112,7 +112,12 @@ PROGRAM = {
   # mesagge instructions for debugging
   'debug_message' :   ("You are in debugging mode. Press n to continue to the next line.\n"+
             "Press s to step into the current function. Press c to go to next timestep.\n"+ 
-            "Ctrl+c to exit.\n\n" + "Brought to you by Luis Perez!\n")
+            "Ctrl+c to exit.\n\n" + "Brought to you by Luis Perez!\n"),
+
+  # number of timesteps the swarm awaits before launching a new robot
+  'waitSteps' : 20
+
+
 }
 
 

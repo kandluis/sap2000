@@ -14,8 +14,8 @@ from xlsxwriter.workbook import Workbook
 from Helpers import commandline
 from Helpers import helpers
 # import simulation objects
-from oldCode.colony import SmartSwarm
-#from World.swarm import SmartSwarm
+#from oldCode.colony import SmartSwarm
+from World.swarm import SmartSwarm
 from World.structure import Structure
 from SAP2000.constants import MATERIAL_TYPES, UNITS,STEEL_SUBTYPES, PLACEHOLDER
 from variables import BEAM, MATERIAL, PROGRAM, WORLD, WIND

@@ -9,6 +9,8 @@ latest = 'C:\\SAP 2000\\Aug-16\\15_33_11\\'
 
 spring = 'C:\\SAP 2000\\Apr-25\\00_03_58\\'
 
-vis = Visualization(spring)
+new_brain = 'C:\\SAP 2000\\2014-May\\May-14\\12_56_07\\'
+
+vis = Visualization(new_brain)
 vis.load_data()
 vis.run(False,inverse_speed=.1)
