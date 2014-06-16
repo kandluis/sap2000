@@ -78,7 +78,7 @@ MATERIAL.update({
   'cross_sect_area' : math.pi * ((MATERIAL['outside_diameter'] / 2)**2 - 
     (MATERIAL['outside_diameter'] / 2 - MATERIAL['wall_thickness'])**2), # in*in
   'moment_of_intertia' : math.pi * ((MATERIAL['outside_diameter']/2)**4 - 
-    (MATERIAL['outside_diameter'] / 2 - MATERIAL['wall_thickness'])**4) / 4
+    (MATERIAL['outside_diameter'] / 2 - MATERIAL['wall_thickness'])**4) / 4 # check if this is correct?
 })
 
 MATERIAL.update({

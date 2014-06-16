@@ -16,7 +16,8 @@ from Behaviour import constants as BConstants
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Implementation of different robot brains. 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-class BaseBrain(metaclass=ABCMeta):
+class BaseBrain:
+  __metaclass__=ABCMeta
   @abstractmethod
   def __init__(self,Robot):
     # access to the robot body; functions are detailed in the documentation file

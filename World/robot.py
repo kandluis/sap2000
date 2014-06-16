@@ -11,7 +11,8 @@ from Helpers import helpers
 from variables import BEAM, MATERIAL, PROGRAM, ROBOT, VISUALIZATION
 from construction import HOME, CONSTRUCTION
 
-class BaseBody(metaclass=ABCMeta):
+class BaseBody:
+  __metaclass__=ABCMeta
   '''
   These are the methods that need to be implemented in order for the
   current brains to continue functioning correctly. Look at comments on

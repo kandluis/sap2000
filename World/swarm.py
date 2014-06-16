@@ -14,7 +14,8 @@ from variables import ROBOT, VISUALIZATION
 # for visualization
 import visual
 
-class BaseSwarm(metaclass=ABCMeta):
+class BaseSwarm:
+  __metaclass__=ABCMeta
   '''
   Interface abstraction for Swarm. See implementation and documentation for
   explanation of class methods
