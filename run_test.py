@@ -32,3 +32,4 @@ except:
 
 # Display the simulation
 Sim.run_visualization()
+#SAP 2000 templates.sdb
