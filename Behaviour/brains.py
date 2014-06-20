@@ -61,7 +61,7 @@ simulation that have here.
 '''
 class Brain(BaseBrain):
   def __init__(self,Robot):
-    super(Brain,self).__init__(Robot)
+    super().__init__(Robot)
 
     # Setup default values for memory storage
     self.Body.addToMemory('search_mode', False)
@@ -440,6 +440,7 @@ class Brain(BaseBrain):
 
     # We have climbed off, so wander about 
     else:
+      print(self.Body.name +' is WANDERING')
       self.wander()
 
   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -1342,7 +1343,7 @@ class Brain(BaseBrain):
     Moves the robot in direction passed in and onto the beam specified
     '''
     length = helpers.length(direction)
-
+    print(self.Body.name + str(direction))
     # The direction is smaller than the determined step, so move exactly by 
     # direction
     if length < self.Body.step:
