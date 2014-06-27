@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from Helpers import helpers
 
 # import brain module, we need it to add into the robot body when making robots
-from Behaviour import brains as Brains
+from Behaviour import brain_v1 as Brains
 from World import robot as Robot
 
 # import construction constants and robot/visualization constants
