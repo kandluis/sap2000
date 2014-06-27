@@ -16,7 +16,7 @@ beam = {
 
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another
-  'min_angle_constraint'      : 90, #5
+  'min_angle_constraint'      : 0, #5
 
   # The maximum angle from vertical at which a beam is allowed to intersect with another
   'max_angle_constraint'      : 90, #60
@@ -59,7 +59,7 @@ beam = {
 
   # This is only used for classes which inherit from LeanRepairer
   # This is the angle from the vertical at which a beam is initially constructed
-  'construction_angle'        : 30,
+  'construction_angle'        : 90, #30,
 
   # This is the angle between the beam we want to repair and the beam we are
   # currently on.
