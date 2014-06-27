@@ -49,7 +49,7 @@ class BaseBrain:
 class Brain(BaseBrain):
   def __init__(self,Robot):
     super().__init__(Robot)
-    '''
+    
     # Setup default values for memory storage
     self.Body.addToMemory('search_mode', False)
     self.Body.addToMemory('start_construction', False)
@@ -112,7 +112,7 @@ class Brain(BaseBrain):
 
     # The direction in which we should move
     self.Body.addToMemory('next_direction_info', None)
-    '''
+
   def performDecision(self):
     #pdb.set_trace()
     self.decide()
