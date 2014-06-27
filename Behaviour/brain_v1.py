@@ -208,24 +208,21 @@ class Brain(BaseBrain):
         self.Body.changeLocalLocation(new_location)
 
 
-  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  Actions performable by the robot body
-  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  def pickupBeams(self,num = ROBOT['beam_capacity']):
+  def pickup_beams(self,num = ROBOT['beam_capacity']):
     '''
-    Pickup beams by adding weight to the robot and by adding num to number 
-    carried
+    Adding ability to change memory
     '''
-    self.num_beams = self.num_beams + num
-    self.weight = self.weight + MATERIAL['beam_load'] * num
 
-  def discardBeams(self,num = 1):
-    '''
-    Get rid of the specified number of beams by decresing the weight and the 
-    number carried
-    '''
-    self.num_beams = self.num_beams - num
-    self.weight = self.weight - MATERIAL['beam_load'] * num
+    # Set the direction towards the structure
+    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
+      CONSTRUCTION['center']))
+    self.Body.addToMemory('broken', [])
+    self.Body.addToMemory('broken_beam_name', '')
+
+    # Move up when you pick one up
+    self.Body.addToMemory('pos_z', True)
+
+    self.Body.pickupBeams(num)
 
 
 
