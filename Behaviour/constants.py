@@ -16,10 +16,10 @@ beam = {
 
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another
-  'min_angle_constraint'      : 0, #5
+  'min_angle_constraint'      : 5,
 
   # The maximum angle from vertical at which a beam is allowed to intersect with another
-  'max_angle_constraint'      : 90, #60
+  'max_angle_constraint'      : 60,
 
   # The default vertical direction
   'vertical_dir_set'          : (0,0,1),
@@ -48,18 +48,18 @@ beam = {
   'structure_check'           : PROGRAM['structure_check'],
 
   # The angle from vertical at which a support beam is constructed
-  'support_angle'             : 90, #60
+  'support_angle'             : 60,
 
   # The minimum angle at which a support beam is allowed to be constructed if 
   # it intersects with another beam in the structure
   'support_angle_min'         : 0,
 
   # The maximum angle (from vertical)
-  'support_angle_max'         : 90, #60
+  'support_angle_max'         : 60, 
 
   # This is only used for classes which inherit from LeanRepairer
   # This is the angle from the vertical at which a beam is initially constructed
-  'construction_angle'        : 90, #30,
+  'construction_angle'        : 30,
 
   # This is the angle between the beam we want to repair and the beam we are
   # currently on.

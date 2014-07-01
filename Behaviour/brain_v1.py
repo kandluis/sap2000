@@ -20,10 +20,13 @@ Implementation of robot brain.
 class BaseBrain:
   __metaclass__=ABCMeta
   @abstractmethod
-  def __init__(self,Robot):
+  def __init__(self, Robot):
     # access to the robot body; functions are detailed in the documentation file
     # Code for the robot can be found in /World/robot.py
     self.Body = Robot
+    self.addToMemory('decision',None)
+    self.addToMemory('location',self.Body.getLocation())
+    self.addToMemory('construction_angle',90)
 
   @abstractmethod
   def performDecision(self):
@@ -46,72 +49,17 @@ class BaseBrain:
     '''
     pass
 
-class Brain(BaseBrain):
-  def __init__(self,Robot):
-    super().__init__(Robot)
+  def move(self, direction=0):
+    pass
+
+  def pickUpBeam(self, numBeams = ROBOT['beam_capacity']):
     
-    # Setup default values for memory storage
-    self.Body.addToMemory('search_mode', False)
-    self.Body.addToMemory('start_construction', False)
-    self.Body.addToMemory('ground_direction', None)
-    self.Body.addToMemory('ground_tendencies', [None, None, None])
-    self.Body.addToMemory('new_beam_steps', 0)
 
-    # Same as above, but on the ground - since the ground is already a horizontal
-    # support beam
-    self.Body.addToMemory('new_beam_ground_steps', 0)
 
-    # Stores name of beam to be reinforced (so we know when we're no longer on it)
-    self.Body.addToMemory('broken_beam_name','')
 
-    # Stores the previous beam we were on
-    self.Body.addToMemory('previous_beam',None)
-
-    # Smaller number gives higher priority
-    self.Body.addToMemory('dir_priority',[0,0,0])
-
-    # Move further in the x-direction?
-    self.Body.addToMemory('pos_x', None)
-
-    # Move further in the y-direction?
-    self.Body.addToMemory('pos_y', None)
-
-    self.Body.addToMemory('start_construction', False)
-
-    # Climbing up or down
-    self.Body.addToMemory('pos_z', None)
-    self.Body.addToMemory('dir_priority', [0])
-
-    # Starting defaults
-    self.Body.addToMemory('built', False)
-    self.Body.addToMemory('constructed', 0)
-
-    # Keeps track of the direction we last moved in.
-    self.Body.addToMemory('previous_direction', None)
-
-    # Stores information on beams that need repairing
-    self.Body.addToMemory('broken', [])
-
-    # Stores whether or not we are constructing vertically or at an angle (for 
-    # support)
-    self.Body.addToMemory('construct_support', False)
-
-    # This is the direction towards which the robot looks when searching for a 
-    # support tube.
-    # This is in the form (x,y,z)
-    self.Body.addToMemory('preferred_direction', None)
-
-    # Modes for supporting structure
-    # WILL GO IN MEMORY
-    self.Body.addToMemory('search_mode', False)
-    self.Body.addToMemory('repair_mode', False)
-
-    # The robots all initially move towards the centertower
-    self.Body.addToMemory('ground_direction', helpers.make_vector(self.Body.getLocation(),
-      CONSTRUCTION['corner']))
-
-    # The direction in which we should move
-    self.Body.addToMemory('next_direction_info', None)
+class Brain(BaseBrain):
+  def __init__(self, Robot):
+    super().__init__(Robot)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -129,7 +77,7 @@ class Brain(BaseBrain):
     pass
 
   def do_action(self):
-    length = helpers.length(direction)
+    pass
 
 
 
