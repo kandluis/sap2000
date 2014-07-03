@@ -1,6 +1,6 @@
 from visualization import Visualization
 
-revisualize = 'C:\\SAP 2000\\2014-Jun\\Jun-19\\18_39_10\\'
+revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-03\\06_17_45\\'
 
 vis = Visualization(revisualize)
 vis.load_data()
