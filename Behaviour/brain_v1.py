@@ -74,8 +74,11 @@ class Brain(BaseBrain):
     print(self.Body.getLocation())
     if self.Body.num_beams == 0 and self.Body.getLocation()[2] == 0:
       self.pick_up_beam()
+    else if not self.Body.atSite():
+      self.go_to_construction_site()
+      self.Body.discardBeams()
     else:
-      direction = random_direction()
+      direction = self.random_direction()
       self.move(direction)
 
   def move(self, angle):
@@ -103,14 +106,14 @@ class Brain(BaseBrain):
       self.Body.step, helpers.make_unit(direction_construction)))
     self.Body.changeLocalLocation(new_location)
 
-  def random_direction():
+  def random_direction(self):
     rand = int(random()*4)
     if rand == 0: return 90
     if rand == 1: return 180
     if rand == 2: return 270
     if rand == 3: return 0
 
-  
+
 
 
 
