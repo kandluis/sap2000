@@ -18,7 +18,7 @@ beam = {
   'ground_angle'              : 60,
 
   # Angle non-base beams make relative to each other
-  'beam_angle'                : 60,
+  'beam_angle'                : 30,
 
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another

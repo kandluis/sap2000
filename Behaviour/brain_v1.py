@@ -79,20 +79,23 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.atTop(): 
-        self.place_beam()
+        beam_initial = self.Body.beam
+        self.climb_up()
+        beam_final = self.Body.beam
+        self.place_beam()#if beam_initial.name == beam_final.name: 
       else:
-        self.climb_up() if random() <= 0.9 else self.place_beam()
+        self.climb_up() if random() <= 0.95 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       if self.Body.ground() != None:
         self.go_to_beam() if random() <= 0.5 else self.move('NWSE')
       else: 
-        BASE_RADIUS = 60
+        BASE_RADIUS = 120
         vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
         if helpers.length(vector_to_site) <= BASE_RADIUS: 
           self.build_base() if random() <= 0.5 else self.move('NWSE')
         else:
-          self.go_to_construction_site() if random() <= 0.75 else self.move('NWSE')
+          self.go_to_construction_site() if random() <= 0.5 else self.move('NWSE')
     
     else:
       print('Hmm, what to do?')
@@ -180,7 +183,7 @@ class Brain(BaseBrain):
     if not self.Body.structure.available(i,j):
       # Create a small disturbace
       lim = BEAM['random']
-      f = random.uniform
+      f = uniform
       disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
       # find the new j-point for the beam
       new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
@@ -196,31 +199,31 @@ class Brain(BaseBrain):
       self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
-    beam = self.Body.beam
+    beam = None
     steepest = float('Inf')
     for beam_name, loc in info['directions'].items():
       for (x,y,z) in loc:
-        if z < steepest: 
+        if z < 0: 
           direction = (x,y,z)
           steepest = z
-          #beam = get_beam_info(beam_name)
+          beam = self.Body.structure.find_beam(beam_name)
     self.climb(direction,beam)
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
-    if self.Body.model.GetModelIsLocked():
-      self.Body.model.SetModelIsLocked(False)
+    
+    self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
-    beam = self.Body.beam
+    beam = None
     steepest = -float('Inf')
     print(info['directions'])
     for beam_name, loc in info['directions'].items():
       for (x,y,z) in loc:
-        if z > steepest: 
+        if z > 0: 
           direction = (x,y,z)
           steepest = z
-          #beam = get_beam_info(beam_name)
+          beam = self.Body.structure.find_beam(beam_name)
     self.climb(direction,beam)
 
 
@@ -230,10 +233,9 @@ class Brain(BaseBrain):
     build_angle = radians(BConstants.beam['beam_angle'])
     
     random_angle = radians(random()*360)
-    height = sin(ground_angle)
-    radius = cos(ground_angle)
-    x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
-    
+    height = sin(build_angle)
+    radius = cos(build_angle)
+    x, y, z = radius*cos(random_angle), radius*sin(random_angle), height  
     end_coordinates = (x,y,z)
     
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\

@@ -365,7 +365,7 @@ class Body(BaseBody):
       existed (assumes the robot is on a beam)
       '''
       # Sanity check
-      assert not self.model.GetModelIsLocked()
+      #assert not self.model.GetModelIsLocked() FIX (should work uncommented)
 
       # obtain current values.
       # values are encapsulated in a list as follows: ret, number_items, 
@@ -545,7 +545,7 @@ class Body(BaseBody):
 
     # Debugging
     if box == {}:
-      pdb.set_trace()
+      #pdb.set_trace() FIX
       pass
 
     # Find the beams and directions (ie, where can he walk?)
@@ -737,7 +737,7 @@ class Body(BaseBody):
     location
     '''
     # Sanity check
-    assert not self.model.GetModelIsLocked()
+    #assert not self.model.GetModelIsLocked() FIX
 
     # Find distance and add load
     distance = helpers.distance(beam.endpoints.i,location)
