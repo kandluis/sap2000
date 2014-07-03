@@ -84,7 +84,7 @@ class Brain(BaseBrain):
       if self.Body.ground() != None:
         self.go_to_beam() if random() <= 0.5 else self.move('NWSE')
       else: 
-        BASE_RADIUS = 120
+        BASE_RADIUS = 60
         vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
         if helpers.length(vector_to_site) <= BASE_RADIUS: 
           self.build_base() if random() <= 0.5 else self.move('NWSE')
@@ -110,8 +110,8 @@ class Brain(BaseBrain):
     self.Body.changeLocalLocation(new_location)
 
   # move on structure
-  def move(self, location, beam):
-    length = helpers.length(direction)
+  def climb(self, location, beam):
+    length = helpers.length(location)
     if length < self.Body.step:
       new_location = helpers.sum_vectors(self.Body.getLocation(), location)
     else:
@@ -190,12 +190,13 @@ class Brain(BaseBrain):
     direction = (0,0,0)
     beam = self.Body.beam
     steepest = float('Inf')
-    for beam_name, (x,y,z) in info['directions'].items():
+    for beam_name, loc in info['directions'].items():
+      (x,y,z) = (loc[0][0], loc[0][1], loc[0][2])
       if z < steepest: 
         direction = (x,y,z)
         steepest = z
         beam = beam_name
-    move(direction,beam)
+    self.climb(direction,beam)
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
@@ -203,12 +204,14 @@ class Brain(BaseBrain):
     direction = (0,0,0)
     beam = self.Body.beam
     steepest = -float('Inf')
-    for beam_name, (x,y,z) in info['directions'].items():
+    print(info['directions'])
+    for beam_name, loc in info['directions'].items():
+      (x,y,z) = (loc[0][0], loc[0][1], loc[0][2])
       if z > steepest: 
         direction = (x,y,z)
         steepest = z
         beam = beam_name
-    move(direction,beam)
+    self.climb(direction,beam)
     if random() <= 0.1: self.Body.discardBeams()
   
   def get_direction(self):
@@ -378,7 +381,7 @@ class Brain(BaseBrain):
 
     return directions
 
-    def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
+  def filter_dict(self,dirs,new_dirs,comp_functions,preferenced,priorities=[]):
     '''
     Filters a dictinary of directions, taking out all directions not in the 
     correct directions based on the list of comp_functions (x,y,z).
@@ -564,7 +567,6 @@ class Brain(BaseBrain):
       new_location = helpers.sum_vectors(self.Body.getLocation(), movement)
       newbeam = None if self.climb_off(new_location) else beam
       self.Body.changeLocationOnStructure(new_location, newbeam)
-  '''
 
 
 
