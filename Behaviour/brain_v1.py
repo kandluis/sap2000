@@ -89,7 +89,7 @@ class Brain(BaseBrain):
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
     if self.Body.num_beams == 0:
       self.go_home()
-      self.Body.pickUpBeams(numBeams)
+      self.Body.pickupBeams(numBeams)
 
   def go_home(self):
     direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
