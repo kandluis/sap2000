@@ -88,7 +88,7 @@ class Brain(BaseBrain):
   # Called whenever robot does not have a beam.
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
     if self.Body.num_beams == 0:
-      self.goHome()
+      self.go_home()
       self.Body.pickUpBeams(numBeams)
 
   def go_home(self):
