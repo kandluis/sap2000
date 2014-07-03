@@ -76,7 +76,7 @@ class Brain(BaseBrain):
       self.pick_up_beam()
     else:
       direction = 90 if int(random()*2)==0 else 270
-      move(direction)
+      self.move(direction)
 
   def move(self, angle):
     rad = radians(angle)
