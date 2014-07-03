@@ -23,6 +23,7 @@ class BaseBrain:
   def __init__(self, Robot):
     # access to the robot body; functions are detailed in the documentation file
     # Code for the robot can be found in /World/robot.py
+    self.Body = Robot
 
   @abstractmethod
   def performDecision(self):
@@ -49,7 +50,6 @@ class BaseBrain:
 class Brain(BaseBrain):
   def __init__(self, Robot):
     super().__init__(Robot)
-    self.Body = Robot
     self.addToMemory('decision',None)
     self.addToMemory('location',self.Body.getLocation())
     self.addToMemory('construction_angle',90)
