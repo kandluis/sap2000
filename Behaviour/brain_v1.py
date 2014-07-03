@@ -75,7 +75,11 @@ class Brain(BaseBrain):
     if self.Body.num_beams == 0 and self.Body.getLocation()[2] == 0:
       self.pick_up_beam()
     else:
-      direction = 90 if int(random()*2)==0 else 270
+      rand = int(random()*4)
+      if rand == 0: direction = 90
+      if rand == 1: direction = 180
+      if rand == 2: direction = 270
+      if rand == 3: direction = 0
       self.move(direction)
 
   def move(self, angle):
