@@ -81,7 +81,7 @@ class Brain(BaseBrain):
         self.go_to_beam() if random() <= 0.5 else self.move('NWSE')
       else: 
         if self.Body.atSite():
-          self.build_base() if random() <= 0.1 else self.move('NWSE')
+          self.build_base() if random() <= 0.5 else self.move('NWSE')
         else:
           self.go_to_construction_site() if random() <= 0.75 else self.move('NWSE')
     
