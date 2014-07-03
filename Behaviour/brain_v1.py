@@ -70,16 +70,13 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
-    print(self.Body.num_beams)
-    print(self.Body.getLocation())
-    if self.Body.num_beams == 0 and compare(self.Body.getLocation()[2],0):
+    if self.Body.num_beams == 0 and helpers.compare(self.Body.getLocation()[2],0):
       self.pick_up_beam()
-    else if self.Body.atSite() or self.Body.atHome():
+    elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
+      self.go_to_construction_site()
+    else:
       direction = self.random_direction()
       self.move(direction)
-    else:
-      self.go_to_construction_site()
-      self.Body.discardBeams()
 
   def move(self, angle):
     rad = radians(angle)
@@ -90,21 +87,22 @@ class Brain(BaseBrain):
 
   # Called whenever robot does not have a beam.
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
-    if self.Body.num_beams == 0:
-      self.go_home()
+    if not self.Body.atHome():
+      direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
+      new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
+                     self.Body.step, helpers.make_unit(direction_home)))
+      self.Body.changeLocalLocation(new_location)
+    else: 
       self.Body.pickupBeams(num_beams)
 
-  def go_home(self):
-    direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
-    new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
-      self.Body.step, helpers.make_unit(direction_home)))
-    self.Body.changeLocalLocation(new_location)
-
   def go_to_construction_site(self):
-    direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
-    new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
-      self.Body.step, helpers.make_unit(direction_construction)))
-    self.Body.changeLocalLocation(new_location)
+    if not self.Body.atSite(): 
+      direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
+      new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
+                     self.Body.step, helpers.make_unit(direction_construction)))
+      self.Body.changeLocalLocation(new_location)
+    else:
+      self.Body.discardBeams()
 
   def random_direction(self):
     rand = int(random()*4)
