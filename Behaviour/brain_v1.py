@@ -78,7 +78,7 @@ class Brain(BaseBrain):
       self.move('NWSE')
 
   # move in certain direction (random by default)
-  def move(self, angle=random()*360)):
+  def move(self, angle=random()*360):
     def random_NWSE():
       rand = int(random()*4)
       if rand == 0: return 90   #forward
