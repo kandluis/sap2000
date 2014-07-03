@@ -78,7 +78,10 @@ class Brain(BaseBrain):
         self.climb_down()
     
     elif self.Body.num_beams > 0 and self.Body.beam != None:
-      self.climb_up() #or add new beam to current beam
+      if self.Body.atTop(): 
+        self.place_beam()
+      else:
+        self.climb_up() if random() <= 0.9 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       if self.Body.ground() != None:
@@ -109,7 +112,7 @@ class Brain(BaseBrain):
       self.Body.step, helpers.make_unit(direction)))
     self.Body.changeLocalLocation(new_location)
 
-  # move on structure
+  # move on structure, method called from either climb_up or climb_down
   def climb(self, location, beam):
     length = helpers.length(location)
     if length < self.Body.step:
@@ -151,29 +154,6 @@ class Brain(BaseBrain):
     self.Body.changeLocationOnStructure(new_location, beam)
 
   def build_base(self):
-    def check(i,j):
-      '''
-      Checks the endpoints and returns two that don't already exist in the 
-      structure. If they do already exist, then it returns two endpoints that 
-      don't. It does this by changing the j-endpoint. This function also takes 
-      into account making sure that the returned value is still within the 
-      robot's tendency to build up. (ie, it does not return a beam which would 
-      build below the limit angle_constraint)
-      '''
-      # There is already a beam here, so let's move our current beam slightly to
-      # some side
-      if not self.Body.structure.available(i,j):
-        # Create a small disturbace
-        lim = BEAM['random']
-        f = random.uniform
-        disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
-        # find the new j-point for the beam
-        new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
-        return check(i,new_j)
-      else:
-        # Calculate the actual endpoint of the beam (now that we know direction 
-        # vector)
-        return (i,helpers.beam_endpoint(i,j))
     pivot = self.Body.getLocation()
     ground_angle = radians(BConstants.beam['ground_angle'])
     random_angle = radians(random()*360)
@@ -183,8 +163,32 @@ class Brain(BaseBrain):
     end_coordinates = (x,y,z)
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
-    i, j = check(pivot, endpoint)
+    i, j = self.check(pivot, endpoint)
     self.Body.addBeam(i,j)
+
+  def check(self,i,j):
+    '''
+    Checks the endpoints and returns two that don't already exist in the 
+    structure. If they do already exist, then it returns two endpoints that 
+    don't. It does this by changing the j-endpoint. This function also takes 
+    into account making sure that the returned value is still within the 
+    robot's tendency to build up. (ie, it does not return a beam which would 
+    build below the limit angle_constraint)
+    '''
+    # There is already a beam here, so let's move our current beam slightly to
+    # some side
+    if not self.Body.structure.available(i,j):
+      # Create a small disturbace
+      lim = BEAM['random']
+      f = random.uniform
+      disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
+      # find the new j-point for the beam
+      new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
+      return self.check(i,new_j)
+    else:
+      # Calculate the actual endpoint of the beam (now that we know direction 
+      # vector)
+      return (i,helpers.beam_endpoint(i,j))
   
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
@@ -199,7 +203,7 @@ class Brain(BaseBrain):
         if z < steepest: 
           direction = (x,y,z)
           steepest = z
-          #beam = beam_name
+          #beam = get_beam_info(beam_name)
     self.climb(direction,beam)
     
   def climb_up(self):
@@ -216,12 +220,27 @@ class Brain(BaseBrain):
         if z > steepest: 
           direction = (x,y,z)
           steepest = z
-          #beam = beam_name
+          #beam = get_beam_info(beam_name)
     self.climb(direction,beam)
-    #if random() <= 0.1: self.Body.discardBeams()
 
 
-
+  # For building by placing beam on another beam
+  def place_beam(self):
+    pivot = self.Body.getLocation()
+    build_angle = radians(BConstants.beam['beam_angle'])
+    
+    random_angle = radians(random()*360)
+    height = sin(ground_angle)
+    radius = cos(ground_angle)
+    x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
+    
+    end_coordinates = (x,y,z)
+    
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                 helpers.make_unit(end_coordinates)))
+    
+    i, j = self.check(pivot, endpoint)
+    self.Body.addBeam(i,j)
 
 
 

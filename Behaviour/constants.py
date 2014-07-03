@@ -14,6 +14,12 @@ beam = {
   # The lenght of the beam
   'length'                    : BEAM['length'],
 
+  # Angle base beams make relative to ground
+  'ground_angle'              : 60,
+
+  # Angle non-base beams make relative to each other
+  'beam_angle'                : 60,
+
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another
   'min_angle_constraint'      : 5,
@@ -23,9 +29,6 @@ beam = {
 
   # The default vertical direction
   'vertical_dir_set'          : (0,0,1),
-
-  # Angle base beams make relative to ground
-  'ground_angle'              : 60,
 
   # The limit at a joint at which a beam is considered unsuitable for further travel
   'joint_limit'               : joint_limit,
