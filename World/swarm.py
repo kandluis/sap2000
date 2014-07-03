@@ -73,7 +73,7 @@ class SmartSwarm(BaseSwarm):
       name = "smartrepairer_" + str(i)
 
       # repairers start at home
-      location = helpers.sum_vectors(self.home,(60*i,0,0)) 
+      location = helpers.sum_vectors(self.home,(120*i,0,0)) 
       self.repairers[name] = self.create(name,structure,location,program)
 
     # Keeps track of visualization data

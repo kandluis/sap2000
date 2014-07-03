@@ -44,16 +44,7 @@ class BaseBrain:
     are no results.
     '''
     pass
-
-
-'''
-Example brain model. Does some simple movements on the structure to demonstrate
-how to access the API for the body. This implements a robot which moves.
-'''
-class MovingBrain(BaseBrain):
-  def __init__(self,Robot):
-    super(MovingBrain,self).__init__(Robot)
-
+    
 
 '''
 Currently used brain class object. This is the final implementation of the summer
@@ -1145,7 +1136,7 @@ class Brain(BaseBrain):
 
       else:
 
-        # Calculate the actual endpoint of the beam (now that we now direction 
+        # Calculate the actual endpoint of the beam (now that we know direction 
         # vector)
         return (i,helpers.beam_endpoint(i,j))
 
