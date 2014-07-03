@@ -188,33 +188,37 @@ class Brain(BaseBrain):
   
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
+    if self.Body.model.GetModelIsLocked():
+      self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = self.Body.beam
     steepest = float('Inf')
     for beam_name, loc in info['directions'].items():
-      (x,y,z) = (loc[0][0], loc[0][1], loc[0][2])
-      if z < steepest: 
-        direction = (x,y,z)
-        steepest = z
-        beam = beam_name
+      for (x,y,z) in loc:
+        if z < steepest: 
+          direction = (x,y,z)
+          steepest = z
+          #beam = beam_name
     self.climb(direction,beam)
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
+    if self.Body.model.GetModelIsLocked():
+      self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = self.Body.beam
     steepest = -float('Inf')
     print(info['directions'])
     for beam_name, loc in info['directions'].items():
-      (x,y,z) = (loc[0][0], loc[0][1], loc[0][2])
-      if z > steepest: 
-        direction = (x,y,z)
-        steepest = z
-        beam = beam_name
+      for (x,y,z) in loc:
+        if z > steepest: 
+          direction = (x,y,z)
+          steepest = z
+          #beam = beam_name
     self.climb(direction,beam)
-    if random() <= 0.1: self.Body.discardBeams()
+    #if random() <= 0.1: self.Body.discardBeams()
 
 
 
