@@ -70,6 +70,9 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
+    import time
+    print(self.Body.num_beams)
+    time.sleep(3)
     if self.Body.num_beams == 0 and self.Body.getLocation()[2] == 0:
       self.pick_up_beam()
     else:
