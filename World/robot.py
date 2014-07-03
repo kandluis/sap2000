@@ -528,7 +528,7 @@ class Body(BaseBody):
     robot can detect (though, this should only be used for finding a connection,
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
-    # Run analysys before deciding to get the next direction
+    # Run analysis before deciding to get the next direction
     if not self.model.GetModelIsLocked() and self.needData():
       errors = helpers.run_analysis(self.model)
       if errors != '':
