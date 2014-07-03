@@ -72,14 +72,14 @@ class Brain(BaseBrain):
   def act(self):
     print(self.Body.num_beams)
     print(self.Body.getLocation())
-    if self.Body.num_beams == 0 and self.Body.getLocation()[2] == 0:
+    if self.Body.num_beams == 0 and compare(self.Body.getLocation()[2],0):
       self.pick_up_beam()
-    else if not self.Body.atSite():
-      self.go_to_construction_site()
-      self.Body.discardBeams()
-    else:
+    else if self.Body.atSite() or self.Body.atHome():
       direction = self.random_direction()
       self.move(direction)
+    else:
+      self.go_to_construction_site()
+      self.Body.discardBeams()
 
   def move(self, angle):
     rad = radians(angle)
