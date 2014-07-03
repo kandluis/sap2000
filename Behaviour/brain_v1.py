@@ -73,19 +73,27 @@ class Brain(BaseBrain):
     if self.Body.num_beams == 0 and helpers.compare(self.Body.getLocation()[2],0):
       self.pick_up_beam()
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
-      self.go_to_construction_site()
+      self.go_to_construction_site() if random()*2 == 0 else self.move('NWSE')
     else:
-      direction = self.random_direction()
-      self.move(direction)
+      self.move('NWSE')
 
-  def move(self, angle):
+  # move in certain direction (random by default)
+  def move(self, angle=random()*360)):
+    def random_NWSE():
+      rand = int(random()*4)
+      if rand == 0: return 90   #forward
+      if rand == 1: return 180  #left
+      if rand == 2: return 270  #backward
+      if rand == 3: return 0    #right
+    if angle == 'NWSE': 
+      angle = random_NWSE()
     rad = radians(angle)
     direction = helpers.make_vector((0,0,0),(cos(rad),sin(rad),0))
     new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
       self.Body.step, helpers.make_unit(direction)))
     self.Body.changeLocalLocation(new_location)
 
-  # Called whenever robot does not have a beam.
+  # Called whenever robot does not have a beam while on the ground.
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
     if not self.Body.atHome():
       direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
@@ -95,6 +103,7 @@ class Brain(BaseBrain):
     else: 
       self.Body.pickupBeams(num_beams)
 
+  # Straight to construction site corner
   def go_to_construction_site(self):
     if not self.Body.atSite(): 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
@@ -104,14 +113,13 @@ class Brain(BaseBrain):
     else:
       self.Body.discardBeams()
 
-  def random_direction(self):
-    rand = int(random()*4)
-    if rand == 0: return 90
-    if rand == 1: return 180
-    if rand == 2: return 270
-    if rand == 3: return 0
+  # Called when robot is at construction site.
+  def find_ground_beam(self):
+    beam_location = self.Body.ground()
 
 
+  def build(self):
+    pass
 
 
 

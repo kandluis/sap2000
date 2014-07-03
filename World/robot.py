@@ -1,6 +1,7 @@
 # Python default libraries
 import operator
 import math
+from random import *
 from abc import ABCMeta, abstractmethod
 
 # import errors
@@ -361,7 +362,7 @@ class Body(BaseBody):
     def removeload(location):
       '''
       Removes the load assigned to a specific location based on where the robot 
-      existed (assumes the robot is on a beams
+      existed (assumes the robot is on a beam)
       '''
       # Sanity check
       assert not self.model.GetModelIsLocked()
@@ -667,11 +668,12 @@ class Body(BaseBody):
   def nearestOnGround(self):
     return ground(self)
 
-  def ground(self):
+  def ground(self,random=False):
     '''
     This function finds the nearest beam to the robot that is connected 
     to the xy-plane (ground). It returns that beam and its direction from the 
-    robot.
+    robot. If random = True, the function picks a random beam from those connected
+    to the xy-plane.
     '''
     # Get local boxes
     boxes = self.structure.get_boxes(self.location)
@@ -709,8 +711,10 @@ class Body(BaseBody):
     if distances == {}:
       return None
     else:
+      # Random key
+      if random: name = choice(list(distances.keys()))
       # This returns the key (ie, name) of the minimum value in distances
-      name = min(distances, key=distances.get)
+      else: name = min(distances, key=distances.get)
 
       # So far away that we can't "see it"      
       if distances[name] > ROBOT['local_radius']:
