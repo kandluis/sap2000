@@ -25,7 +25,7 @@ beam = {
   'vertical_dir_set'          : (0,0,1),
 
   # Angle base beams make relative to ground
-  'ground_angle'              : 60
+  'ground_angle'              : 60,
 
   # The limit at a joint at which a beam is considered unsuitable for further travel
   'joint_limit'               : joint_limit,

@@ -70,11 +70,12 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
+    print(self.Body.name, self.Body.num_beams)
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
         self.pick_up_beam()
       else:
-        #climb down
+        pass #climb down
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       if self.Body.ground() != None:
