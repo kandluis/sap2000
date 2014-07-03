@@ -50,9 +50,9 @@ class BaseBrain:
 class Brain(BaseBrain):
   def __init__(self, Robot):
     super().__init__(Robot)
-    self.addToMemory('decision',None)
-    self.addToMemory('location',self.Body.getLocation())
-    self.addToMemory('construction_angle',90)
+    self.Body.addToMemory('decision',None)
+    self.Body.addToMemory('location',self.Body.getLocation())
+    self.Body.addToMemory('construction_angle',90)
 
   def performDecision(self):
     #pdb.set_trace()
