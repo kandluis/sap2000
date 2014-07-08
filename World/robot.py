@@ -546,7 +546,7 @@ class Body(BaseBody):
 
     # Debugging
     if box == {}:
-      pdb.set_trace()
+      #pdb.set_trace() FIX
       pass
 
     # Find the beams and directions (ie, where can he walk?)

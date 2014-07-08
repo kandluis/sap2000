@@ -53,7 +53,7 @@ class Brain(BaseBrain):
     self.Body.addToMemory('decision',None)
     self.Body.addToMemory('location',self.Body.getLocation())
     self.Body.addToMemory('construction_angle',90)
-    self.Body.addToMemory('wandering', 0)
+    self.Body.addToMemory('wandering', -1)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -89,17 +89,19 @@ class Brain(BaseBrain):
         self.climb_up() if random() <= 0.95 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
-      vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
+      #vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       wandering = self.Body.readFromMemory('wandering')
-      if helpers.length(vector_to_site) != 0 and wandering == 0:
+      if not self.Body.atSite() and wandering == -1:
         self.go_to_construction_site()
       else:
-        if self.Body.readFromMemory('wandering') <= 10:
-          wandering++
+        if self.Body.readFromMemory('wandering') < 20:
+          wandering+=1
           self.Body.addToMemory('wandering', wandering)
           self.move('NWSE')
-        else:
+        elif self.Body.ground() != None:
           self.go_to_beam()
+        else:
+          self.build_base() if random() <= 0.5 else self.move('NWSE')
     
     else:
       print('Hmm, what to do?')
@@ -142,17 +144,16 @@ class Brain(BaseBrain):
       self.Body.changeLocalLocation(new_location)
     else: 
       self.Body.pickupBeams(num_beams)
-      self.addToMemory('wandering',0)
+      self.Body.addToMemory('wandering',-1)
 
   # Straight to construction site center
   def go_to_construction_site(self):
-    if not self.Body.atSite(): 
+    vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
+    if helpers.length(vector_to_site) != 0: 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(direction_construction)))
       self.Body.changeLocalLocation(new_location)
-    else:
-      self.Body.discardBeams()
 
   # Called when robot decides to climb a certain ground beam.
   # Robot is moved to base of beam in one step
