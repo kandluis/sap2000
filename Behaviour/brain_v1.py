@@ -79,11 +79,11 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.atTop(): 
-       #beam_initial = self.Body.beam
-       # self.climb_up()
+        #beam_initial = self.Body.beam
+        #self.climb_up()
         #beam_final = self.Body.beam
         print('At TOP')
-        self.place_beam()#if beam_initial.name == beam_final.name: 
+        self.place_beam() #if beam_initial.name == beam_final.name: 
       else:
         self.climb_up() if random() <= 0.95 else self.place_beam()
 
@@ -207,6 +207,7 @@ class Brain(BaseBrain):
           direction = (x,y,z)
           steepest = z
           beam = self.Body.structure.find_beam(beam_name)
+    if compare(self.Body.getLocation()[2], 0): beam = None
     self.climb(direction,beam)
     
   def climb_up(self):
@@ -216,7 +217,7 @@ class Brain(BaseBrain):
     direction = (0,0,0)
     beam = None
     steepest = -float('Inf')
-    print(info['directions'])
+    #print(info['directions'])
     for beam_name, loc in info['directions'].items():
       for (x,y,z) in loc:
         if z > steepest: 
