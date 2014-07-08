@@ -538,6 +538,7 @@ class Body(BaseBody):
     # This is done so that floating-point arithmethic errors don't add up.
     (e1, e2) = self.beam.endpoints
     if not (helpers.on_line (e1,e2,self.location)):
+      self.model.SetModelIsLocked(False) #added in to prevent assertion error FIX
       self.changeLocationOnStructure(helpers.correct(e1,e2,self.location), self.beam)
 
     # Obtain all local objects

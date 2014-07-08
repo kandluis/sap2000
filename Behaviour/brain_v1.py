@@ -119,13 +119,15 @@ class Brain(BaseBrain):
   # move on structure, method called from either climb_up or climb_down
   def climb(self, location, beam):
     length = helpers.length(location)
-    if length < self.Body.step:
+    if length <= self.Body.step:
       new_location = helpers.sum_vectors(self.Body.getLocation(), location)
+      if new_location[2] == 0: beam = None
+      print('beam:',None)
     else:
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(location)))
-    if self.Body.model.GetModelIsLocked():
-          self.Body.model.SetModelIsLocked(False)
+      print('beam:',beam.name)
+    self.Body.model.SetModelIsLocked(False)
     self.Body.changeLocationOnStructure(new_location, beam)
 
   # Called whenever robot does not have a beam while on the ground.
@@ -206,8 +208,7 @@ class Brain(BaseBrain):
         if z < steepest: 
           direction = (x,y,z)
           steepest = z
-          beam = self.Body.structure.find_beam(beam_name)
-    if compare(self.Body.getLocation()[2], 0): beam = None
+          beam = self.Body.structure.find_beam(beam_name) 
     self.climb(direction,beam)
     
   def climb_up(self):
