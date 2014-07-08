@@ -53,6 +53,7 @@ class Brain(BaseBrain):
     self.Body.addToMemory('decision',None)
     self.Body.addToMemory('location',self.Body.getLocation())
     self.Body.addToMemory('construction_angle',90)
+    self.Body.addToMemory('wandering', 0)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -88,15 +89,17 @@ class Brain(BaseBrain):
         self.climb_up() if random() <= 0.95 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
-      if self.Body.ground() != None:
-        self.go_to_beam() if random() <= 0.5 else self.move('NWSE')
-      else: 
-        BASE_RADIUS = 120
-        vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
-        if helpers.length(vector_to_site) <= BASE_RADIUS: 
-          self.build_base() if random() <= 0.5 else self.move('NWSE')
+      vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
+      wandering = self.Body.readFromMemory('wandering')
+      if helpers.length(vector_to_site) != 0 and wandering == 0:
+        self.go_to_construction_site()
+      else:
+        if self.Body.readFromMemory('wandering') <= 10:
+          wandering++
+          self.Body.addToMemory('wandering', wandering)
+          self.move('NWSE')
         else:
-          self.go_to_construction_site() if random() <= 0.5 else self.move('NWSE')
+          self.go_to_beam()
     
     else:
       print('Hmm, what to do?')
@@ -139,8 +142,9 @@ class Brain(BaseBrain):
       self.Body.changeLocalLocation(new_location)
     else: 
       self.Body.pickupBeams(num_beams)
+      self.addToMemory('wandering',0)
 
-  # Straight to construction site corner
+  # Straight to construction site center
   def go_to_construction_site(self):
     if not self.Body.atSite(): 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
