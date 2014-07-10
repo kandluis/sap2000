@@ -70,7 +70,7 @@ class SmartSwarm(BaseSwarm):
     # create repairers
     self.repairers = {}
     for i in range(size):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot_" + str(i)
 
       # repairers start at home
       location = helpers.sum_vectors(self.home,(120*i,0,0)) 
