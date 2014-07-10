@@ -83,7 +83,7 @@ class Brain(BaseBrain):
         #beam_initial = self.Body.beam
         #self.climb_up()
         #beam_final = self.Body.beam
-        print('At TOP of beam ', self.Body.beam)
+        print('At TOP of beam ', self.Body.beam.name)
         self.place_beam() #if beam_initial.name == beam_final.name: 
       else:
         self.climb_up() #if random() <= 0.95 else self.place_beam()
@@ -175,7 +175,7 @@ class Brain(BaseBrain):
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
-    self.Body.addBeam(i,j)
+    self.Body.addBeam(pivot,endpoint)
 
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
@@ -223,7 +223,7 @@ class Brain(BaseBrain):
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
-    self.Body.addBeam(i,j)
+    self.Body.addBeam(pivot,endpoint)
 
 
 
