@@ -7,9 +7,9 @@ from abc import ABCMeta, abstractmethod
 # Local imports
 from Helpers import helpers
 # constants for simulation
-from variables import BEAM, ROBOT,PROGRAM, VISUALIZATION
+from variables import BEAM, ROBOT, PROGRAM, VISUALIZATION
 # constants for construction
-from construction import HOME,CONSTRUCTION
+from construction import HOME, CONSTRUCTION
 # constants for behaviour
 from Behaviour import constants as BConstants
 
@@ -28,11 +28,11 @@ class BaseBrain:
   @abstractmethod
   def performDecision(self):
     '''
-    This function is called during the simulation before the act function is called.
+    Called during the simulation before the act function is called.
     The brain should perform the task of deciding what actions to perform next.
 
-    In particular, note that self.Body.addToMemory(key,value) allows for storing 
-    information in the Body. 
+    In particular, note that self.Body.addToMemory(key,value) allows for storing
+    information in the Body.
     '''
     pass
 
@@ -71,7 +71,7 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
-    print(self.Body.name, self.Body.num_beams)
+    print('>>' + str(self.Body.name) + ': ' + str(self.Body.num_beams) + ' beam')
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
         self.pick_up_beam()
@@ -83,7 +83,7 @@ class Brain(BaseBrain):
         #beam_initial = self.Body.beam
         #self.climb_up()
         #beam_final = self.Body.beam
-        print('At TOP of beam ', self.Body.beam.name)
+        print('At TOP of beam', self.Body.beam.name)
         self.place_beam() #if beam_initial.name == beam_final.name: 
       else:
         self.climb_up() #if random() <= 0.95 else self.place_beam()
@@ -101,7 +101,7 @@ class Brain(BaseBrain):
         elif self.Body.ground() != None:
           self.go_to_beam()
         else:
-          self.build_base() if random() <= 0.5 else self.move('NWSE')
+          self.build_base() if random() <= 0.1 else self.move('NWSE')
     
     else:
       print('Hmm, what to do?')
@@ -120,20 +120,7 @@ class Brain(BaseBrain):
     new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
       self.Body.step, helpers.make_unit(direction)))
     self.Body.changeLocalLocation(new_location)
-
-  # move on structure, method called from either climb_up or climb_down
-  def climb(self, location, beam):
-    length = helpers.length(location)
-    if length <= self.Body.step:
-      new_location = helpers.sum_vectors(self.Body.getLocation(), location)
-      if new_location[2] == 0: beam = None
-      print('beam:',None)
-    else:
-      new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
-                     self.Body.step, helpers.make_unit(location)))
-      print('beam:',beam.name)
-    self.Body.model.SetModelIsLocked(False)
-    self.Body.changeLocationOnStructure(new_location, beam)
+    return True
 
   # Called whenever robot does not have a beam while on the ground.
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
@@ -145,6 +132,7 @@ class Brain(BaseBrain):
     else: 
       self.Body.pickupBeams(num_beams)
       self.Body.addToMemory('wandering',-1)
+    return True
 
   # Straight to construction site center
   def go_to_construction_site(self):
@@ -154,6 +142,7 @@ class Brain(BaseBrain):
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(direction_construction)))
       self.Body.changeLocalLocation(new_location)
+    return True
 
   # Called when robot decides to climb a certain ground beam.
   # Robot is moved to base of beam in one step
@@ -163,6 +152,7 @@ class Brain(BaseBrain):
     #self.move(direction, beam)
     new_location = helpers.sum_vectors(self.Body.getLocation(), direction)
     self.Body.changeLocationOnStructure(new_location, beam)
+    return True
 
   def build_base(self):
     pivot = self.Body.getLocation()
@@ -176,6 +166,7 @@ class Brain(BaseBrain):
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
     self.Body.addBeam(pivot,endpoint)
+    return True
 
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
@@ -191,6 +182,7 @@ class Brain(BaseBrain):
           steepest = z
           beam = self.Body.structure.find_beam(beam_name) 
     self.climb(direction,beam)
+    return True
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
@@ -207,7 +199,22 @@ class Brain(BaseBrain):
           steepest = z
           beam = self.Body.structure.find_beam(beam_name)
     self.climb(direction,beam)
+    return True
 
+  # move on structure, method called from either climb_up or climb_down
+  def climb(self, location, beam):
+    length = helpers.length(location)
+    if length <= self.Body.step:
+      new_location = helpers.sum_vectors(self.Body.getLocation(), location)
+      if new_location[2] == 0: beam = None
+      print('Climbing beam',None)
+    else:
+      new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
+                     self.Body.step, helpers.make_unit(location)))
+      print('Climbing beam',beam.name)
+    self.Body.model.SetModelIsLocked(False)
+    self.Body.changeLocationOnStructure(new_location, beam)
+    return True
 
   # For building by placing beam on another beam
   def place_beam(self):
@@ -224,6 +231,7 @@ class Brain(BaseBrain):
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
     self.Body.addBeam(pivot,endpoint)
+    return True
 
 
 

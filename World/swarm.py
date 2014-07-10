@@ -163,7 +163,7 @@ class SmartSwarm(BaseSwarm):
     '''
     self.repairers = {}
     for i in range(self.original_size):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
       self.repairers[name] = self.create(name,self.structure,location,self.model)
 
@@ -186,7 +186,7 @@ class SmartSwarm(BaseSwarm):
     x-axis. The names are a continuation of the size of the swarm.
     '''
     for i in range(self.num_created, self.num_created + num):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
       self.repairers[name] = self.create(name,self.structure,location,self.model)
 

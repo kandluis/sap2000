@@ -28,14 +28,14 @@ ROBOT = {
 
   # If true, then we record data when moving down the structure. This slows down
   # the simulation significantly.
-  'collect_data'  : False, #True,
+  'collect_data'  : True,
 
   # This defines the mass of each robot in the units specified by program_units
   'load'  : 0.035, # kip
   
   # Radius of "locality" (how far can a robot obtain information about 
   # the structure from where it is located. In units specified by program_units
-  'local_radius' : 20, #36, # 3 ft
+  'local_radius' : 30, #36, # 3 ft
 
   # The size of a step that the robot can take. This is expressed in the specified
   # program units.
