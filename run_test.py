@@ -9,9 +9,9 @@ from visualization import Visualization
 # Variables (see Documentation for description)
 view = True
 seed = "r@nd0M2"
-robot_number = 5
+robot_number = 1
 maxsteps = 10000
-debug = 0 # begin debugging after this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
+debug = 265 # begin debugging after this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
 comment = seed
 
 # seeding the simulation
