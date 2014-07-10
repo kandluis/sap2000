@@ -71,7 +71,7 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
-    print('>>' + str(self.Body.name) + ': #beams = ' + str(self.Body.num_beams))
+    print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
         self.pick_up_beam()
@@ -207,11 +207,11 @@ class Brain(BaseBrain):
     if length <= self.Body.step:
       new_location = helpers.sum_vectors(self.Body.getLocation(), location)
       if new_location[2] == 0: beam = None
-      print('Climbing beam',None)
+      print('climbing beam',None)
     else:
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(location)))
-      print('Climbing beam',beam.name)
+      print('climbing beam',beam.name)
     self.Body.model.SetModelIsLocked(False)
     self.Body.changeLocationOnStructure(new_location, beam)
     return True
