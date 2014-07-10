@@ -83,7 +83,7 @@ class Brain(BaseBrain):
         #beam_initial = self.Body.beam
         #self.climb_up()
         #beam_final = self.Body.beam
-        print('At TOP')
+        print('At TOP of beam ', self.Body.beam)
         self.place_beam() #if beam_initial.name == beam_final.name: 
       else:
         self.climb_up() #if random() <= 0.95 else self.place_beam()

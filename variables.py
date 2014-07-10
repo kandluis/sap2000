@@ -11,9 +11,9 @@ WORLD = {
     'num_x' : 10,
     'num_y' : 10,
     'num_z' : 100,
-    'dim_x' : 1700, # 100 ft
-    'dim_y' : 1700,
-    'dim_z' : 170000
+    'dim_x' : 1200, # 100 ft
+    'dim_y' : 1200,
+    'dim_z' : 120000
   }
 }
 
@@ -28,14 +28,14 @@ ROBOT = {
 
   # If true, then we record data when moving down the structure. This slows down
   # the simulation significantly.
-  'collect_data'  : True,
+  'collect_data'  : False #True,
 
   # This defines the mass of each robot in the units specified by program_units
   'load'  : 0.035, # kip
   
   # Radius of "locality" (how far can a robot obtain information about 
   # the structure from where it is located. In units specified by program_units
-  'local_radius' : 36, # 3 ft
+  'local_radius' : 20, #36, # 3 ft
 
   # The size of a step that the robot can take. This is expressed in the specified
   # program units.
