@@ -174,33 +174,9 @@ class Brain(BaseBrain):
     end_coordinates = (x,y,z)
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
-    i, j = self.check(pivot, endpoint)
+    #try to connect to already present beam
     self.Body.addBeam(i,j)
 
-  def check(self,i,j):
-    '''
-    Checks the endpoints and returns two that don't already exist in the 
-    structure. If they do already exist, then it returns two endpoints that 
-    don't. It does this by changing the j-endpoint. This function also takes 
-    into account making sure that the returned value is still within the 
-    robot's tendency to build up. (ie, it does not return a beam which would 
-    build below the limit angle_constraint)
-    '''
-    # There is already a beam here, so let's move our current beam slightly to
-    # some side
-    if not self.Body.structure.available(i,j):
-      # Create a small disturbace
-      lim = BEAM['random']
-      f = uniform
-      disturbance = (f(-1*lim,lim),f(-1*lim,lim),f(-1*lim,lim))
-      # find the new j-point for the beam
-      new_j = helpers.beam_endpoint(i,helpers.sum_vectors(j,disturbance))
-      return self.check(i,new_j)
-    else:
-      # Calculate the actual endpoint of the beam (now that we know direction 
-      # vector)
-      return (i,helpers.beam_endpoint(i,j))
-  
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
     self.Body.model.SetModelIsLocked(False)
@@ -246,8 +222,7 @@ class Brain(BaseBrain):
     
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
-    
-    i, j = self.check(pivot, endpoint)
+    #try to connect to already present beam
     self.Body.addBeam(i,j)
 
 
