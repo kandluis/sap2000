@@ -15,10 +15,10 @@ beam = {
   'length'                    : BEAM['length'],
 
   # Angle base beams make relative to ground
-  'ground_angle'              : 60,
+  'ground_angle'              : 90,
 
   # Angle non-base beams make relative to each other
-  'beam_angle'                : 30,
+  'beam_angle'                : 90,
 
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another

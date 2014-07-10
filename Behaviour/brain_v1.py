@@ -86,7 +86,7 @@ class Brain(BaseBrain):
         print('At TOP')
         self.place_beam() #if beam_initial.name == beam_final.name: 
       else:
-        self.climb_up() if random() <= 0.95 else self.place_beam()
+        self.climb_up() #if random() <= 0.95 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       #vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
