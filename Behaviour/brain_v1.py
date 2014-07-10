@@ -71,7 +71,7 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
-    print('\n>>' + str(self.Body.name) + ': ' + str(self.Body.num_beams) + ' beam')
+    print('>>' + str(self.Body.name) + ': #beams = ' + str(self.Body.num_beams))
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
         self.pick_up_beam()

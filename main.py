@@ -501,6 +501,7 @@ class Simulation(object):
 
         # Give a status update if necessary
         commandline.status("Finished timestep {}.".format(str(i + 1)))
+        print()
 
         # Sort beam data
         if self.Structure.structure_data[-1] != []:
