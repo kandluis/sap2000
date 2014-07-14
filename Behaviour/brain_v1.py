@@ -206,8 +206,10 @@ class Brain(BaseBrain):
     length = helpers.length(location)
     if length <= self.Body.step:
       new_location = helpers.sum_vectors(self.Body.getLocation(), location)
-      if new_location[2] == 0: beam = None
-      print('climbing beam',None)
+      if new_location[2] == 0: 
+        beam = None
+        print('climbing beam',None)
+      else: print('climbing beam',beam.name)
     else:
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(location)))
