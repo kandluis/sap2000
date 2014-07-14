@@ -710,7 +710,7 @@ class Structure(object):
       '''
       results = program.model.Results.FrameForce(beam.name,0)
       if results[0] != 0:
-        pdb.set_trace()
+        #pdb.set_trace()
         return 0
 
       def total(index):
@@ -762,7 +762,7 @@ class Structure(object):
         # Get displacements
         results = program.model.Results.JointDisplAbs(joint_name,0)
         if results[0] != 0:
-          pdb.set_trace()
+          #pdb.set_trace()
           return (0,0,0)
         u1,u2,u3 = results[7][0], results[8][0], results[9][0]
 

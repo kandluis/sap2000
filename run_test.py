@@ -8,7 +8,8 @@ from visualization import Visualization
 
 # Variables (see Documentation for description)
 view = True
-SAP_physics = False
+# To turn on/off the use of SAP, go to Helpers/helpers.py and change the
+# default value for SAP_physics to True or False in the run_analysis method.
 seed = "r@nd0M2"
 robot_number = 1
 maxsteps = 10000
@@ -20,7 +21,7 @@ random.seed(seed)
 
 # Run the Simulation, input is the random seed
 Sim = Simulation()
-Sim.start(view,robot_number)
+Sim.start(view, robot_number)
 
 # wrapped in a try/except block to catch errors and immediately begin
 # pdb at exception's location

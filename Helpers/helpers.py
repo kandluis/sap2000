@@ -10,7 +10,6 @@ from SAP2000.constants import LOAD_PATTERN_TYPES
 from Helpers.algebra import *
 # import constants
 from variables import BEAM, PROGRAM
-from run_test import SAP_physics
 
 
 ########### THIS IS IS TO BE MOVED IN
@@ -259,14 +258,12 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
-def run_analysis(model,output=PROGRAM['robot_load_case']):
+def run_analysis(model, SAP_physics=False, output=PROGRAM['robot_load_case']):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.
   '''
-
   if SAP_physics == False: return ''
-
 
   combo = PROGRAM['wind_combo'] == output
   
