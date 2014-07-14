@@ -8,6 +8,7 @@ from visualization import Visualization
 
 # Variables (see Documentation for description)
 view = True
+SAP_physics = False
 seed = "r@nd0M2"
 robot_number = 1
 maxsteps = 10000
