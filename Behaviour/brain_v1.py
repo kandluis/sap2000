@@ -80,16 +80,12 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.atTop(): 
-        #beam_initial = self.Body.beam
-        #self.climb_up()
-        #beam_final = self.Body.beam
         print('At TOP of beam', self.Body.beam.name)
-        self.place_beam() #if beam_initial.name == beam_final.name: 
+        self.place_beam()  
       else:
-        self.climb_up() #if random() <= 0.95 else self.place_beam()
+        self.climb_up() if random() <= 0.95 else self.place_beam()
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
-      #vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       wandering = self.Body.readFromMemory('wandering')
       if not self.Body.atSite() and wandering == -1:
         self.go_to_construction_site()
@@ -97,11 +93,11 @@ class Brain(BaseBrain):
         if self.Body.readFromMemory('wandering') < 20:
           wandering+=1
           self.Body.addToMemory('wandering', wandering)
-          self.move('NWSE')
+          self.move()
         elif self.Body.ground() != None:
           self.go_to_beam()
         else:
-          self.build_base() if random() <= 0.1 else self.move('NWSE')
+          self.build_base() if random() <= 0.1 else self.move()
     
     else:
       print('Hmm, what to do?')
@@ -220,6 +216,7 @@ class Brain(BaseBrain):
 
   # For building by placing beam on another beam
   def place_beam(self):
+    if self.Body.atJoint(): return False
     pivot = self.Body.getLocation()
     build_angle = radians(BConstants.beam['beam_angle'])
     
