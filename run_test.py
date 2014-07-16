@@ -13,7 +13,7 @@ view = True
 seed = "r@nd0M2"
 robot_number = 1
 maxsteps = 10000
-debug = 264 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
+debug = 0#264 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
 comment = seed
 
 # seeding the simulation

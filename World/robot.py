@@ -260,7 +260,7 @@ class Body(BaseBody):
 
 
   def atTop(self):
-    info = self.Body.getAvailableDirections()
+    info = self.getAvailableDirections()
     direction = (0,0,0)
     beam = None
     for beam_name, loc in info['directions'].items():
