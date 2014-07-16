@@ -18,6 +18,7 @@ class SapAnalysis(object):
     with a file name before running the analysis. Saving the file creates
     the file path.
     """
+    print('ANALYSIS WAS RUN')
     return_value = self._obj.RunAnalysis()
     assert return_value == 0        # Ensure that everything went as expected
 

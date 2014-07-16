@@ -170,7 +170,7 @@ class Brain(BaseBrain):
 
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
-    self.Body.model.SetModelIsLocked(False)
+    #self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = None
@@ -186,7 +186,7 @@ class Brain(BaseBrain):
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
-    self.Body.model.SetModelIsLocked(False)
+    #self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = None

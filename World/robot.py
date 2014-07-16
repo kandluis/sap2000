@@ -258,7 +258,18 @@ class Body(BaseBody):
     return helpers.within(CONSTRUCTION['corner'], 
       CONSTRUCTION['size'], self.location)
 
+
   def atTop(self):
+    info = self.Body.getAvailableDirections()
+    direction = (0,0,0)
+    beam = None
+    for beam_name, loc in info['directions'].items():
+      for (x,y,z) in loc:
+        # is there a direction that goes up?
+        if z > 0: return False 
+    return True
+
+  def atTop_UNUSED(self):
     '''
     Returns if we really are at the top
     '''

@@ -11,6 +11,7 @@ from Helpers.algebra import *
 # import constants
 from variables import BEAM, PROGRAM
 
+SAP_PHYSICS = False
 
 ########### THIS IS IS TO BE MOVED IN
 def non_zero_xydirection():
@@ -243,6 +244,9 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
   checking to see if it exists first. If added successfully,
   returns true, otherwise false
   '''
+
+  if SAP_PHYSICS == False: return True
+
   ret, number, names = model.LoadPatterns.GetNameList()
 
   # load case is already defined
@@ -258,12 +262,12 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
-def run_analysis(model, SAP_physics=False, output=PROGRAM['robot_load_case']):
+def run_analysis(model, output=PROGRAM['robot_load_case']):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.
   '''
-  if SAP_physics == False: return ''
+  if SAP_PHYSICS == False: return ''
 
   combo = PROGRAM['wind_combo'] == output
   

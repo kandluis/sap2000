@@ -9,7 +9,7 @@ from visualization import Visualization
 # Variables (see Documentation for description)
 view = True
 # To turn on/off the use of SAP, go to Helpers/helpers.py and change the
-# default value for SAP_physics to True or False in the run_analysis method.
+# global variable "SAP_PHYSICS" (defined after the import statements) to True/False.
 seed = "r@nd0M2"
 robot_number = 1
 maxsteps = 10000
