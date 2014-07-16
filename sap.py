@@ -1,4 +1,4 @@
-import numpy
+import numpy, run_test
 from SAP2000 import sap2000, analysis, elements
 
 # This file will call on sap2000.py and run and algorithm
@@ -45,13 +45,11 @@ model.start()
 model.open(filename)
 
 # Set and run analysis of model
-
-model.Analyze()
-
+model.analysis
 # In here we will magic some exports and use that data to run through the algorithm
 
 # Establish number of beams used to create structure
-total_elements = elements.count
+total_elements = elements.SapBase.count
 robot_count = run_test.robot_number 
 beam_count = total_elements - robot_count
 
