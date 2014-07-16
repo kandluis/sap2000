@@ -215,19 +215,6 @@ class Brain(BaseBrain):
     self.Body.changeLocationOnStructure(new_location, beam)
     return True
 
-  # For building by placing beam on another beam
-  def place_beam(self, direction=None):
-    if self.Body.atJoint(): return False
-    pivot = self.Body.getLocation()
-    build_angle = radians(BConstants.beam['beam_angle']) 
-    end_coordinates = get_build_vector(build_angle, direction)
-    
-    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                 helpers.make_unit(end_coordinates)))
-    #try to connect to already present beam
-    self.Body.addBeam(pivot,endpoint)
-    return True
-
   def get_build_vector(self, build_angle, direction):
     if direction == None:
       random_angle = radians(random()*360)
@@ -244,6 +231,19 @@ class Brain(BaseBrain):
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
       x, y, z = endpoint[0], endpoint[1], height
       return (x, y, z)
+    return False
+
+  # For building by placing beam on another beam
+  def place_beam(self, direction=None):
+    if self.Body.atJoint(): return False
+    pivot = self.Body.getLocation()
+    build_angle = radians(BConstants.beam['beam_angle'])
+    end_coordinates = self.get_build_vector(build_angle, direction)
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                 helpers.make_unit(end_coordinates)))
+    #try to connect to already present beam
+    self.Body.addBeam(pivot,endpoint)
+    return True
 
 
 
