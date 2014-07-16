@@ -81,9 +81,9 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        self.place_beam()  
+        self.place_beam('center')  
       else:
-        self.climb_up() if random() <= 0.95 else self.place_beam()
+        self.climb_up() if random() <= 0.95 else self.place_beam('center')
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
@@ -103,7 +103,7 @@ class Brain(BaseBrain):
       print('Hmm, what to do?')
 
   # move in certain direction (random by default) for ground movement only
-  def move(self, angle=random()*360):
+  def move(self, angle='random'):
     def random_NWSE():
       rand = int(random()*4)
       if rand == 0: return 90   #forward
@@ -111,6 +111,7 @@ class Brain(BaseBrain):
       if rand == 2: return 270  #backward
       if rand == 3: return 0    #right
     if angle == 'NWSE': angle = random_NWSE()
+    if angle == 'random': angle = random()*360
     rad = radians(angle)
     direction = helpers.make_vector((0,0,0),(cos(rad),sin(rad),0))
     new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
@@ -215,22 +216,35 @@ class Brain(BaseBrain):
     return True
 
   # For building by placing beam on another beam
-  def place_beam(self):
+  def place_beam(self, direction=None):
     if self.Body.atJoint(): return False
     pivot = self.Body.getLocation()
-    build_angle = radians(BConstants.beam['beam_angle'])
-    
-    random_angle = radians(random()*360)
-    height = sin(build_angle)
-    radius = cos(build_angle)
-    x, y, z = radius*cos(random_angle), radius*sin(random_angle), height  
-    end_coordinates = (x,y,z)
+    build_angle = radians(BConstants.beam['beam_angle']) 
+    end_coordinates = get_build_vector(build_angle, direction)
     
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
     self.Body.addBeam(pivot,endpoint)
     return True
+
+  def get_build_vector(self, build_angle, direction):
+    if direction == None:
+      random_angle = radians(random()*360)
+      height = sin(build_angle)
+      radius = cos(build_angle)
+      x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
+      return (x, y, z)
+    if direction == 'center': 
+      height = sin(build_angle)
+      radius = cos(build_angle)
+      position_center = CONSTRUCTION['center']
+      position_center = (position_center[0], position_center[1], self.Body.getLocation()[2])
+      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
+      endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
+      x, y, z = endpoint[0], endpoint[1], height
+      return (x, y, z)
+
 
 
 
