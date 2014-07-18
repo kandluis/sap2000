@@ -10,7 +10,7 @@ from SAP2000.constants import UNITS
 ##from SAP2000.analysis import SapAnalysis
 
 # Import OAPI
-sap_com_object = win32.Dispatch("SAP2000v15.sapobject")
+sap_com_object = win32.Dispatch("SAP2000v15.SapObject")
 
 # Initialize dicitionaries
 LISTVARIABLES = {
@@ -35,28 +35,79 @@ NORMALIZEDVARIABLES = {
 	'stressedbeams': 0		# number of beams stressed beyond 50% (arbitrary)
 }
 
-#initialize variables
+# Initialize variables
 count = 0
 
+# Variables for buckling case
+LoadType = ('Load', 'Accel')
+LoadName = ('DEAD' , 'UZ')
+MySF = (1.0, 0)
 
 # Start SAP and open a file
-filename = 'C:\\SAP 2000\\2014-Jul\\Jul-16\\09_13_13\\tower-9800.sdb'
+filename = 'C:\\SAP 2000\\2014-Jun\\Jun-17\\12_11_39\\tower-2800 - Copy.sdb'
 units = UNITS["kip_in_F"]
 visible = True
 sap_com_object.ApplicationStart(units, visible, filename)
 model = sap_com_object.SapModel
 
+# Define load patterns
+Name = 'DEAD'
+MyType = 1
+SelfWTMultiplier = 1
+AddLoadCase = True
+
+ret = model.LoadPatterns.Add(Name, MyType, SelfWTMultiplier, AddLoadCase)
+ret = model.LoadCases.StaticNonlinear.SetCase(Name)
+assert ret == 0
+
+Name = 'WIND'
+MyType = 6
+SelfWTMultiplier = 0
+ret = model.LoadPatterns.Add(Name, MyType, SelfWTMultiplier, AddLoadCase)
+ret = model.LoadCases.StaticNonlinear.SetCase(Name)
+assert ret == 0
+
+# Add Load Combination
+Name = 'D+W'
+ComboType = 0
+
+ret = model.RespCombo.Add(Name, ComboType)
+
+# Define Design Combinations
+DesignSteel = True
+DesignConcrete = False
+DesignAluminum = False
+DesignColdFormed = False
+
+ret = model.RespCombo.AddDesignDefaultCombos(DesignSteel, DesignConcrete, DesignAluminum, DesignColdFormed)
+assert ret == 0
+
+# Add a strength combination
+Selected = True
+
+ret = model.DesignSteel.SetComboStrength(Name, Selected)
+assert ret == 0
+
 # Set a buckling load case
-model.LoadCases.Buckling.SetCase('Buckling1')
-model.LoadCases.Buckling.SetInitialCase('Buckling1', 'DEAD')
-model.LoadCases.Buckling.SetLoads('Buckling1' , 1 , 'Load' , 'DEAD',1)
+model.LoadCases.Buckling.SetCase('Buckling')
+model.LoadCases.Buckling.SetInitialCase('Buckling', 'DEAD')
+model.LoadCases.Buckling.SetLoads('Buckling', 2, LoadType, LoadName, MySF)
 model.Results.Setup.SetOptionBucklingMode(False, False, True)
 
+# Lock model
+model.SetModelIsLocked(True)
+
 # Set and run analysis of model
-model.Analyze.RunAnalysis
+model.Analyze.CreateAnalysisModel()
+
+# Set cases to run
+model.Results.Setup.SetCaseSelectedForOutput('Buckling', True)
+##model.Results.Setup.SetCaseSelectedForOutput('DEAD', True)
+##model.Results.Setup.SetCaseSelectedForOutput('Wind', True)
+model.Analyze.RunAnalysis()
 
 # Establish number of beams used to create structure
-beam_count = model.LineElm.Count()
+beam_count = model.FrameObj.Count()
 
 # Find maximum height of tower.  I assume this will take place through 
 # calling an excel file.
@@ -69,8 +120,9 @@ height = linevalue[0:(len(linevalue) - 2)]
 joints = model.PointElm.Count()
 density = joints/(2*beam_count)
 
-# Determine buckling factor
-##buckling = model.Results.BucklingFactor()
+### Determine buckling factor
+##buckling =
+[a,b,c,d,e,f]=model.Results.BucklingFactor(6,('Buckling','Buckling'), ('Mode','Mode'),(1,2,3,4,5,6), ())
 ##print(buckling)
 
 
@@ -81,15 +133,37 @@ model.RespCombo.AddDesignDefaultCombos(True, False, False, False)
 model.DesignSteel.SetComboStrength('D+W', True)
 model.DesignSteel.StartDesign()
 
-###construct array of FrameNames
-##for i in range(1:beam_count):
-##    FrameNames[i - 1] = i
-##
-##ret = model.DesignSteel.GetSummaryResults('D+W', 1 , FrameNames , 1 , 1
+#construct arrays
+FrameNames = []
+Ratio = []
+RatioType = []
+Location = []
+ComboName = []
+ErrorSum = []
+WarningSum = []
+ItemType = 0
+for i in range(1, model.FrameObj.Count()):
+    if len(FrameNames) == 0:
+        FrameNames = [i]
+        Ratio = [0.5]
+        RatioType = [1]
+        Location = [0]
+        ComboName = ['D+W']
+        ErrorSum = ['No Messages']
+        WarningSum = ['No Messages']
+    else:
+        FrameNames.append(i)
+        Ratio.append(0.5)
+        RatioType.append(1)
+        Location.append(0)
+        ComboName.append('D+W')
+        ErrorSum.append('No Messages')
+        WarningSum.append('No Messages')
 
 # Solve for percentage of beams stressed between 50% and 80% of total capacity
-for line in ret:
-    if ret(line)>0.5 and ret(line)<0.8:
+for index in range(1,model.FrameObj.Count()):
+    stress_ratio = model.DesignSteel.GetSummaryResults(str(index), model.FrameObj.Count() , FrameNames , Ratio,RatioType , Location, ComboName, ErrorSum, WarningSum,ItemType)
+    if stress_ratio[3][0]>0.5 and stress_ratio[3][0]<0.8:
         count = count + 1
         sbeam = count/beam_count
 
