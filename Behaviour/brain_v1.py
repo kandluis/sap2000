@@ -248,7 +248,7 @@ class Brain(BaseBrain):
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
-    get_structure_density(endpoint)
+    self.get_structure_density(endpoint)
     self.Body.addBeam(pivot,endpoint)
     return True
 
