@@ -16,7 +16,8 @@ maxsteps = 10000
 debug = 0 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
 comment = seed
 
-# seeding the simulation
+# seeding the simulation, turn this on to remove randomness in brain.
+# behavior between runs will be identical.
 #random.seed(seed)
 
 # Run the Simulation, input is the random seed
