@@ -235,9 +235,14 @@ class Brain(BaseBrain):
 
   def get_structure_density(self, location):
     boxes = self.Body.structure.get_boxes(location)
-    beam_count = 0
+    nearby_beams = []
     print(boxes)
-    #for box in boxes
+    for box in boxes:
+      for beam_name in box.keys():
+        if beam_name not in nearby_beams:
+          nearby_beams.append(beam_name)
+    num_beams = len(nearby_beams)
+    print(num_beams)
 
   # For building by placing beam on another beam
   def place_beam(self, direction=None):
