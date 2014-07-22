@@ -83,7 +83,8 @@ class Brain(BaseBrain):
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center')  
       else:
-        self.climb_up() if random() <= 0.95 else self.place_beam('center')
+        coin_flip = random()
+        self.climb_up() if coin_flip <= 0.95 else self.place_beam('center')
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
@@ -97,7 +98,8 @@ class Brain(BaseBrain):
         elif self.Body.ground() != None:
           self.go_to_beam()
         else:
-          self.build_base() if random() <= 0.1 else self.move()
+          coin_flip = random()
+          self.build_base() if coin_flip <= 0.1 else self.move()
     
     else:
       print('Hmm, what to do?')
@@ -105,7 +107,7 @@ class Brain(BaseBrain):
   # move in certain direction (random by default) for ground movement only
   def move(self, angle='random'):
     def random_NWSE():
-      rand = int(random()*4)
+      rand = randint(0,3)
       if rand == 0: return 90   #forward
       if rand == 1: return 180  #left
       if rand == 2: return 270  #backward

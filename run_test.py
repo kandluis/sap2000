@@ -17,7 +17,7 @@ debug = 0 # begin debugging AFTER this timestep. 0 turns off debugging, change t
 comment = seed
 
 # seeding the simulation
-random.seed(seed)
+#random.seed(seed)
 
 # Run the Simulation, input is the random seed
 Sim = Simulation()
