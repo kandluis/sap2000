@@ -233,6 +233,12 @@ class Brain(BaseBrain):
       return (x, y, z)
     return False
 
+  def get_structure_density(location):
+    boxes = self.Body.structure.get_boxes(location)
+    beam_count = 0
+    print(boxes)
+    #for box in boxes
+
   # For building by placing beam on another beam
   def place_beam(self, direction=None):
     if self.Body.atJoint(): return False
@@ -242,15 +248,9 @@ class Brain(BaseBrain):
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
-    self.Body.addBeam(pivot,endpoint)
     get_structure_density(endpoint)
+    self.Body.addBeam(pivot,endpoint)
     return True
-
-  def get_structure_density(location):
-    boxes = self.Body.structure.get_boxes(location)
-    beam_count = 0
-    print(boxes)
-    #for box in boxes:
 
 
 
