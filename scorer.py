@@ -90,7 +90,8 @@ def scorer(base_directory):
     linevalue = heightdata.readlines()[-1]
     height = linevalue[0:(len(linevalue) - 2)]  # this value is inches we must convert to feet
     height = float(height)/12
-
+    heightdata.close() #########
+    
     # Find the number of beams per foot of tower
     beam_count = model.LineElm.Count()
     foot_per_beams = height/beam_count
@@ -163,9 +164,10 @@ def parseFolder(url):
     # Check directory was entered correctly
     try:
         for root, direc, files in os.walk(url):
-            root = root
-            direc = direc
-            files = files
+            pass
+##            root = root
+##            direc = direc
+##            files = files
     except TypeError:
         print('directory needs to be a string or no such directory exists')
         return 0
