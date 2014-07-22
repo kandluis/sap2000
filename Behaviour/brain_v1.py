@@ -83,8 +83,7 @@ class Brain(BaseBrain):
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center')  
       else:
-        coin_flip = random()
-        self.climb_up() if coin_flip <= 0.95 else self.place_beam('center')
+        self.climb_up() if random() <= 0.95 else self.place_beam('center')
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
@@ -98,8 +97,7 @@ class Brain(BaseBrain):
         elif self.Body.ground() != None:
           self.go_to_beam()
         else:
-          coin_flip = random()
-          self.build_base() if coin_flip <= 0.1 else self.move()
+          self.build_base() if random() <= 0.1 else self.move()
     
     else:
       print('Hmm, what to do?')
@@ -245,7 +243,16 @@ class Brain(BaseBrain):
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
     self.Body.addBeam(pivot,endpoint)
+    get_structure_density(endpoint)
     return True
+
+  def get_structure_density(location):
+    boxes = self.Body.structure.get_boxes(location)
+    beam_count = 0
+    print(boxes)
+    #for box in boxes:
+
+
 
 
 

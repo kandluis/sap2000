@@ -20,6 +20,9 @@ beam = {
   # Angle non-base beams make relative to each other
   'beam_angle'                : 45,
 
+  # Maximum # of beams within beam distance from endpoint of another beam
+  'max_beam_density'          : 5,
+
   # The minumum angle from vertical at which a beam is allowed to be constructed when
   # intersecting with another
   'min_angle_constraint'      : 5,
