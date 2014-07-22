@@ -233,7 +233,7 @@ class Brain(BaseBrain):
       return (x, y, z)
     return False
 
-  def get_structure_density(location):
+  def get_structure_density(self, location):
     boxes = self.Body.structure.get_boxes(location)
     beam_count = 0
     print(boxes)
