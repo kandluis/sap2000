@@ -159,6 +159,7 @@ class Brain(BaseBrain):
     radius = cos(ground_angle)
     x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
     end_coordinates = (x,y,z)
+    print(end_coordinates)
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
@@ -167,7 +168,7 @@ class Brain(BaseBrain):
 
   def climb_down(self):
     # We want to go in available direction with largest negative delta z 
-    #self.Body.model.SetModelIsLocked(False)
+    # self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = None
@@ -183,7 +184,7 @@ class Brain(BaseBrain):
     
   def climb_up(self):
     # We want to go in available direction with largest positive delta z 
-    #self.Body.model.SetModelIsLocked(False)
+    # self.Body.model.SetModelIsLocked(False)
     info = self.Body.getAvailableDirections()
     direction = (0,0,0)
     beam = None
@@ -198,7 +199,9 @@ class Brain(BaseBrain):
     self.climb(direction,beam)
     return True
 
-  # move on structure, method called from either climb_up or climb_down
+  '''
+  To move on structure; method called from either climb_up() or climb_down()
+  '''
   def climb(self, location, beam):
     length = helpers.length(location)
     if length <= self.Body.step:
@@ -215,9 +218,15 @@ class Brain(BaseBrain):
     self.Body.changeLocationOnStructure(new_location, beam)
     return True
 
+  '''
+  Returns coordinates of where to place beam, given direction/location you want
+  to build towards.
+  '''
   def get_build_vector(self, build_angle, direction):
-    current_beam_direction = self.Body.beam.global_default_axes()
-    print(current_beam_direction)
+    current_beam_direction = self.Body.beam.global_default_axes()[0]
+    (x_dir, y_dir, z_dir) = current_beam_direction
+
+
     if direction == None:
       random_angle = radians(random()*360)
       height = sin(build_angle)
@@ -238,8 +247,8 @@ class Brain(BaseBrain):
   '''
   Note: This is omniscient information that the robot needs a sensor for in reality
   '''
-  def get_structure_density(self, location):
-    boxes = self.Body.structure.get_boxes(location)
+  def get_structure_density(self, location, raidus=BEAM['length']):
+    boxes = self.Body.structure.get_boxes(location, radius)
     nearby_beams = []
     #print(boxes)
     for box in boxes:
@@ -251,14 +260,22 @@ class Brain(BaseBrain):
 
   # For building by placing beam on another beam
   def place_beam(self, direction=None):
+    # don't make triple joints
     if self.Body.atJoint(): return False
+    
     pivot = self.Body.getLocation()
+    # don't place beams with a 2 ft. radius from each other
+    if self.get_structure_density(pivot, 24) > 1: return False
+
     build_angle = radians(BConstants.beam['beam_angle'])
     end_coordinates = self.get_build_vector(build_angle, direction)
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
-    #try to connect to already present beam
+    # try to connect to already present beam
+    
     density = self.get_structure_density(endpoint)
+    # location at end of beam you are about to place is too dense,
+    # so do not place it.
     if density > BConstants.beam['max_beam_density']: return False
     self.Body.addBeam(pivot,endpoint)
     return True
