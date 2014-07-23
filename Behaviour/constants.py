@@ -15,7 +15,7 @@ beam = {
   'length'                    : BEAM['length'],
 
   # Angle base beams make relative to ground
-  'ground_angle'              : 90,
+  'ground_angle'              : 45,
 
   # Angle non-base beams make relative to each other
   'beam_angle'                : 90,

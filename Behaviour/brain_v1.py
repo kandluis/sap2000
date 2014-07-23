@@ -224,13 +224,18 @@ class Brain(BaseBrain):
   def get_build_vector(self, build_angle, direction):
     current_beam_direction = self.Body.beam.global_default_axes()[0]
     (x_dir, y_dir, z_dir) = current_beam_direction
+    (x, y, z) = (0, 0, 0)
+    # convert to complement of polar angle (=angle up from x-y)
+    build_angle = radians(90 - build_angle) 
+    #direction = None
 
     if direction == None:
       random_angle = radians(random()*360)
       height = sin(build_angle)
       radius = cos(build_angle)
       x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
-      return (x, y, z)
+      print(x,y,z)
+      print(current_beam_direction)
 
     if direction == 'center': 
       height = sin(build_angle)
@@ -238,16 +243,42 @@ class Brain(BaseBrain):
       position_center = CONSTRUCTION['center']
       position_center = (position_center[0], \
         position_center[1], self.Body.getLocation()[2])
-      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center_relative)
+      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
-      x, y, z = endpoint[0]+x_dir, endpoint[1]+y_dir, height+z_dir
-      return (x, y, z)
-    return False
+      x, y, z = endpoint[0], endpoint[1], height
+    
+    return (x, y, z)
+
+  # For building by placing beam on another beam
+  def place_beam(self, direction=None):
+    # don't make triple joints
+    if self.Body.atJoint(): return False
+    
+    pivot = self.Body.getLocation()
+    # don't place beams with a 2 ft. radius from each other
+    if self.get_structure_density(pivot, 2) > 1: 
+      print('TOO CLOSE')
+      #return False
+
+    build_angle = BConstants.beam['beam_angle']
+    end_coordinates = self.get_build_vector(build_angle, direction)
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                 helpers.make_unit(end_coordinates)))
+    # try to connect to already present beam
+    
+    density = self.get_structure_density(endpoint)
+    # location at end of beam you are about to place is too dense,
+    # so do not place it.
+    if density > BConstants.beam['max_beam_density']: 
+      print('TOO DENSE')
+      #return False
+    self.Body.addBeam(pivot,endpoint)
+    return True
 
   '''
   Note: This is omniscient information that the robot needs a sensor for in reality
   '''
-  def get_structure_density(self, location, raidus=BEAM['length']):
+  def get_structure_density(self, location, radius=BEAM['length']):
     boxes = self.Body.structure.get_boxes(location, radius)
     nearby_beams = []
     #print(boxes)
@@ -257,30 +288,6 @@ class Brain(BaseBrain):
           nearby_beams.append(beam_name)
     num_beams = len(nearby_beams)
     return num_beams
-
-  # For building by placing beam on another beam
-  def place_beam(self, direction=None):
-    # don't make triple joints
-    if self.Body.atJoint(): return False
-    
-    pivot = self.Body.getLocation()
-    # don't place beams with a 2 ft. radius from each other
-    if self.get_structure_density(pivot, 24) > 1: return False
-
-    build_angle = radians(BConstants.beam['beam_angle'])
-    end_coordinates = self.get_build_vector(build_angle, direction)
-    print(end_coordinates)
-    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                 helpers.make_unit(end_coordinates)))
-    # try to connect to already present beam
-    
-    density = self.get_structure_density(endpoint)
-    # location at end of beam you are about to place is too dense,
-    # so do not place it.
-    if density > BConstants.beam['max_beam_density']: return False
-    self.Body.addBeam(pivot,endpoint)
-    return True
-
 
 
 
