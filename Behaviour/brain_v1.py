@@ -158,8 +158,7 @@ class Brain(BaseBrain):
     height = sin(ground_angle)
     radius = cos(ground_angle)
     x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
-    end_coordinates = (x,y,z)
-    print(end_coordinates)
+    end_coordinates = (x,y,z) #directional unit vector
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     #try to connect to already present beam
@@ -226,21 +225,22 @@ class Brain(BaseBrain):
     current_beam_direction = self.Body.beam.global_default_axes()[0]
     (x_dir, y_dir, z_dir) = current_beam_direction
 
-
     if direction == None:
       random_angle = radians(random()*360)
       height = sin(build_angle)
       radius = cos(build_angle)
       x, y, z = radius*cos(random_angle), radius*sin(random_angle), height
       return (x, y, z)
+
     if direction == 'center': 
       height = sin(build_angle)
       radius = cos(build_angle)
       position_center = CONSTRUCTION['center']
-      position_center = (position_center[0], position_center[1], self.Body.getLocation()[2])
-      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
+      position_center = (position_center[0], \
+        position_center[1], self.Body.getLocation()[2])
+      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center_relative)
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
-      x, y, z = endpoint[0], endpoint[1], height
+      x, y, z = endpoint[0]+x_dir, endpoint[1]+y_dir, height+z_dir
       return (x, y, z)
     return False
 
@@ -269,6 +269,7 @@ class Brain(BaseBrain):
 
     build_angle = radians(BConstants.beam['beam_angle'])
     end_coordinates = self.get_build_vector(build_angle, direction)
+    print(end_coordinates)
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
     # try to connect to already present beam
