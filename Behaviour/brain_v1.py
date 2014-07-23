@@ -83,7 +83,7 @@ class Brain(BaseBrain):
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center')  
       else:
-        self.climb_up() if random() <= 0.95 else self.place_beam('center')
+        self.climb_up() if random() <= 0.99 else self.place_beam('center')
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
@@ -274,6 +274,8 @@ class Brain(BaseBrain):
     build_angle = BConstants.beam['beam_angle']
     end_coordinates = self.get_build_vector(build_angle, direction)
     # try to connect to already present beam
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                 helpers.make_unit(end_coordinates)))
     
     density = self.get_structure_density(endpoint)
     # location at end of beam you are about to place is too dense,
@@ -281,10 +283,10 @@ class Brain(BaseBrain):
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE')
       end_coordinates = self.get_build_vector(build_angle, 'outward')
+      endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                   helpers.make_unit(end_coordinates)))
       #return False
 
-    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                 helpers.make_unit(end_coordinates)))
     self.Body.addBeam(pivot,endpoint)
     return True
 
