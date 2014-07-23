@@ -192,7 +192,7 @@ class Brain(BaseBrain):
     while beam == None:
       for beam_name, loc in info['directions'].items():
         for (x,y,z) in loc:
-          if z > steepest and random() <= 0.5: 
+          if z >=0 and random() <= 0.5: 
             direction = (x,y,z)
             steepest = z
             beam = self.Body.structure.find_beam(beam_name)
