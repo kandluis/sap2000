@@ -189,12 +189,13 @@ class Brain(BaseBrain):
     beam = None
     steepest = -float('Inf')
     #print(info['directions'])
-    for beam_name, loc in info['directions'].items():
-      for (x,y,z) in loc:
-        if z > steepest: 
-          direction = (x,y,z)
-          steepest = z
-          beam = self.Body.structure.find_beam(beam_name)
+    while beam == None:
+      for beam_name, loc in info['directions'].items():
+        for (x,y,z) in loc:
+          if z > steepest and random() <= 0.5: 
+            direction = (x,y,z)
+            steepest = z
+            beam = self.Body.structure.find_beam(beam_name)
     self.climb(direction,beam)
     return True
 
@@ -246,6 +247,16 @@ class Brain(BaseBrain):
       direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
       x, y, z = endpoint[0], endpoint[1], height
+
+    if direction == 'outward':
+      height = sin(build_angle)
+      radius = cos(build_angle)
+      position_center = CONSTRUCTION['center']
+      position_center = (position_center[0], \
+        position_center[1], self.Body.getLocation()[2])
+      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
+      endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
+      x, y, z = -1*endpoint[0], -1*endpoint[1], height
     
     return (x, y, z)
 
@@ -262,8 +273,6 @@ class Brain(BaseBrain):
 
     build_angle = BConstants.beam['beam_angle']
     end_coordinates = self.get_build_vector(build_angle, direction)
-    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                 helpers.make_unit(end_coordinates)))
     # try to connect to already present beam
     
     density = self.get_structure_density(endpoint)
@@ -271,7 +280,11 @@ class Brain(BaseBrain):
     # so do not place it.
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE')
+      end_coordinates = self.get_build_vector(build_angle, 'outward')
       #return False
+
+    endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                 helpers.make_unit(end_coordinates)))
     self.Body.addBeam(pivot,endpoint)
     return True
 

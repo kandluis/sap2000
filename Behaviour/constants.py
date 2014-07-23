@@ -18,7 +18,7 @@ beam = {
   'ground_angle'              : 45,
 
   # Angle non-base beams make relative to each other
-  'beam_angle'                : 90,
+  'beam_angle'                : 45,
 
   # Maximum # of beams within beam distance from endpoint of another beam
   'max_beam_density'          : 5,
