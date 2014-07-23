@@ -261,7 +261,7 @@ class Brain(BaseBrain):
       x, y, z = -1*endpoint[0], -1*endpoint[1], height
 
     if direction == 'upwards':
-      x, y, z = 0, 0,1
+      x, y, z = 0, 0, 1
     
     return (x, y, z)
 
@@ -288,7 +288,7 @@ class Brain(BaseBrain):
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE')
       density_decisions = self.Body.readFromMemory('density_decisions')
-      if random() <= (.95**density_decisions):
+      if random() <= (.5**density_decisions):
         end_coordinates = self.get_build_vector(build_angle, 'outward')
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
