@@ -54,6 +54,7 @@ class Brain(BaseBrain):
     self.Body.addToMemory('location',self.Body.getLocation())
     self.Body.addToMemory('construction_angle',90)
     self.Body.addToMemory('wandering', -1)
+    self.Body.addToMemory('density_decisions', 0)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -129,6 +130,7 @@ class Brain(BaseBrain):
     else: 
       self.Body.pickupBeams(num_beams)
       self.Body.addToMemory('wandering',-1)
+      self.Body.addToMemory('density_decisions', 0)
     return True
 
   # Straight to construction site center
@@ -257,6 +259,9 @@ class Brain(BaseBrain):
       direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
       x, y, z = -1*endpoint[0], -1*endpoint[1], height
+
+    if direction == 'upwards':
+      x, y, z = 0, 0,1
     
     return (x, y, z)
 
@@ -282,9 +287,16 @@ class Brain(BaseBrain):
     # so do not place it.
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE')
-      end_coordinates = self.get_build_vector(build_angle, 'outward')
-      endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                   helpers.make_unit(end_coordinates)))
+      density_decisions = self.Body.readFromMemory('density_decisions')
+      if random() <= (.95**density_decisions):
+        end_coordinates = self.get_build_vector(build_angle, 'outward')
+        endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                     helpers.make_unit(end_coordinates)))
+      else:
+        end_coordinates = self.get_build_vector(build_angle, 'upwards')
+        endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                     helpers.make_unit(end_coordinates)))
+      self.Body.addToMemory('density_decisions', density_decisions+1)
       #return False
 
     self.Body.addBeam(pivot,endpoint)
