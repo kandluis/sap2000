@@ -12,7 +12,7 @@ revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-23\\16_59_08\\'
 #'C:\\SAP 2000\\2014-Jul\\Jul-23\\ \\'
 # 16_43_21
 # 16_59_08
-# 
+# 17_15_36
 
 
 vis = Visualization(revisualize)
