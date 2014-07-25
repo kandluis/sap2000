@@ -298,7 +298,7 @@ class Brain(BaseBrain):
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
       self.Body.addToMemory('density_decisions', density_decisions+1)
-      #return False
+      return True
 
     self.Body.addBeam(pivot,endpoint)
     return True
