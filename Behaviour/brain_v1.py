@@ -79,15 +79,15 @@ class Brain(BaseBrain):
   def act(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
 
-    #self.Body.addToMemory('current_location', self.Body.getLocation())
+    self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
       self.Body.addToMemory('current_beam', self.Body.beam.name)
-    #if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
-        #same_loc_count = self.Body.readFromMemory('same_loc_count')
+    if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
+        same_loc_count = self.Body.readFromMemory('same_loc_count')
         #print(same_loc_count)
-        #self.Body.addToMemory('same_loc_count', same_loc_count + 1)
-        #if same_loc_count >= 10:
-        #  self.Body.addToMemory('stuck', True)
+        self.Body.addToMemory('same_loc_count', same_loc_count + 1)
+        if same_loc_count >= 10:
+          self.Body.addToMemory('stuck', True)
     if self.Body.readFromMemory('stuck'): 
       print('STUCK on beam ', self.Body.beam.name)
       self.Body.discardBeams()
