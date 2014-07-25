@@ -169,7 +169,7 @@ class Brain(BaseBrain):
   # Straight to construction site center
   def go_to_construction_site(self):
     vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
-    if helpers.length(vector_to_site) > 10: 
+    if helpers.length(vector_to_site) != 0: 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(direction_construction)))
