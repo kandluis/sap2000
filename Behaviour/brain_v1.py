@@ -57,6 +57,9 @@ class Brain(BaseBrain):
     self.Body.addToMemory('current_beam', None)
     self.Body.addToMemory('prev_beam', None)
     self.Body.addToMemory('stuck', False)
+    self.Body.addToMemory('prev_location', None)
+    self.Body.addToMemory('current_location', None)
+    self.Body.addToMemory('same_loc_count', 0)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -76,9 +79,17 @@ class Brain(BaseBrain):
   def act(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
     
+    self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
       self.Body.addToMemory('current_beam', self.Body.beam.name)
-    if self.Body.readFromMemory('stuck'): self.Body.discardBeams()
+    if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
+        same_loc_count = self.Body.readFromMemory('same_loc_count')
+        self.Body.addToMemory('same_loc_count', same_loc_count + 1)
+        if same_loc_count >= 10:
+          self.Body.addToMemory('stuck', True)
+    if self.Body.readFromMemory('stuck'): 
+      print('STUCK on beam ', self.Body.beam.name)
+      self.Body.discardBeams()
 
 
     if self.Body.num_beams == 0:
@@ -113,6 +124,7 @@ class Brain(BaseBrain):
     else:
       print('Hmm, what to do?')
 
+    self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
     self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
 
   # move in certain direction (random by default) for ground movement only
@@ -143,6 +155,11 @@ class Brain(BaseBrain):
       self.Body.pickupBeams(num_beams)
       self.Body.addToMemory('wandering',-1)
       self.Body.addToMemory('density_decisions', 0)
+      self.Body.addToMemory('climbing_back', 0)
+      self.Body.addToMemory('current_beam', None)
+      self.Body.addToMemory('prev_beam', None)
+      self.Body.addToMemory('same_loc_count', 0)
+      self.Body.addToMemory('stuck', False)
     return True
 
   # Straight to construction site center
