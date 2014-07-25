@@ -101,7 +101,7 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
-      if not self.Body.atSite() and wandering == -1:
+      if not self.at_construction_site() and wandering == -1:
         self.go_to_construction_site()
       else:
         if self.Body.readFromMemory('wandering') < BConstants.robot['wander']:
@@ -127,6 +127,7 @@ class Brain(BaseBrain):
 
     self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
     self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
+
 
   # move in certain direction (random by default) for ground movement only
   def move(self, angle='random'):
@@ -172,6 +173,9 @@ class Brain(BaseBrain):
                      self.Body.step, helpers.make_unit(direction_construction)))
       self.Body.changeLocalLocation(new_location)
     return True
+
+  def at_construction_site():
+    return helpers.distance(self.Body.getLocation(), CONSTRUCTION['center']) == 0
 
   # Called when robot decides to climb a certain ground beam.
   # Robot is moved to base of beam in one step
