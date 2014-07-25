@@ -28,7 +28,7 @@ ROBOT = {
 
   # If true, then we record data when moving down the structure. This slows down
   # the simulation significantly.
-  'collect_data'  : True,
+  'collect_data'  : False,
 
   # This defines the mass of each robot in the units specified by program_units
   'load'  : 0.035, # kip

@@ -201,7 +201,7 @@ class Body(BaseBody):
     '''
     Returns whether or not this particular robot needs the structure to be analyzed
     '''
-    return self.onStructure()
+    return self.onStructure() and self.atJoint()
 
   def getGenuineLocation(self):
     '''
@@ -541,9 +541,10 @@ class Body(BaseBody):
     '''
     # Run analysis before deciding to get the next direction
     if not self.model.GetModelIsLocked() and self.needData():
-      errors = helpers.run_analysis(self.model)
-      if errors != '':
-        self.error_data += "getAvailableDirections(): " + errors + "\n"
+      if self.atJoint():
+        errors = helpers.run_analysis(self.model)
+        if errors != '':
+          self.error_data += "getAvailableDirections(): " + errors + "\n"
 
     # Verify that the robot is on its beam and correct if necessary. 
     # This is done so that floating-point arithmethic errors don't add up.

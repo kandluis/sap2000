@@ -169,7 +169,7 @@ class SmartSwarm(BaseSwarm):
 
   def need_data(self):
     '''
-    Returns whether or not the robots will need to data in order to make 
+    Returns whether or not the robots will need data in order to make 
     decisions. This basically checks to see if they are moving down. If so, then
     they don't need data.
     '''

@@ -11,7 +11,7 @@ from Helpers.algebra import *
 # import constants
 from variables import BEAM, PROGRAM
 
-SAP_PHYSICS = False
+SAP_PHYSICS = True
 
 ########### THIS IS IS TO BE MOVED IN
 def non_zero_xydirection():
@@ -268,6 +268,8 @@ def run_analysis(model, output=PROGRAM['robot_load_case']):
   explanations for any errors that occurred during the analysis process.
   '''
   if SAP_PHYSICS == False: return ''
+
+  print('ANALYSIS RUN')
 
   combo = PROGRAM['wind_combo'] == output
   
