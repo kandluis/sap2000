@@ -167,14 +167,19 @@ class Brain(BaseBrain):
   # Straight to construction site center
   def go_to_construction_site(self):
     vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
-    if helpers.length(vector_to_site) != 0: 
+    if helpers.length(vector_to_site) > 10: 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(direction_construction)))
       self.Body.changeLocalLocation(new_location)
-    return True
+      return True
+    else:
+      direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
+      new_location = helpers.sum_vectors(self.Body.getLocation(), direction_construction)
+      self.Body.changeLocalLocation(new_location)
+      return True
 
-  def at_construction_site():
+  def at_construction_site(self):
     return helpers.distance(self.Body.getLocation(), CONSTRUCTION['center']) == 0
 
   # Called when robot decides to climb a certain ground beam.
