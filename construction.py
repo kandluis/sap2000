@@ -3,7 +3,7 @@ from variables import WORLD, PROGRAM
 # home location
 HOME = {
   # corner of home 
-  'corner'  : (WORLD['properties']['dim_x'] * 0.4, WORLD['properties']['dim_y'] * 0.4,0),
+  'corner'  : (WORLD['properties']['dim_x'] * 0.3, WORLD['properties']['dim_y'] * 0.3,0),
 
   # Size of home, measured from the home location along the +x, +y, and +z axes
   'size'    : (40, 40, 0)#PROGRAM['epsilon'])
