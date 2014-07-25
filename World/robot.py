@@ -314,8 +314,7 @@ class Body(BaseBody):
     Adds into the robot memory the information specified by value accessible 
     throught the key. If the key already exists, it simply replaces the value.
     '''
-    mult.update({key : value})
-    self.memory.update(mult)
+    self.memory.update({key : value})
     return True
 
   def popFromMemory(self,key):
