@@ -272,7 +272,7 @@ class Brain(BaseBrain):
     
     pivot = self.Body.getLocation()
     # don't place beams with a 2 ft. radius from each other
-    nearby_beams = self.get_structure_density(pivot, 2)
+    nearby_beams = self.get_structure_density(pivot, 24)
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
       return False
@@ -307,10 +307,9 @@ class Brain(BaseBrain):
   Note: This is omniscient information that the robot needs a sensor for in reality
   Finds and returns the number of beams with endpoints within sphere of location
   '''
-  def get_structure_density(self, location, radius=BEAM['length']):
+  def get_structure_density(self, location, radius=BEAM['length']/2):
     boxes = self.Body.structure.get_boxes(location, radius)
     nearby_beams = []
-    #print(boxes)
     for box in boxes:
       for beam_name in box.keys():
         beam_info = box[beam_name].current_state()
@@ -319,6 +318,7 @@ class Brain(BaseBrain):
         if distance_1 <= radius or distance_2 <= radius:
           if beam_name not in nearby_beams:
             nearby_beams.append(beam_name)
+    #print(nearby_beams)
     num_beams = len(nearby_beams)
     return num_beams
 
