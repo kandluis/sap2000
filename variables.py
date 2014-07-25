@@ -35,7 +35,7 @@ ROBOT = {
   
   # Radius of "locality" (how far can a robot obtain information about 
   # the structure from where it is located. In units specified by program_units
-  'local_radius' : 30, #36, # 3 ft
+  'local_radius' : 30, #inches = 2.5 ft.
 
   # The size of a step that the robot can take. This is expressed in the specified
   # program units.
