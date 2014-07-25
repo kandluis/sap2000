@@ -78,7 +78,7 @@ class Brain(BaseBrain):
 
   def act(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
-    
+
     self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
       self.Body.addToMemory('current_beam', self.Body.beam.name)
