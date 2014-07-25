@@ -212,7 +212,7 @@ class Brain(BaseBrain):
     # We want to go in available direction with largest negative delta z 
     # self.Body.model.SetModelIsLocked(False)
     if num_beams != 0:
-      print(self.Body.readFromMemory('climbing_back'), self.Body.readFromMemory('prev_beam'), self.Body.readFromMemory('current_beam'))
+      #print(self.Body.readFromMemory('climbing_back'), self.Body.readFromMemory('prev_beam'), self.Body.readFromMemory('current_beam'))
       if helpers.compare(self.Body.getLocation()[2],0):
         self.Body.addToMemory('climbing_back', 0)
         return True
@@ -339,7 +339,7 @@ class Brain(BaseBrain):
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
-      print('Density Decisions: ', density_decisions)
+      #print('Density Decisions: ', density_decisions)
       if density_decisions >= 5: 
         self.climb_back(5)
         return False
