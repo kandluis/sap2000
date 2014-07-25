@@ -79,15 +79,15 @@ class Brain(BaseBrain):
   def act(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
 
-    self.Body.addToMemory('current_location', self.Body.getLocation())
+    #self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
       self.Body.addToMemory('current_beam', self.Body.beam.name)
-    if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
-        same_loc_count = self.Body.readFromMemory('same_loc_count')
+    #if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
+        #same_loc_count = self.Body.readFromMemory('same_loc_count')
         #print(same_loc_count)
-        self.Body.addToMemory('same_loc_count', same_loc_count + 1)
-        if same_loc_count >= 10:
-          self.Body.addToMemory('stuck', True)
+        #self.Body.addToMemory('same_loc_count', same_loc_count + 1)
+        #if same_loc_count >= 10:
+        #  self.Body.addToMemory('stuck', True)
     if self.Body.readFromMemory('stuck'): 
       print('STUCK on beam ', self.Body.beam.name)
       self.Body.discardBeams()
@@ -102,7 +102,7 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and self.Body.beam == None:
       wandering = self.Body.readFromMemory('wandering')
-      if not self.Body.atSite() and wandering == -1:
+      if not self.Body.at_construction_site() and wandering == -1:
         self.go_to_construction_site()
       else:
         if self.Body.readFromMemory('wandering') < BConstants.robot['wander']:
@@ -169,7 +169,7 @@ class Brain(BaseBrain):
   # Straight to construction site center
   def go_to_construction_site(self):
     vector_to_site = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
-    if helpers.length(vector_to_site) != 0: 
+    if helpers.length(vector_to_site) > 10: 
       direction_construction = helpers.make_vector(self.Body.getLocation(), CONSTRUCTION['center'])
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(direction_construction)))
