@@ -84,6 +84,7 @@ class Brain(BaseBrain):
       self.Body.addToMemory('current_beam', self.Body.beam.name)
     if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
         same_loc_count = self.Body.readFromMemory('same_loc_count')
+        print(same_loc_count)
         self.Body.addToMemory('same_loc_count', same_loc_count + 1)
         if same_loc_count >= 10:
           self.Body.addToMemory('stuck', True)
@@ -365,8 +366,8 @@ class Brain(BaseBrain):
         distance_1, distance_2 = helpers.distance(location, endpoint_1), helpers.distance(location, endpoint_2)
         if distance_1 <= radius or distance_2 <= radius:
           if beam_name not in nearby_beams:
-            nearby_beams.append(beam_name)
-    #print(nearby_beams)
+            nearby_beams.append([beam_name, distance_1, distance_2)
+    print(nearby_beams)
     num_beams = len(nearby_beams)
     return num_beams
 
