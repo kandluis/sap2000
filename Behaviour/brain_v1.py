@@ -272,9 +272,10 @@ class Brain(BaseBrain):
     
     pivot = self.Body.getLocation()
     # don't place beams with a 2 ft. radius from each other
-    if self.get_structure_density(pivot, 2) > 1: 
-      print('TOO CLOSE')
-      #return False
+    nearby_beams = self.get_structure_density(pivot, 2)
+    if  nearby_beams > 1: 
+      print('TOO CLOSE: ' + str(nearby_beams))
+      return False
 
     build_angle = BConstants.beam['beam_angle']
     end_coordinates = self.get_build_vector(build_angle, direction)
@@ -286,7 +287,7 @@ class Brain(BaseBrain):
     # location at end of beam you are about to place is too dense,
     # so do not place it.
     if density > BConstants.beam['max_beam_density']: 
-      print('TOO DENSE')
+      print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
       if random() <= (.75**density_decisions):
         end_coordinates = self.get_build_vector(build_angle, 'outward')
@@ -304,6 +305,7 @@ class Brain(BaseBrain):
 
   '''
   Note: This is omniscient information that the robot needs a sensor for in reality
+  Finds and returns the number of beams with endpoints within sphere of location
   '''
   def get_structure_density(self, location, radius=BEAM['length']):
     boxes = self.Body.structure.get_boxes(location, radius)
@@ -311,8 +313,12 @@ class Brain(BaseBrain):
     #print(boxes)
     for box in boxes:
       for beam_name in box.keys():
-        if beam_name not in nearby_beams:
-          nearby_beams.append(beam_name)
+        beam_info = box[beam_name].current_state()
+        endpoint_1, endpoint_2 = beam_info['endpoints']
+        distance_1, distance_2 = helpers.distance(location, endpoint_1), helpers.distance(location, endpoint_2)
+        if distance_1 <= radius or distance_2 <= radius:
+          if beam_name not in nearby_beams:
+            nearby_beams.append(beam_name)
     num_beams = len(nearby_beams)
     return num_beams
 
