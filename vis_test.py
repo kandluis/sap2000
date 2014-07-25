@@ -1,6 +1,6 @@
 from visualization import Visualization
 
-revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-25\\01_36_49\\'
+revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-25\\10_26_30\\'
 #'C:\\SAP 2000\\2014-Jul\\Jul-03\\ \\'
 # 16_42_37
 # 17_01_07
@@ -15,7 +15,7 @@ revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-25\\01_36_49\\'
 # 17_15_36
 #'C:\\SAP 2000\\2014-Jul\\Jul-25\\ \\'
 # 01_36_49
-# 
+# 10_26_30
 
 
 vis = Visualization(revisualize)

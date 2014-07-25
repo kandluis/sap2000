@@ -250,6 +250,9 @@ class Body(BaseBody):
     return helpers.within(HOME['corner'], HOME['size'],
       self.location)
 
+  def at_construction_site(self):
+    return helpers.compare(helpers.distance(self.location, CONSTRUCTION['center']), 0)
+
   def atSite(self):
     '''
     True if the robot is in the area designated as the construction site 
