@@ -90,6 +90,7 @@ class Brain(BaseBrain):
     if self.Body.readFromMemory('stuck'): 
       print('STUCK on beam ', self.Body.beam.name)
       self.Body.discardBeams()
+      self.Body.addToMemory('stuck', False)
 
 
     if self.Body.num_beams == 0:
@@ -98,15 +99,6 @@ class Brain(BaseBrain):
       else:
         self.climb_down()
     
-    elif self.Body.num_beams > 0 and self.Body.beam != None:
-      if self.Body.readFromMemory('climbing_back') != 0:
-        self.climb_down(self.Body.readFromMemory('climbing_back'))
-      if self.Body.atTop(): 
-        print('At TOP of beam', self.Body.beam.name)
-        self.place_beam('center')  
-      else:
-        self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
-
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
       if not self.Body.atSite() and wandering == -1:
@@ -120,7 +112,16 @@ class Brain(BaseBrain):
           self.go_to_beam()
         else:
           self.build_base() if random() <= BConstants.prob['add_base'] else self.move()
-    
+
+    elif self.Body.num_beams > 0 and self.Body.beam != None:
+      if self.Body.readFromMemory('climbing_back') != 0:
+        self.climb_down(self.Body.readFromMemory('climbing_back'))
+      if self.Body.atTop(): 
+        print('At TOP of beam', self.Body.beam.name)
+        self.place_beam('center')  
+      else:
+        self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
+
     else:
       print('Hmm, what to do?')
 
