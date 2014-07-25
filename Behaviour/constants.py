@@ -17,7 +17,7 @@ beam = {
   'beam_angle'                : 45,
 
   # Maximum # of beams within radius from endpoint of beam you want to add
-  'max_beam_density'          : 10,
+  'max_beam_density'          : 5,
 
   # Radius for sphere within which # of beam endpoints are counted
   'density_radius'            : BEAM['length']/2,
@@ -38,7 +38,7 @@ beam = {
 
 prob = {
   # P(placing beam while still climbing, and not at top yet)
-  'random_beam'               : 0.7,
+  'random_beam'               : 0.01,
 
   # P(adding beam to ground if no nearby beam is detected in robot local radius)
   'add_base'                  : 0.1,
@@ -48,6 +48,13 @@ prob = {
 
   # probability used in exponential build out/up function when density is too high
   'build_out'                 : 0.5,
+
+}
+
+robot = {
+  
+  # number of steps to wander away from construction site center
+  'wander'                    : 20,
 
 }
 

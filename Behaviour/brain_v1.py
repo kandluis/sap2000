@@ -56,6 +56,7 @@ class Brain(BaseBrain):
     self.Body.addToMemory('climbing_back', 0)
     self.Body.addToMemory('current_beam', None)
     self.Body.addToMemory('prev_beam', None)
+    self.Body.addToMemory('stuck', False)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -75,7 +76,10 @@ class Brain(BaseBrain):
   def act(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
     
-    self.Body.addToMemory('current_beam', self.Body.beam.name)
+    if self.Body.beam != None:
+      self.Body.addToMemory('current_beam', self.Body.beam.name)
+    if self.Body.readFromMemory('stuck'): self.Body.discardBeams()
+
 
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
@@ -84,20 +88,20 @@ class Brain(BaseBrain):
         self.climb_down()
     
     elif self.Body.num_beams > 0 and self.Body.beam != None:
-      if self.Body.readFromMemory('climb_down') != 0:
-        self.climb_down(self.Body.readFromMemory('climb_down'))
+      if self.Body.readFromMemory('climbing_back') != 0:
+        self.climb_down(self.Body.readFromMemory('climbing_back'))
       if self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center')  
       else:
-        self.climb_up() if random() <= BConstants.prob['random_beam'] else self.place_beam('center')
+        self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
 
     elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
       wandering = self.Body.readFromMemory('wandering')
       if not self.Body.atSite() and wandering == -1:
         self.go_to_construction_site()
       else:
-        if self.Body.readFromMemory('wandering') < 20:
+        if self.Body.readFromMemory('wandering') < BConstants.robot['wander']:
           wandering+=1
           self.Body.addToMemory('wandering', wandering)
           self.move()
@@ -290,6 +294,7 @@ class Brain(BaseBrain):
     nearby_beams = self.get_structure_density(pivot, BConstants.beam['joint_distance'])
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
+      self.climb_down(3)
       return False
 
     build_angle = BConstants.beam['beam_angle']
@@ -305,7 +310,7 @@ class Brain(BaseBrain):
       print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
       if density_decisions >= 10: self.climb_down(3)
-      if random() <= (BConstants.prob['build_out']:#**density_decisions):
+      if random() <= (BConstants.prob['build_out']):#**density_decisions):
         end_coordinates = self.get_build_vector(build_angle, 'outward')
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
