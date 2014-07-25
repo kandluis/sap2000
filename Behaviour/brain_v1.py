@@ -84,7 +84,7 @@ class Brain(BaseBrain):
       self.Body.addToMemory('current_beam', self.Body.beam.name)
     if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
         same_loc_count = self.Body.readFromMemory('same_loc_count')
-        print(same_loc_count)
+        #print(same_loc_count)
         self.Body.addToMemory('same_loc_count', same_loc_count + 1)
         if same_loc_count >= 10:
           self.Body.addToMemory('stuck', True)
@@ -100,9 +100,9 @@ class Brain(BaseBrain):
       else:
         self.climb_down()
     
-    elif self.Body.num_beams > 0 and helpers.compare(self.Body.getLocation()[2],0):
+    elif self.Body.num_beams > 0 and self.Body.beam == None:
       wandering = self.Body.readFromMemory('wandering')
-      if not self.at_construction_site() and wandering == -1:
+      if not self.Body.atSite() and wandering == -1:
         self.go_to_construction_site()
       else:
         if self.Body.readFromMemory('wandering') < BConstants.robot['wander']:
@@ -117,7 +117,7 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-      if self.Body.atTop(): 
+      elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center')  
       else:
@@ -149,6 +149,7 @@ class Brain(BaseBrain):
 
   # Called whenever robot does not have a beam while on the ground.
   def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
+    self.Body.beam = None
     if not self.Body.atHome():
       direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
@@ -180,9 +181,6 @@ class Brain(BaseBrain):
       self.Body.changeLocalLocation(new_location)
       return True
 
-  def at_construction_site(self):
-    return helpers.distance(self.Body.getLocation(), CONSTRUCTION['center']) == 0
-
   # Called when robot decides to climb a certain ground beam.
   # Robot is moved to base of beam in one step
   def go_to_beam(self):
@@ -207,11 +205,15 @@ class Brain(BaseBrain):
     self.Body.addBeam(pivot,endpoint)
     return True
 
+  def climb_back(self, num_beams):
+    self.Body.addToMemory('climbing_back', num_beams)
+
   def climb_down(self, num_beams=0):
     # We want to go in available direction with largest negative delta z 
     # self.Body.model.SetModelIsLocked(False)
     if num_beams != 0:
-      if self.Body.getLocation()[2] == 0:
+      print(self.Body.readFromMemory('climbing_back'), self.Body.readFromMemory('prev_beam'), self.Body.readFromMemory('current_beam'))
+      if helpers.compare(self.Body.getLocation()[2],0):
         self.Body.addToMemory('climbing_back', 0)
         return True
       beams_back = self.Body.readFromMemory('climbing_back')
@@ -224,7 +226,7 @@ class Brain(BaseBrain):
     steepest = float('Inf')
     for beam_name, loc in info['directions'].items():
       for (x,y,z) in loc:
-        if z < steepest: 
+        if z <= steepest: 
           direction = (x,y,z)
           steepest = z
           beam = self.Body.structure.find_beam(beam_name) 
@@ -256,13 +258,13 @@ class Brain(BaseBrain):
     length = helpers.length(location)
     if length <= self.Body.step:
       new_location = helpers.sum_vectors(self.Body.getLocation(), location)
-      if new_location[2] == 0: 
+      if helpers.compare(new_location[2], 0): 
         beam = None
-      else: print('climbing beam',beam.name)
+      else: print('climbing beam', beam.name)
     else:
       new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
                      self.Body.step, helpers.make_unit(location)))
-      print('climbing beam',beam.name)
+      print('climbing beam', beam.name)
     self.Body.model.SetModelIsLocked(False)
     self.Body.changeLocationOnStructure(new_location, beam)
     return True
@@ -322,7 +324,7 @@ class Brain(BaseBrain):
     nearby_beams = self.get_structure_density(pivot, BConstants.beam['joint_distance'])
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
-      self.climb_down(3)
+      self.climb_back(3)
       return False
 
     build_angle = BConstants.beam['beam_angle']
@@ -337,8 +339,11 @@ class Brain(BaseBrain):
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
-      if density_decisions >= 10: self.climb_down(3)
-      if random() <= (BConstants.prob['build_out']):#**density_decisions):
+      print('Density Decisions: ', density_decisions)
+      if density_decisions >= 5: 
+        self.climb_back(5)
+        return False
+      elif random() <= (BConstants.prob['build_out']):#**density_decisions):
         end_coordinates = self.get_build_vector(build_angle, 'outward')
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
@@ -347,7 +352,6 @@ class Brain(BaseBrain):
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
       self.Body.addToMemory('density_decisions', density_decisions+1)
-      return True
 
     self.Body.addBeam(pivot,endpoint)
     return True
@@ -365,9 +369,9 @@ class Brain(BaseBrain):
         endpoint_1, endpoint_2 = beam_info['endpoints']
         distance_1, distance_2 = helpers.distance(location, endpoint_1), helpers.distance(location, endpoint_2)
         if distance_1 <= radius or distance_2 <= radius:
-          if beam_name not in nearby_beams:
-            nearby_beams.append([beam_name, distance_1, distance_2)
-    print(nearby_beams)
+          if [beam_name, distance_1, distance_2] not in nearby_beams:
+            nearby_beams.append([beam_name, distance_1, distance_2])
+    #print(nearby_beams)
     num_beams = len(nearby_beams)
     return num_beams
 
