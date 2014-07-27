@@ -7,7 +7,7 @@ from main import Simulation
 from visualization import Visualization
 
 # Variables (see Documentation for description)
-view = True
+view = False
 # To turn on/off the use of SAP, go to Helpers/helpers.py and change the
 # global variable "SAP_PHYSICS" (defined after the import statements) to True/False.
 seed = "r@nd0M"
