@@ -1,6 +1,8 @@
 from random import *
 from math import *
 from time import sleep
+import sys
+import subprocess
 
 # genome encoding: [x, y]
 
@@ -79,6 +81,12 @@ CHANGE_IN_COST_THRESHOLD = 0.1
 CONVERGENCE_THRESHOLD = 5
 
 def main():	
+
+
+	theproc = subprocess.Popen([sys.executable, "run_test.py"])
+  theproc.communicate()
+
+
 	global convergence
 	global mutation_rate
 	convergence = [] #[cost, num_generations], if num_generations is high, local/global min has been reached
