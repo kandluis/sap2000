@@ -82,15 +82,14 @@ CONVERGENCE_THRESHOLD = 5
 
 def main():	
 
-
 	theproc = subprocess.Popen([sys.executable, "run_test.py"])
-  theproc.communicate()
+	theproc.communicate()
 
 
 	global convergence
 	global mutation_rate
 	convergence = [] #[cost, num_generations], if num_generations is high, local/global min has been reached
-
+	'''
 	population = initialize_population(POP_SIZE)
 	rank(population)
 	convergence = [cost(population[0]), 0]
@@ -107,5 +106,5 @@ def main():
 		display(population)
 
 	print('\nNatural Selection picks ' + str(population[0]) + ' as most fit with cost ' + str(cost(population[0]))+'\n')
-
+	'''
 if __name__== '__main__': main()
