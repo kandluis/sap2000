@@ -215,6 +215,7 @@ class Brain(BaseBrain):
       #print(self.Body.readFromMemory('climbing_back'), self.Body.readFromMemory('prev_beam'), self.Body.readFromMemory('current_beam'))
       if helpers.compare(self.Body.getLocation()[2],0):
         self.Body.addToMemory('climbing_back', 0)
+        sekf.Body.addToMemory('wandering', 0)
         return True
       beams_back = self.Body.readFromMemory('climbing_back')
       if self.Body.beam.name != self.Body.readFromMemory('prev_beam'):
@@ -324,7 +325,7 @@ class Brain(BaseBrain):
     nearby_beams = self.get_structure_density(pivot, BConstants.beam['joint_distance'])
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
-      self.climb_back(3)
+      self.climb_back(1)
       return False
 
     build_angle = BConstants.beam['beam_angle']
@@ -340,8 +341,8 @@ class Brain(BaseBrain):
       print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
       #print('Density Decisions: ', density_decisions)
-      if density_decisions >= 5: 
-        self.climb_back(5)
+      if density_decisions >= 10: 
+        self.climb_back(3)
         return False
       elif random() <= (BConstants.prob['build_out']):#**density_decisions):
         end_coordinates = self.get_build_vector(build_angle, 'outward')
