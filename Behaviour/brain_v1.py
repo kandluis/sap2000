@@ -215,7 +215,7 @@ class Brain(BaseBrain):
       #print(self.Body.readFromMemory('climbing_back'), self.Body.readFromMemory('prev_beam'), self.Body.readFromMemory('current_beam'))
       if helpers.compare(self.Body.getLocation()[2],0):
         self.Body.addToMemory('climbing_back', 0)
-        sekf.Body.addToMemory('wandering', 0)
+        self.Body.addToMemory('wandering', 0)
         return True
       beams_back = self.Body.readFromMemory('climbing_back')
       if self.Body.beam.name != self.Body.readFromMemory('prev_beam'):
