@@ -354,8 +354,8 @@ class Brain(BaseBrain):
       self.Body.addToMemory('density_decisions', density_decisions+1)
 
     # don't want beams "inside" the beam you are on.
-    if helpers.collinear(pivot,endpoint,self.Body.beam.endpoints.i) or \
-    helpers.collinear(pivot,endpoint,self.Body.beam.endpoints.j): 
+    if helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.i, False) \
+    or helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.j, False): 
       return False
 
     self.Body.addBeam(pivot,endpoint)
