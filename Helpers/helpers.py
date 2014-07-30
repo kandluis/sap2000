@@ -586,3 +586,81 @@ def sphere_intersection(line, center, radius, segment = True):
           return [p2]
         else:
           return None
+
+def addMatrices(a,b):
+  '''
+  Takes in two lists of lists (i.e. matrices) of equal dimensions and adds them.
+  '''
+  res = []
+  for i in range(len(a)):
+      row = []
+      for j in range(len(a[0])):
+          row.append(a[i][j]+b[i][j])
+      res.append(row)
+  return res
+
+def multiplyMatrices(A, B):
+  '''
+  Takes in two lists of lists (i.e. matrices) with appropriate dimensions 
+  and multiplies them.
+  '''
+  rows_A = len(A)
+  cols_A = len(A[0])
+  rows_B = len(B)
+  cols_B = len(B[0])
+  if cols_A != rows_B:
+    print("Cannot multiply the two matrices. Incorrect dimensions.")
+    return
+  # Create the result matrix
+  # Dimensions would be rows_A x cols_B
+  C = [[0 for row in range(cols_B)] for col in range(rows_A)]
+  #print(C)
+  for i in range(rows_A):
+      for j in range(cols_B):
+          for k in range(cols_A):
+              C[i][j] += A[i][k] * B[k][j]
+  return C
+
+def multiplyScalar(A, c):
+  return tuple(scale(c,row) for row in A)
+
+def rotate_vector_3D(placement_direction, beam_direction):
+  '''
+  Rotates an absolute vector (that is making a certain angle with +z) to the axis
+  of the beam the robot is currently climbing up in order to make relative 
+  building angles (i.e. realistic case when using clamps in real life)
+  Works by computing rotation matrix for +z to beam axis, then applying to 
+  placement direction
+  @input: vector of beam you want to put down making angle with +z axis, 
+          vertical direction vector of beam robot is on
+  @return: unit vector rotated to relative angle with beam
+  '''
+
+  placement = make_unit(placement_direction)
+  placement = [[placement[0]],[placement[1]],[placement[2]]]
+
+  z_pos = (0,0,1)
+  beam_dir = make_unit(beam_direction)
+
+  cross_prod = cross(z_pos, beam_dir)
+  s = length(cross_prod)
+  c = dot(z_pos, beam_dir)
+
+  x, y, z = cross_prod[0], cross_prod[1], cross_prod[2]
+  skew_symmetric_matrix = ((0,-z,y),(z,0,-x),(-y,x,0))
+  v_skew = skew_symmetric_matrix
+  identity = ((1,0,0),(0,1,0),(0,0,1))
+
+  # Computer Rotation Matrix in multiple steps:
+  step1 = addMatrices(identity, v_skew)
+  step2 = multiplyScalar(multiplyMatrices(v_skew,v_skew), (1-c)/s**2)
+  R = addMatrices(step1, step2)
+  #print(R, placement)
+  rotated_unit = multiplyMatrices(R, placement)
+  rotated_unit = tuple(point[0] for point in rotated_unit)
+
+  return rotated_unit
+
+
+
+
