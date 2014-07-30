@@ -1,6 +1,8 @@
 from visualization import Visualization
 
-revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-29\\18_31_53\\'
+revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-10\\00_10_25\\'
+#'C:\\SAP 2000\\2014-May\\May-11\\ \\'
+# 15_12_43*
 #'C:\\SAP 2000\\2014-Jul\\Jul-03\\ \\'
 # 16_42_37
 # 17_01_07
@@ -8,9 +10,9 @@ revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-29\\18_31_53\\'
 #'C:\\SAP 2000\\2014-Jul\\Jul-08\\ \\'
 # 13_47_27
 #'C:\\SAP 2000\\2014-Jul\\Jul-10\\ \\'
-# 00_10_25
+# 00_10_25*
 #'C:\\SAP 2000\\2014-Jul\\Jul-23\\ \\'
-# 16_43_21
+# 16_43_21*
 # 16_59_08
 # 17_15_36
 #'C:\\SAP 2000\\2014-Jul\\Jul-25\\ \\'
@@ -19,8 +21,9 @@ revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-29\\18_31_53\\'
 # 19_40_22
 #'C:\\SAP 2000\\2014-Jul\\Jul-29\\ \\'
 # 01_09_23
-# 14_05_26
+# 14_05_26*
 # 18_31_53
+# 21_10_41
 
 vis = Visualization(revisualize)
 vis.load_data()
