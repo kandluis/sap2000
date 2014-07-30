@@ -587,43 +587,6 @@ def sphere_intersection(line, center, radius, segment = True):
         else:
           return None
 
-def addMatrices(a,b):
-  '''
-  Takes in two lists of lists (i.e. matrices) of equal dimensions and adds them.
-  '''
-  res = []
-  for i in range(len(a)):
-      row = []
-      for j in range(len(a[0])):
-          row.append(a[i][j]+b[i][j])
-      res.append(row)
-  return res
-
-def multiplyMatrices(A, B):
-  '''
-  Takes in two lists of lists (i.e. matrices) with appropriate dimensions 
-  and multiplies them.
-  '''
-  rows_A = len(A)
-  cols_A = len(A[0])
-  rows_B = len(B)
-  cols_B = len(B[0])
-  if cols_A != rows_B:
-    print("Cannot multiply the two matrices. Incorrect dimensions.")
-    return
-  # Create the result matrix
-  # Dimensions would be rows_A x cols_B
-  C = [[0 for row in range(cols_B)] for col in range(rows_A)]
-  #print(C)
-  for i in range(rows_A):
-      for j in range(cols_B):
-          for k in range(cols_A):
-              C[i][j] += A[i][k] * B[k][j]
-  return C
-
-def multiplyScalar(A, c):
-  return tuple(scale(c,row) for row in A)
-
 def rotate_vector_3D(placement_direction, beam_direction):
   '''
   Rotates an absolute vector (that is making a certain angle with +z) to the axis
