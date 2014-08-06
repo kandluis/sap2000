@@ -166,18 +166,18 @@ class Brain(BaseBrain):
     
     elif self.Body.num_beams > 0 and self.Body.beam == None:
       wandering = self.Body.readFromMemory('wandering')
+      radius = self.Body.readFromMemory('base_radius')
       if not self.Body.at_construction_site() and wandering == -1:
         self.go_to_construction_site()
       elif self.Body.at_construction_site() and wandering == -1:
-        self.Body.addToMemory('wandering') = 0
-      elif wandering == 0:
-        radius = self.Body.readFromMemory('base_radius')
-        if radius == 0:
-          self.place_beam('upwards')
+        self.Body.addToMemory('wandering', 0)
+        if radius == 0 and self.Body.ground() == None:
+          (x, y, z) = self.Body.getLocation()
+          self.Body.addBeam(self.Body.getLocation(),(x,y,z+120))
           self.Body.addToMemory('base_radius', 10)
-        else:
-          self.move('random', radius)
-          self.Body.addToMemory('wandering') = 1
+      elif wandering == 0:
+        self.move('random', radius)
+        self.Body.addToMemory('wandering', 1)
       else:
         if self.Body.ground() != None:
           self.go_to_beam()
@@ -194,12 +194,14 @@ class Brain(BaseBrain):
           self.place_beam('center')
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        self.place_beam('center')  
+        self.place_beam('center') 
+      else:
+        self.climb_up()
 
     else:
       print('Hmm, what to do?')
 
-    self.addToMemory('base_radius', self.updateRadius())
+    self.Body.addToMemory('base_radius', self.updateRadius())
     self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
     self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
 
@@ -209,7 +211,7 @@ class Brain(BaseBrain):
   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
   # move in certain direction (random by default) for ground movement only
-  def move(self, angle='random', step=self.Body.step):
+  def move(self, angle='random', step=10):
     def random_NWSE():
       rand = randint(0,3)
       if rand == 0: return 90   #forward
@@ -481,13 +483,10 @@ class Brain(BaseBrain):
         if endpoint_1[2] == 0:
           distance = helpers.distance(center, endpoint_1)
         if endpoint_2[2] == 0:
-          distance = , helpers.distance(center, endpoint_2)
+          distance = helpers.distance(center, endpoint_2)
         if distance > max_radius:
           max_radius = distance
     return max_radius
-        
-
-
 
 
 
