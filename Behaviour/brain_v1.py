@@ -60,6 +60,7 @@ class Brain(BaseBrain):
     self.Body.addToMemory('prev_location', None)
     self.Body.addToMemory('current_location', None)
     self.Body.addToMemory('same_loc_count', 0)
+    self.Body.addToMemory('base_radius', 0)
 
   def performDecision(self):
     #pdb.set_trace()
@@ -77,6 +78,14 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
+    #self.executeStrategy1()
+    self.executeStrategy2()
+
+  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  Strategies
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  
+  def executeStrategy1(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
 
     self.Body.addToMemory('current_location', self.Body.getLocation())
@@ -92,6 +101,7 @@ class Brain(BaseBrain):
       print('STUCK on beam ', self.Body.beam.name)
       self.Body.discardBeams()
       self.Body.addToMemory('stuck', False)
+      self.Body.addToMemory('same_loc_count', 0)
 
 
     if self.Body.num_beams == 0:
@@ -129,9 +139,77 @@ class Brain(BaseBrain):
     self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
     self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
 
+  def executeStrategy2(self):
+    print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
+
+    self.Body.addToMemory('current_location', self.Body.getLocation())
+    if self.Body.beam != None:
+      self.Body.addToMemory('current_beam', self.Body.beam.name)
+    if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
+        same_loc_count = self.Body.readFromMemory('same_loc_count')
+        #print(same_loc_count)
+        self.Body.addToMemory('same_loc_count', same_loc_count + 1)
+        if same_loc_count >= 10:
+          self.Body.addToMemory('stuck', True)
+    if self.Body.readFromMemory('stuck'): 
+      print('STUCK on beam ', self.Body.beam.name)
+      self.Body.discardBeams()
+      self.Body.addToMemory('stuck', False)
+      self.Body.addToMemory('same_loc_count', 0)
+
+
+    if self.Body.num_beams == 0:
+      if helpers.compare(self.Body.getLocation()[2],0):
+        self.pick_up_beam()
+      else:
+        self.climb_down()
+    
+    elif self.Body.num_beams > 0 and self.Body.beam == None:
+      wandering = self.Body.readFromMemory('wandering')
+      if not self.Body.at_construction_site() and wandering == -1:
+        self.go_to_construction_site()
+      elif self.Body.at_construction_site() and wandering == -1:
+        self.Body.addToMemory('wandering') = 0
+      elif wandering == 0:
+        radius = self.Body.readFromMemory('base_radius')
+        if radius == 0:
+          self.place_beam('upwards')
+          self.Body.addToMemory('base_radius', 10)
+        else:
+          self.move('random', radius)
+          self.Body.addToMemory('wandering') = 1
+      else:
+        if self.Body.ground() != None:
+          self.go_to_beam()
+        else:
+          self.go_to_construction_site()
+          
+    elif self.Body.num_beams > 0 and self.Body.beam != None:
+      if self.Body.readFromMemory('climbing_back') != 0:
+        self.climb_down(self.Body.readFromMemory('climbing_back'))
+      elif random() > BConstants.prob['random_beam']:
+        if self.Body.getLocation()[2] <= 5*sqrt(2):
+          self.place_beam('ground')
+        else:
+          self.place_beam('center')
+      elif self.Body.atTop(): 
+        print('At TOP of beam', self.Body.beam.name)
+        self.place_beam('center')  
+
+    else:
+      print('Hmm, what to do?')
+
+    self.addToMemory('base_radius', self.updateRadius())
+    self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
+    self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
+
+
+  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  Motor functions
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
   # move in certain direction (random by default) for ground movement only
-  def move(self, angle='random'):
+  def move(self, angle='random', step=self.Body.step):
     def random_NWSE():
       rand = randint(0,3)
       if rand == 0: return 90   #forward
@@ -143,7 +221,7 @@ class Brain(BaseBrain):
     rad = radians(angle)
     direction = helpers.make_vector((0,0,0),(cos(rad),sin(rad),0))
     new_location = helpers.sum_vectors(self.Body.getLocation(), helpers.scale( \
-      self.Body.step, helpers.make_unit(direction)))
+      step, helpers.make_unit(direction)))
     self.Body.changeLocalLocation(new_location)
     return True
 
@@ -312,6 +390,16 @@ class Brain(BaseBrain):
 
     if direction == 'upwards':
       x, y, z = 0, 0, 1
+
+    if direction == 'ground':
+      height = sin(build_angle)
+      radius = cos(build_angle)
+      position_center = CONSTRUCTION['center']
+      position_center = (position_center[0], \
+        position_center[1], self.Body.getLocation()[2])
+      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
+      endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
+      x, y, z = -1*endpoint[0], -1*endpoint[1], -1*height
     
     return (x, y, z)
 
@@ -381,8 +469,23 @@ class Brain(BaseBrain):
     num_beams = len(nearby_beams)
     return num_beams
 
-
-
+  def updateRadius(self):
+    center = CONSTRUCTION['center']
+    max_radius = self.Body.readFromMemory('base_radius')
+    boxes = self.Body.structure.get_boxes(center, self.Body.readFromMemory('base_radius') + 10)
+    for box in boxes:
+      for beam_name in box.keys():
+        beam_info = box[beam_name].current_state()
+        endpoint_1, endpoint_2 = beam_info['endpoints']
+        distance = 0
+        if endpoint_1[2] == 0:
+          distance = helpers.distance(center, endpoint_1)
+        if endpoint_2[2] == 0:
+          distance = , helpers.distance(center, endpoint_2)
+        if distance > max_radius:
+          max_radius = distance
+    return max_radius
+        
 
 
 
