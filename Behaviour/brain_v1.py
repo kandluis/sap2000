@@ -415,7 +415,8 @@ class Brain(BaseBrain):
     # try to connect to already present beam
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
-    if direction == 'ground':
+    # prevent beams going into the ground (-z)
+    if endpoint[2] <= 0:
       dx, dy, dz = helpers.make_unit(end_coordinates)
       factor = endpoint[2]/dz
       dx, dy, dz = dx*factor, dy*factor, dz*factor
