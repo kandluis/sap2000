@@ -83,7 +83,9 @@ class Brain(BaseBrain):
     if BConstants.beam['tripod'] and self.Body.readFromMemory('base_radius') == 0: 
       if self.Body.name == 'SwarmRobot_0':
         self.drop_tripod()
-      else: return
+      else: 
+        self.Body.addToMemory('base_radius', self.update_radius())
+        return
 
     self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
@@ -106,7 +108,7 @@ class Brain(BaseBrain):
 
 
     self.Body.addToMemory('base_radius', self.update_radius())
-    print(self.Body.readFromMemory('base_radius'))
+    #print(self.Body.readFromMemory('base_radius'))
     self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
     self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
 
@@ -461,7 +463,7 @@ class Brain(BaseBrain):
   def update_radius(self):
     center = CONSTRUCTION['center']
     max_radius = self.Body.readFromMemory('base_radius')
-    boxes = self.Body.structure.get_boxes(center, self.Body.readFromMemory('base_radius') + 10)
+    boxes = self.Body.structure.get_boxes(center, max_radius + 120)
     for box in boxes:
       for beam_name in box.keys():
         beam_info = box[beam_name].current_state()
