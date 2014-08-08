@@ -399,7 +399,7 @@ class Brain(BaseBrain):
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
       x, y, z = -1*endpoint[0], -1*endpoint[1], -1*height
     
-    x, y, z = rotate_vector_3D((x, y, z), current_beam_direction):
+    x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction):
 
     return (x, y, z)
 
