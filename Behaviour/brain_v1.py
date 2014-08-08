@@ -80,7 +80,7 @@ class Brain(BaseBrain):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
 
     # Drops tripod if desired
-    if BConstants['tripod'] and self.Body.readFromMemory('base_radius') == 0: 
+    if BConstants.beam['tripod'] and self.Body.readFromMemory('base_radius') == 0: 
       if self.Body.name == 'SwarmRobot_0':
         self.drop_tripod()
       else: return
@@ -95,7 +95,8 @@ class Brain(BaseBrain):
         if same_loc_count >= 10:
           self.Body.addToMemory('stuck', True)
     if self.Body.readFromMemory('stuck'): 
-      print('STUCK on beam ', self.Body.beam.name)
+      if self.Body.beam != None: print('STUCK on beam ', self.Body.beam.name)
+      else: print('STUCK on ground')
       self.Body.discardBeams()
       self.Body.addToMemory('stuck', False)
       self.Body.addToMemory('same_loc_count', 0)
@@ -476,12 +477,31 @@ class Brain(BaseBrain):
 
   def drop_tripod(self):
     x,y,z = CONSTRUCTION['center']
+    initial_loc = self.Body.getLocation()
+    self.Body.location = (x-60,y-60/sqrt(3),0)
     self.Body.addBeam((x-60,y-60/sqrt(3),0),(x+60,y-60/sqrt(3),0))
+    self.Body.location = (x-60,y-60/sqrt(3),0)
     self.Body.addBeam((x-60,y-60/sqrt(3),0),(x,y+40*sqrt(3),0))
+    self.Body.location = (x,y+40*sqrt(3),0)
     self.Body.addBeam((x,y+40*sqrt(3),0),(x+60,y-60/sqrt(3),0))
+    self.Body.location = (x-60,y-60/sqrt(3),0)
     self.Body.addBeam((x-60,y-60/sqrt(3),0),(x,y,z+40*sqrt(6)))
+    self.Body.location = (x+60,y-60/sqrt(3),0)
     self.Body.addBeam((x+60,y-60/sqrt(3),0),(x,y,z+40*sqrt(6)))
+    self.Body.location = (x,y+40*sqrt(3),0)
     self.Body.addBeam((x,y+40*sqrt(3),0),(x,y,z+40*sqrt(6)))
+    self.Body.location = initial_loc
+    self.Body.addToMemory('wandering', -1)
+    self.Body.addToMemory('density_decisions', 0)
+    self.Body.addToMemory('climbing_back', 0)
+    self.Body.addToMemory('current_beam', None)
+    self.Body.addToMemory('prev_beam', None)
+    self.Body.addToMemory('stuck', False)
+    self.Body.addToMemory('prev_location', None)
+    self.Body.addToMemory('current_location', None)
+    self.Body.addToMemory('same_loc_count', 0)
+    self.Body.addToMemory('base_radius', 0)
+    self.Body.num_beams = 0
     return True
 
 

@@ -818,7 +818,7 @@ class Body(BaseBody):
         print("Failed in addbeam. Adding beam {} at points {} and {} didn't \
           work.".format(name,str(p1),str(p2)))
         return False
-
+    
       # Cycle through the joints and add the necessary points
       for coord in beam.joints:
         if coord != p1 and coord != p2:
