@@ -421,6 +421,10 @@ class Brain(BaseBrain):
     # try to connect to already present beam
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
+    if direction == 'ground':
+      dx, dy, dz = endpoint
+      pivot = (pivot[0]-dx, pivot[1]-dy,pivot[2]-dz)
+      endpoint = (endpoint[0]-dx, endpoint[1]-dy, endpoint[2]-dz)
     
     density = self.get_structure_density(endpoint)
     # location at end of beam you are about to place is too dense,
