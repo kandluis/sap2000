@@ -717,7 +717,7 @@ class Body(BaseBody):
           distances[name] = helpers.distance(e1, self.location)
         elif helpers.compare(e2[2],0):
           vectors[name] = helpers.make_vector(self.location, e2)
-          distances[name] = helpers.distances(e2, self.location)
+          distances[name] = helpers.distance(e2, self.location)
 
         # No points on the ground
         else:

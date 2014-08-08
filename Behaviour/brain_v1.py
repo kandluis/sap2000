@@ -183,15 +183,12 @@ class Brain(BaseBrain):
       #  else:
       #    self.place_beam('center')
       elif self.on_tripod():
-        print('on tripod')
         self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam('ground')
       #elif self.Body.atTop(): 
       #  print('At TOP of beam', self.Body.beam.name)
         #self.place_beam()
-      #else:
-      #  if self.on_tripod():
-      #    pass
-      #  self.climb_up()
+      else:
+        self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
 
     else:
       print('Hmm, what to do?')
@@ -410,12 +407,13 @@ class Brain(BaseBrain):
     
     pivot = self.Body.getLocation()
     # don't place beams with a 2 ft. radius from each other
+    '''
     nearby_beams = self.get_structure_density(pivot, BConstants.beam['joint_distance'])
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
       self.climb_back(1)
       return False
-
+    '''
     build_angle = BConstants.beam['beam_angle']
     end_coordinates = self.get_build_vector(build_angle, direction)
     # try to connect to already present beam
@@ -423,12 +421,13 @@ class Brain(BaseBrain):
                  helpers.make_unit(end_coordinates)))
     if direction == 'ground':
       dx, dy, dz = endpoint
-      pivot = (pivot[0]-dx, pivot[1]-dy,pivot[2]-dz)
-      endpoint = (endpoint[0]-dx, endpoint[1]-dy, endpoint[2]-dz)
+      pivot = (pivot[0]-dz, pivot[1]-dz,pivot[2]-dz)
+      endpoint = (endpoint[0]-dz, endpoint[1]-dz, endpoint[2]-dz)
     
     density = self.get_structure_density(endpoint)
     # location at end of beam you are about to place is too dense,
     # so do not place it.
+    '''
     if density > BConstants.beam['max_beam_density']: 
       print('TOO DENSE: ' + str(density))
       density_decisions = self.Body.readFromMemory('density_decisions')
@@ -445,7 +444,7 @@ class Brain(BaseBrain):
         endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                      helpers.make_unit(end_coordinates)))
       self.Body.addToMemory('density_decisions', density_decisions+1)
-
+    '''
     # don't want beams "inside" the beam you are on.
     if helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.i, False) \
     or helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.j, False): 
