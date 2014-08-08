@@ -13,7 +13,7 @@ view = True
 seed = "r@nd0M"
 robot_number = 1
 maxsteps = 10000
-debug = 385 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
+debug = 0 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
 comment = seed
 
 # seeding the simulation: turn this on to remove randomness in brain (for debugging)

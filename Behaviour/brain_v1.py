@@ -176,7 +176,7 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-      elif self.Body.location()[2] <= 5*sqrt(2):
+      elif self.Body.getLocation()[2] <= 5*sqrt(2):
         self.climb_up() if random() > BConstants.prob['ground_beam'] else self.place_beam('ground')
       elif self.on_tripod():
         self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam('ground')
