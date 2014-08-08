@@ -181,9 +181,10 @@ class Brain(BaseBrain):
       #    self.place_beam('ground')
       #  else:
       #    self.place_beam('center')
-      #elif self.Body.atTop(): 
-      #  print('At TOP of beam', self.Body.beam.name)
-      #  self.place_beam('center') 
+      elif self.Body.atTop(): 
+        print('At TOP of beam', self.Body.beam.name)
+        self.climb_down()
+        self.place_beam('center') 
       # 
       else:
         self.climb_up()
