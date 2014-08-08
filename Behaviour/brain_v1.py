@@ -393,8 +393,10 @@ class Brain(BaseBrain):
         rads = radians(theta)
         x, y, z = radius*cos(random_angle+rads), radius*sin(random_angle+rads), height
         x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
-        if z <= 0: return (x,y,z)
-        if z < best_z: best_x, best_y, best_z = x, y, z
+        x_r, y_r, z_r = helpers.sum_vectors(self.Body.getLocation(),helpers.scale(\
+          BEAM['length'], helpers.make_unit((x,y,z))))
+        if z_r <= 0: return (x,y,z)
+        if z_r < best_z: best_x, best_y, best_z = x, y, z
       return (x,y,z)
 
     x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
