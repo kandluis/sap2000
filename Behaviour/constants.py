@@ -14,7 +14,7 @@ beam = {
   'ground_angle'              : 45,
 
   # Angle non-base beams make relative to each other
-  'beam_angle'                : 30,
+  'beam_angle'                : 90,
 
   # Maximum # of beams within radius from endpoint of beam you want to add
   'max_beam_density'          : 5,
@@ -42,6 +42,9 @@ beam = {
 prob = {
   # P(placing beam while still climbing, and not at top yet)
   'random_beam'               : 0.05,
+
+  # P(placing beam while still climbing ONLY if on tripod base beam)
+  'tripod'                    : 0.3,
 
   # P(adding beam to ground if no nearby beam is detected in robot local radius)
   'add_base'                  : 0.1,

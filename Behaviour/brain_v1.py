@@ -177,24 +177,19 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-        print('climbing back!!!!')
       
       #elif random() > BConstants.prob['random_beam']:
       #  if self.Body.getLocation()[2] <= 5*sqrt(2):
       #    self.place_beam('ground')
       #  else:
       #    self.place_beam('center')
+      elif self.on_tripod():
+        self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam()
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        if self.Body.beam.name in ['1','2','3','4','5','6']:
-          self.climb_down(0)
-          self.climb_down(0)
-          self.climb_down(0)
-          self.place_beam('outward') 
-        else:
-          self.place_beam('center')
+        self.place_beam()
       else:
-        if self.Body.beam.name in ['1','2','3','4','5','6']:
+        if self.on_tripod():
           pass
         self.climb_up()
 
@@ -514,6 +509,9 @@ class Brain(BaseBrain):
     self.Body.addToMemory('base_radius', 0)
     self.Body.num_beams = 0
     return True
+
+  def on_tripod(self):
+    return self.Body.beam.name in ['1','2','3','4','5','6']
 
 
 
