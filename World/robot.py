@@ -269,7 +269,7 @@ class Body(BaseBody):
     for beam_name, loc in info['directions'].items():
       for (x,y,z) in loc:
         # is there a direction that goes up?
-        if z > 0: return False 
+        if z >= 0: return False 
     return True
 
   def atTop_UNUSED(self):
