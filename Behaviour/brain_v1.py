@@ -163,7 +163,6 @@ class Brain(BaseBrain):
       if not self.Body.at_construction_site() and wandering == -1:
         self.go_to_construction_site()
       elif self.Body.at_construction_site() and wandering == -1:
-        self.Body.addToMemory('wandering', 0)
         self.move('random', radius + 60)
         self.Body.addToMemory('wandering', 0)
       else:
@@ -184,14 +183,15 @@ class Brain(BaseBrain):
       #  else:
       #    self.place_beam('center')
       elif self.on_tripod():
+        print('on tripod')
         self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam('ground')
-      elif self.Body.atTop(): 
-        print('At TOP of beam', self.Body.beam.name)
+      #elif self.Body.atTop(): 
+      #  print('At TOP of beam', self.Body.beam.name)
         #self.place_beam()
-      else:
-        if self.on_tripod():
-          pass
-        self.climb_up()
+      #else:
+      #  if self.on_tripod():
+      #    pass
+      #  self.climb_up()
 
     else:
       print('Hmm, what to do?')

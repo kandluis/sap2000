@@ -44,7 +44,7 @@ prob = {
   'random_beam'               : 0.05,
 
   # P(keep climbing while on a tripod beam)
-  'tripod'                    : 0.3,
+  'tripod'                    : 0.5,
 
   # P(adding beam to ground if no nearby beam is detected in robot local radius)
   'add_base'                  : 0.1,
