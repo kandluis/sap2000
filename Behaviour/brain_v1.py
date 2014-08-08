@@ -177,8 +177,8 @@ class Brain(BaseBrain):
       
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-      elif self.Body.getLocation()[2] <= 60:
-        self.climb_up() if random() > BConstants.prob['ground_beam'] else self.place_beam('ground')
+      elif self.Body.getLocation()[2] <= BConstants.robot['ground']:
+        self.climb_up() if random() > BConstants.prob['ground_beam'] and not self.Body.atTop() else self.place_beam('ground')
       
       elif self.on_tripod():
         if self.Body.atTop():
@@ -186,13 +186,13 @@ class Brain(BaseBrain):
         elif random() <= BConstants.prob['tripod']:
           self.climb_up() 
         else:
-          if self.Body.getLocation()[2] <= 60:
+          if self.Body.getLocation()[2] <= BConstants.robot['ground']:
             self.place_beam('ground')
           else: self.place_beam('outward')
       
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        if self.Body.getLocation()[2] <= 60: self.place_beam('ground')
+        if self.Body.getLocation()[2] <= BConstants.robot['ground']: self.place_beam('ground')
         else: self.place_beam('center')
       else:
         self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
@@ -361,7 +361,7 @@ class Brain(BaseBrain):
     # convert to complement of polar angle (=angle up from x-y)
     build_angle = radians(90 - build_angle) 
     #direction = None
-
+    '''
     #connect to nearby beam if possible.
     best_x, best_y, best_z = float('Inf'), float('Inf'), float('Inf')
       height = -1*sin(build_angle)
@@ -376,7 +376,7 @@ class Brain(BaseBrain):
         if z_r <= 0: return (x,y,z)
         if z_r < best_z: best_x, best_y, best_z = x, y, z
       return (x,y,z)
-
+    '''
     if direction == None:
       random_angle = radians(random()*360)
       height = sin(build_angle)

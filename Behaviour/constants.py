@@ -65,6 +65,9 @@ robot = {
   # number of steps to wander away from construction site center
   'wander'                    : 20,
 
+  # height in inches where if robot is below, it will consider grounding beams
+  'ground'                    : 40,
+
 }
 
 
