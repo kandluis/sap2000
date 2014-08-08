@@ -174,15 +174,26 @@ class Brain(BaseBrain):
           self.go_to_construction_site()
           
     elif self.Body.num_beams > 0 and self.Body.beam != None:
+      
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-      elif self.Body.getLocation()[2] <= 5*sqrt(2):
+      elif self.Body.getLocation()[2] <= 60:
         self.climb_up() if random() > BConstants.prob['ground_beam'] else self.place_beam('ground')
+      
       elif self.on_tripod():
-        self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam('ground')
+        if self.Body.atTop():
+          self.Body.discardBeams()
+        elif random() <= BConstants.prob['tripod']:
+          self.climb_up() 
+        else:
+          if self.Body.getLocation()[2] <= 60:
+            self.place_beam('ground')
+          else: self.place_beam('outward')
+      
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        self.place_beam('center')
+        if self.Body.getLocation()[2] <= 60: self.place_beam('ground')
+        else: self.place_beam('center')
       else:
         self.climb_up() if random() > BConstants.prob['random_beam'] else self.place_beam('center')
 
@@ -309,7 +320,12 @@ class Brain(BaseBrain):
     while beam == None:
       for beam_name, loc in info['directions'].items():
         for (x,y,z) in loc:
-          if z >=0 and random() <= BConstants.prob['steep_climb']: 
+          if z > 0 and random() <= BConstants.prob['steep_climb']: 
+            direction = (x,y,z)
+            steepest = z
+            beam = self.Body.structure.find_beam(beam_name)
+          # prevent wiggling back and forth on a horizontal beam
+          if z == 0 and x >= 0: 
             direction = (x,y,z)
             steepest = z
             beam = self.Body.structure.find_beam(beam_name)
@@ -345,6 +361,21 @@ class Brain(BaseBrain):
     # convert to complement of polar angle (=angle up from x-y)
     build_angle = radians(90 - build_angle) 
     #direction = None
+
+    #connect to nearby beam if possible.
+    best_x, best_y, best_z = float('Inf'), float('Inf'), float('Inf')
+      height = -1*sin(build_angle)
+      radius = cos(build_angle)
+      random_angle = radians(random()*360)
+      for theta in range(0,360,1):
+        rads = radians(theta)
+        x, y, z = radius*cos(random_angle+rads), radius*sin(random_angle+rads), height
+        x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
+        x_r, y_r, z_r = helpers.sum_vectors(self.Body.getLocation(),helpers.scale(\
+          BEAM['length'], helpers.make_unit((x,y,z))))
+        if z_r <= 0: return (x,y,z)
+        if z_r < best_z: best_x, best_y, best_z = x, y, z
+      return (x,y,z)
 
     if direction == None:
       random_angle = radians(random()*360)
@@ -393,6 +424,9 @@ class Brain(BaseBrain):
       return (x,y,z)
 
     x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
+    # prevent hanging beams that are just above the ground after rotation
+    if direction == 'outward' or direction == 'center' and z < 0:
+      z = -1*z
 
     return (x, y, z)
 
@@ -403,18 +437,42 @@ class Brain(BaseBrain):
     
     pivot = self.Body.getLocation()
     # don't place beams with a 2 ft. radius from each other
-    '''
+    
     nearby_beams = self.get_structure_density(pivot, BConstants.beam['joint_distance'])
     if  nearby_beams > 1: 
       print('TOO CLOSE: ' + str(nearby_beams))
       self.climb_back(1)
       return False
-    '''
+    
     build_angle = BConstants.beam['beam_angle']
     end_coordinates = self.get_build_vector(build_angle, direction)
     # try to connect to already present beam
     endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
                  helpers.make_unit(end_coordinates)))
+  
+    density = self.get_structure_density(endpoint)
+    # location at end of beam you are about to place is too dense,
+    # so do not place it.
+    
+    if density > BConstants.beam['max_beam_density']: 
+      print('TOO DENSE: ' + str(density))
+      density_decisions = self.Body.readFromMemory('density_decisions')
+      #print('Density Decisions: ', density_decisions)
+      if density_decisions >= 10: 
+        self.climb_back(2)
+        return False
+      #
+      #elif random() <= (BConstants.prob['build_out']):#**density_decisions):
+      #  end_coordinates = self.get_build_vector(build_angle, 'upwards')
+      #  endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'], \
+      #    helpers.make_unit(end_coordinates)))
+      #
+      else:
+        end_coordinates = self.get_build_vector(build_angle, 'outward')
+        endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
+                     helpers.make_unit(end_coordinates)))
+      self.Body.addToMemory('density_decisions', density_decisions+1)
+    
     # prevent beams going into the ground (-z)
     if endpoint[2] <= 0:
       dx, dy, dz = helpers.make_unit(end_coordinates)
@@ -422,28 +480,7 @@ class Brain(BaseBrain):
       dx, dy, dz = dx*factor, dy*factor, dz*factor
       pivot = (pivot[0]-dx, pivot[1]-dy,pivot[2]-dz)
       endpoint = (endpoint[0]-dx, endpoint[1]-dy, endpoint[2]-dz)
-    
-    density = self.get_structure_density(endpoint)
-    # location at end of beam you are about to place is too dense,
-    # so do not place it.
-    '''
-    if density > BConstants.beam['max_beam_density']: 
-      print('TOO DENSE: ' + str(density))
-      density_decisions = self.Body.readFromMemory('density_decisions')
-      #print('Density Decisions: ', density_decisions)
-      if density_decisions >= 10: 
-        self.climb_back(3)
-        return False
-      elif random() <= (BConstants.prob['build_out']):#**density_decisions):
-        end_coordinates = self.get_build_vector(build_angle, 'outward')
-        endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                     helpers.make_unit(end_coordinates)))
-      else:
-        end_coordinates = self.get_build_vector(build_angle, 'upwards')
-        endpoint = helpers.sum_vectors(pivot,helpers.scale(BEAM['length'],\
-                     helpers.make_unit(end_coordinates)))
-      self.Body.addToMemory('density_decisions', density_decisions+1)
-    '''
+
     # don't want beams "inside" the beam you are on.
     if helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.i, False) \
     or helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.j, False): 
