@@ -50,7 +50,6 @@ class BaseBrain:
 class Brain(BaseBrain):
   def __init__(self, Robot):
     super().__init__(Robot)
-    self.Body.addToMemory('decision',None)
     self.Body.addToMemory('wandering', -1)
     self.Body.addToMemory('density_decisions', 0)
     self.Body.addToMemory('climbing_back', 0)
@@ -78,15 +77,13 @@ class Brain(BaseBrain):
     pass
 
   def act(self):
-    #self.executeStrategy1()
-    self.executeStrategy2()
-
-  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  Strategies
-  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-  
-  def executeStrategy1(self):
     print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
+
+    # Drops tripod if desired
+    if BConstants['tripod'] and self.Body.readFromMemory('base_radius') == 0: 
+      if self.Body.name == 'SwarmRobot_0':
+        self.drop_tripod()
+      else: return
 
     self.Body.addToMemory('current_location', self.Body.getLocation())
     if self.Body.beam != None:
@@ -103,10 +100,24 @@ class Brain(BaseBrain):
       self.Body.addToMemory('stuck', False)
       self.Body.addToMemory('same_loc_count', 0)
 
+    #self.executeStrategy1()
+    self.executeStrategy2()
 
+
+    self.Body.addToMemory('base_radius', self.update_radius())
+    print(self.Body.readFromMemory('base_radius'))
+    self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
+    self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
+
+
+  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  Strategies
+  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  
+  def executeStrategy1(self):
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
-        self.pick_up_beam()
+        self.go_home_and_pick_up_beam()
       else:
         self.climb_down()
     
@@ -136,31 +147,10 @@ class Brain(BaseBrain):
     else:
       print('Hmm, what to do?')
 
-    self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
-    self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
-
   def executeStrategy2(self):
-    print('>> ' + str(self.Body.name) + ': beams=' + str(self.Body.num_beams))
-
-    self.Body.addToMemory('current_location', self.Body.getLocation())
-    if self.Body.beam != None:
-      self.Body.addToMemory('current_beam', self.Body.beam.name)
-    if self.Body.getLocation() == self.Body.readFromMemory('prev_location'):
-        same_loc_count = self.Body.readFromMemory('same_loc_count')
-        #print(same_loc_count)
-        self.Body.addToMemory('same_loc_count', same_loc_count + 1)
-        if same_loc_count >= 10:
-          self.Body.addToMemory('stuck', True)
-    if self.Body.readFromMemory('stuck'): 
-      print('STUCK on beam ', self.Body.beam.name)
-      self.Body.discardBeams()
-      self.Body.addToMemory('stuck', False)
-      self.Body.addToMemory('same_loc_count', 0)
-
-
     if self.Body.num_beams == 0:
       if helpers.compare(self.Body.getLocation()[2],0):
-        self.pick_up_beam()
+        self.go_home_and_pick_up_beam()
       else:
         self.climb_down()
     
@@ -201,10 +191,6 @@ class Brain(BaseBrain):
     else:
       print('Hmm, what to do?')
 
-    self.Body.addToMemory('base_radius', self.updateRadius())
-    self.Body.addToMemory('prev_location', self.Body.readFromMemory('current_location'))
-    self.Body.addToMemory('prev_beam', self.Body.readFromMemory('current_beam'))
-
 
   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   Motor functions
@@ -228,7 +214,7 @@ class Brain(BaseBrain):
     return True
 
   # Called whenever robot does not have a beam while on the ground.
-  def pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
+  def go_home_and_pick_up_beam(self, num_beams = ROBOT['beam_capacity']):
     self.Body.beam = None
     if not self.Body.atHome():
       direction_home = helpers.make_vector(self.Body.getLocation(), HOME['center'])
@@ -471,7 +457,7 @@ class Brain(BaseBrain):
     num_beams = len(nearby_beams)
     return num_beams
 
-  def updateRadius(self):
+  def update_radius(self):
     center = CONSTRUCTION['center']
     max_radius = self.Body.readFromMemory('base_radius')
     boxes = self.Body.structure.get_boxes(center, self.Body.readFromMemory('base_radius') + 10)
@@ -488,7 +474,15 @@ class Brain(BaseBrain):
           max_radius = distance
     return max_radius
 
-
+  def drop_tripod(self):
+    x,y,z = CONSTRUCTION['center']
+    self.Body.addBeam((x-60,y-60/sqrt(3),0),(x+60,y-60/sqrt(3),0))
+    self.Body.addBeam((x-60,y-60/sqrt(3),0),(x,y+40*sqrt(3),0))
+    self.Body.addBeam((x,y+40*sqrt(3),0),(x+60,y-60/sqrt(3),0))
+    self.Body.addBeam((x-60,y-60/sqrt(3),0),(x,y,z+40*sqrt(6)))
+    self.Body.addBeam((x+60,y-60/sqrt(3),0),(x,y,z+40*sqrt(6)))
+    self.Body.addBeam((x,y+40*sqrt(3),0),(x,y,z+40*sqrt(6)))
+    return True
 
 
 

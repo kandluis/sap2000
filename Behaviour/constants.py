@@ -34,6 +34,9 @@ beam = {
   # The structural elements are checked at every timestep
   'structure_check'           : PROGRAM['structure_check'],
 
+  # True means tripod is dropped at construction site at start.
+  'tripod'                    : True,
+
 }
 
 prob = {
