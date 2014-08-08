@@ -195,7 +195,7 @@ class Brain(BaseBrain):
           self.place_beam('center')
       else:
         if self.Body.beam.name in ['1','2','3','4','5','6']:
-
+          pass
         self.climb_up()
 
     else:
@@ -399,7 +399,7 @@ class Brain(BaseBrain):
       endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
       x, y, z = -1*endpoint[0], -1*endpoint[1], -1*height
     
-    x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction):
+    x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
 
     return (x, y, z)
 
