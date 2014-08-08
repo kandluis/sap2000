@@ -272,7 +272,7 @@ class Body(BaseBody):
         if z >= 0: return False 
     return True
 
-  def atTop_UNUSED(self):
+  def atTrueTop(self):
     '''
     Returns if we really are at the top
     '''

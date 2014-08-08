@@ -164,13 +164,13 @@ class Brain(BaseBrain):
         self.go_to_construction_site()
       elif self.Body.at_construction_site() and wandering == -1:
         self.Body.addToMemory('wandering', 0)
-        self.move('random', radius + 120)
+        self.move('random', radius + 60)
         self.Body.addToMemory('wandering', 0)
       else:
         if self.Body.ground() != None:
           self.go_to_beam()
         elif self.Body.at_construction_site():
-          self.move('random', radius + 120)
+          self.move('random', radius + 60)
         else:
           self.go_to_construction_site()
           
@@ -184,10 +184,10 @@ class Brain(BaseBrain):
       #  else:
       #    self.place_beam('center')
       elif self.on_tripod():
-        self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam()
+        self.climb_up() if random() <= BConstants.prob['tripod'] else self.place_beam('ground')
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
-        self.place_beam()
+        #self.place_beam()
       else:
         if self.on_tripod():
           pass
@@ -385,15 +385,17 @@ class Brain(BaseBrain):
       x, y, z = 0, 0, 1
 
     if direction == 'ground':
-      height = sin(build_angle)
+      best_x, best_y, best_z = float('Inf'), float('Inf'), float('Inf')
+      height = -1*sin(build_angle)
       radius = cos(build_angle)
-      position_center = CONSTRUCTION['center']
-      position_center = (position_center[0], \
-        position_center[1], self.Body.getLocation()[2])
-      direction_construction = helpers.make_vector(self.Body.getLocation(), position_center)
-      endpoint = helpers.scale(radius, helpers.make_unit(direction_construction))
-      x, y, z = -1*endpoint[0], -1*endpoint[1], -1*height
-    
+      random_angle = radians(random()*360)
+      for theta in range(0,2*pi,2*pi/360):
+        x, y, z = radius*cos(random_angle+theta), radius*sin(random_angle+theta), height
+        x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
+        if z <= 0: return (x,y,z)
+        if z < best_z: best_x, best_y, best_z = x, y, z
+      return (x,y,z)
+
     x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
 
     return (x, y, z)
