@@ -175,16 +175,16 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
-      '''
-      elif random() > BConstants.prob['random_beam']:
-        if self.Body.getLocation()[2] <= 5*sqrt(2):
-          self.place_beam('ground')
-        else:
-          self.place_beam('center')
-      elif self.Body.atTop(): 
-        print('At TOP of beam', self.Body.beam.name)
-        self.place_beam('center') 
-      '''
+      
+      #elif random() > BConstants.prob['random_beam']:
+      #  if self.Body.getLocation()[2] <= 5*sqrt(2):
+      #    self.place_beam('ground')
+      #  else:
+      #    self.place_beam('center')
+      #elif self.Body.atTop(): 
+      #  print('At TOP of beam', self.Body.beam.name)
+      #  self.place_beam('center') 
+      # 
       else:
         self.climb_up()
 
