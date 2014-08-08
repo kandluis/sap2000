@@ -177,6 +177,7 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
+        print('climbing back!!!!')
       
       #elif random() > BConstants.prob['random_beam']:
       #  if self.Body.getLocation()[2] <= 5*sqrt(2):
