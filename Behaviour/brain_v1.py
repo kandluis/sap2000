@@ -164,13 +164,8 @@ class Brain(BaseBrain):
         self.go_to_construction_site()
       elif self.Body.at_construction_site() and wandering == -1:
         self.Body.addToMemory('wandering', 0)
-        if radius == 0 and self.Body.ground() == None:
-          (x, y, z) = self.Body.getLocation()
-          self.Body.addBeam(self.Body.getLocation(),(x,y,z+120))
-          self.Body.addToMemory('base_radius', 10)
-      elif wandering == 0:
-        self.move('random', radius)
-        self.Body.addToMemory('wandering', 1)
+        self.move('random', radius + 120)
+        self.Body.addToMemory('wandering', 0)
       else:
         if self.Body.ground() != None:
           self.go_to_beam()
@@ -180,6 +175,7 @@ class Brain(BaseBrain):
     elif self.Body.num_beams > 0 and self.Body.beam != None:
       if self.Body.readFromMemory('climbing_back') != 0:
         self.climb_down(self.Body.readFromMemory('climbing_back'))
+      '''
       elif random() > BConstants.prob['random_beam']:
         if self.Body.getLocation()[2] <= 5*sqrt(2):
           self.place_beam('ground')
@@ -188,6 +184,7 @@ class Brain(BaseBrain):
       elif self.Body.atTop(): 
         print('At TOP of beam', self.Body.beam.name)
         self.place_beam('center') 
+      '''
       else:
         self.climb_up()
 
