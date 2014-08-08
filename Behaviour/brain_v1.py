@@ -389,8 +389,9 @@ class Brain(BaseBrain):
       height = -1*sin(build_angle)
       radius = cos(build_angle)
       random_angle = radians(random()*360)
-      for theta in range(0,2*pi,2*pi/360):
-        x, y, z = radius*cos(random_angle+theta), radius*sin(random_angle+theta), height
+      for theta in range(0,360,1):
+        rads = radians(theta)
+        x, y, z = radius*cos(random_angle+rads), radius*sin(random_angle+rads), height
         x, y, z = helpers.rotate_vector_3D((x, y, z), current_beam_direction)
         if z <= 0: return (x,y,z)
         if z < best_z: best_x, best_y, best_z = x, y, z
