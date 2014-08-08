@@ -169,6 +169,8 @@ class Brain(BaseBrain):
       else:
         if self.Body.ground() != None:
           self.go_to_beam()
+        elif self.Body.at_construction_site():
+          self.move('random', radius + 120)
         else:
           self.go_to_construction_site()
           
@@ -188,6 +190,8 @@ class Brain(BaseBrain):
           self.climb_down(0)
           self.climb_down(0)
           self.place_beam('outward') 
+        else:
+          self.place_beam('center')
       else:
         self.climb_up()
 

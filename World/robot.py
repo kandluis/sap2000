@@ -705,12 +705,12 @@ class Body(BaseBody):
         # So e1 is in the form (x,y,z)
         e1, e2 = box[name].endpoints 
         # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
-        '''
+        
         if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
           # pdb.set_trace()
           vectors[name] = helpers.vector_to_line(e1,e2,self.location)
           distances[name] = helpers.length(vectors[name])
-        '''
+        
         # Only one point is on the ground
         if helpers.compare(e1[2],0):
           vectors[name] = helpers.make_vector(self.location, e1)
