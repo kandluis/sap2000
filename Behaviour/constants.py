@@ -11,16 +11,16 @@ beam = {
   'length'                    : BEAM['length'],
 
   # Angle base beams make relative to ground
-  'ground_angle'              : 45,
+  'ground_angle'              : 90,
 
   # Angle non-base beams make relative to each other
   'beam_angle'                : 90,
 
   # Maximum # of beams within radius from endpoint of beam you want to add
-  'max_beam_density'          : 5,
+  'max_beam_density'          : 3,
 
   # Radius for sphere within which # of beam endpoints are counted
-  'density_radius'            : BEAM['length']/2,
+  'density_radius'            : BEAM['length'],
 
   # If there is a joint within this distance of the robot, then
   # it is too close to place another beam down.
@@ -41,19 +41,19 @@ beam = {
 
 prob = {
   # P(placing beam while still climbing, and not at top yet)
-  'random_beam'               : 0.05,
+  'random_beam'               : 0.1,
 
   # P(keep climbing while on a tripod beam)
-  'tripod'                    : 0.2,
+  'tripod'                    : 0.3,
 
   # P(adding beam to ground while low enough)
-  'ground_beam'               : 0.2,
+  'ground_beam'               : 0.1,
 
   # P(adding beam to ground if no nearby beam is detected in robot local radius)
   'add_base'                  : 0.1,
 
   # P(climbing steepest path at given timestep while climbing up)
-  'steep_climb'               : 0.5,
+  'steep_climb'               : 0.7,
 
   # probability used in exponential build out/up function when density is too high
   'build_out'                 : 0.5,

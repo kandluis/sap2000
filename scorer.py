@@ -137,7 +137,7 @@ def scorer(base_directory):
 
     # Find percent of beams experiencing the correct range of stress
     for index in range(1,model.FrameObj.Count()):
-        if ratio[index-1]>0.5 and ratio[index-1]<0.8:
+        if ratio[index-1]>0.3 and ratio[index-1]<0.5:
             count = count + 1
         sbeam = count/FrameCount
 

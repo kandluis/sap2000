@@ -324,11 +324,6 @@ class Brain(BaseBrain):
             direction = (x,y,z)
             steepest = z
             beam = self.Body.structure.find_beam(beam_name)
-          # prevent wiggling back and forth on a horizontal beam
-          if z == 0 and x >= 0: 
-            direction = (x,y,z)
-            steepest = z
-            beam = self.Body.structure.find_beam(beam_name)
     self.climb(direction,beam)
     return True
 
@@ -482,9 +477,9 @@ class Brain(BaseBrain):
       endpoint = (endpoint[0]-dx, endpoint[1]-dy, endpoint[2]-dz)
 
     # don't want beams "inside" the beam you are on.
-    if helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.i, False) \
-    or helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.j, False): 
-      return False
+    #if helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.i, False) \
+    #or helpers.between_points(pivot,endpoint,self.Body.beam.endpoints.j, False): 
+    #  return False
 
     self.Body.addBeam(pivot,endpoint)
     return True

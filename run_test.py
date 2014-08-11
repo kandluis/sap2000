@@ -11,14 +11,14 @@ view = True
 # To turn on/off the use of SAP, go to Helpers/helpers.py and change the
 # global variable "SAP_PHYSICS" (defined after the import statements) to True/False.
 seed = "r@nd0M2"
-robot_number = 10
+robot_number = 5
 maxsteps = 10000
 debug = 0 # begin debugging AFTER this timestep. 0 turns off debugging, change to 1 to debug w/ PDB
 comment = seed
 
 # seeding the simulation: turn this on to remove randomness in brain (for debugging)
 # behavior between runs will be identical.
-random.seed(seed)
+#random.seed(seed)
 
 # Run the Simulation, input is the random seed
 Sim = Simulation()
