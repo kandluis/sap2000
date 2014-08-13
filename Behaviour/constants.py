@@ -24,7 +24,7 @@ beam = {
 
   # If there is a joint within this distance of the robot, then
   # it is too close to place another beam down.
-  'joint_distance'           :  24, # inches
+  'joint_distance'           :  36, # inches
 
   # The limit at a joint at which a beam is considered unsuitable for further travel
   'joint_limit'               : joint_limit,

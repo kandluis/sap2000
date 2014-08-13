@@ -425,7 +425,7 @@ class Simulation(object):
         # Save to a different filename every now and again
         try:
           if (i+1) % PROGRAM['analysis_timesteps'] == 0 and i != 0:
-            filename = "tower-" + str(i) + ".sdb"
+            filename = "tower-" + str(i+1) + ".sdb"
             self.SapModel.File.Save(outputfolder + filename)
         except:
           print("Simulation ended when saving output.")
