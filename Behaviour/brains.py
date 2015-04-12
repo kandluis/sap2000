@@ -16,7 +16,8 @@ from Behaviour import constants as BConstants
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Implementation of different robot brains. 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-class BaseBrain(metaclass=ABCMeta):
+class BaseBrain:
+  __metaclass__=ABCMeta
   @abstractmethod
   def __init__(self,Robot):
     # access to the robot body; functions are detailed in the documentation file
@@ -43,16 +44,7 @@ class BaseBrain(metaclass=ABCMeta):
     are no results.
     '''
     pass
-
-
-'''
-Example brain model. Does some simple movements on the structure to demonstrate
-how to access the API for the body. This implements a robot which moves.
-'''
-class MovingBrain(BaseBrain):
-  def __init__(self,Robot):
-    super(MovingBrain,self).__init__(Robot)
-
+    
 
 '''
 Currently used brain class object. This is the final implementation of the summer
@@ -60,7 +52,7 @@ simulation that have here.
 '''
 class Brain(BaseBrain):
   def __init__(self,Robot):
-    super(Brain,self).__init__(Robot)
+    super().__init__(Robot)
 
     # Setup default values for memory storage
     self.Body.addToMemory('search_mode', False)
@@ -439,6 +431,7 @@ class Brain(BaseBrain):
 
     # We have climbed off, so wander about 
     else:
+      print(self.Body.name +' is WANDERING')
       self.wander()
 
   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -1143,7 +1136,7 @@ class Brain(BaseBrain):
 
       else:
 
-        # Calculate the actual endpoint of the beam (now that we now direction 
+        # Calculate the actual endpoint of the beam (now that we know direction 
         # vector)
         return (i,helpers.beam_endpoint(i,j))
 
@@ -1341,7 +1334,7 @@ class Brain(BaseBrain):
     Moves the robot in direction passed in and onto the beam specified
     '''
     length = helpers.length(direction)
-
+    print(self.Body.name + str(direction))
     # The direction is smaller than the determined step, so move exactly by 
     # direction
     if length < self.Body.step:

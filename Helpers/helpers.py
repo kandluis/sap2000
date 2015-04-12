@@ -11,6 +11,7 @@ from Helpers.algebra import *
 # import constants
 from variables import BEAM, PROGRAM
 
+SAP_PHYSICS = False
 
 ########### THIS IS IS TO BE MOVED IN
 def non_zero_xydirection():
@@ -243,6 +244,9 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
   checking to see if it exists first. If added successfully,
   returns true, otherwise false
   '''
+
+  if SAP_PHYSICS == False: return True
+
   ret, number, names = model.LoadPatterns.GetNameList()
 
   # load case is already defined
@@ -258,11 +262,15 @@ def addloadpattern(model,name,myType,selfWTMultiplier = 0, AddLoadCase = True):
     else:
       return False
 
-def run_analysis(model,output=PROGRAM['robot_load_case']):
+def run_analysis(model, output=PROGRAM['robot_load_case']):
   '''
   Runs the analysis, selecting the right cases for output. Returns a string of
   explanations for any errors that occurred during the analysis process.
   '''
+  if SAP_PHYSICS == False: return ''
+
+  #print('ANALYSIS RUN')
+
   combo = PROGRAM['wind_combo'] == output
   
   errors = ''
@@ -578,3 +586,44 @@ def sphere_intersection(line, center, radius, segment = True):
           return [p2]
         else:
           return None
+
+def rotate_vector_3D(placement_direction, beam_direction):
+  '''
+  Rotates an absolute vector (that is making a certain angle with +z) to the axis
+  of the beam the robot is currently climbing up in order to make relative 
+  building angles (i.e. realistic case when using clamps in real life)
+  Works by computing rotation matrix for +z to beam axis, then applying to 
+  placement direction
+  @input: vector of beam you want to put down making angle with +z axis, 
+          vertical direction vector of beam robot is on
+  @return: unit vector rotated to relative angle with beam
+  '''
+
+  placement = make_unit(placement_direction)
+  placement = [[placement[0]],[placement[1]],[placement[2]]]
+
+  z_pos = (0,0,1)
+  beam_dir = make_unit(beam_direction)
+
+  cross_prod = cross(z_pos, beam_dir)
+  s = length(cross_prod)
+  c = dot(z_pos, beam_dir)
+
+  x, y, z = cross_prod[0], cross_prod[1], cross_prod[2]
+  skew_symmetric_matrix = ((0,-z,y),(z,0,-x),(-y,x,0))
+  v_skew = skew_symmetric_matrix
+  identity = ((1,0,0),(0,1,0),(0,0,1))
+
+  # Computer Rotation Matrix in multiple steps:
+  step1 = addMatrices(identity, v_skew)
+  step2 = multiplyScalar(multiplyMatrices(v_skew,v_skew), (1-c)/s**2)
+  R = addMatrices(step1, step2)
+  #print(R, placement)
+  rotated_unit = multiplyMatrices(R, placement)
+  rotated_unit = tuple(point[0] for point in rotated_unit)
+
+  return rotated_unit
+
+
+
+

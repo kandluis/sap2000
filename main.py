@@ -424,8 +424,8 @@ class Simulation(object):
 
         # Save to a different filename every now and again
         try:
-          if i % PROGRAM['analysis_timesteps'] == 0 and i != 0:
-            filename = "tower-" + str(i) + ".sdb"
+          if (i+1) % PROGRAM['analysis_timesteps'] == 0 and i != 0:
+            filename = "tower-" + str(i+1) + ".sdb"
             self.SapModel.File.Save(outputfolder + filename)
         except:
           print("Simulation ended when saving output.")
@@ -501,6 +501,7 @@ class Simulation(object):
 
         # Give a status update if necessary
         commandline.status("Finished timestep {}.".format(str(i + 1)))
+        print()
 
         # Sort beam data
         if self.Structure.structure_data[-1] != []:

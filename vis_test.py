@@ -1,16 +1,37 @@
 from visualization import Visualization
 
-one_thousand = 'C:\\SAP 2000\\Jul-08\\14_53_17\\'
-four_robots = "C:\\SAP 2000\\Jul-08\\17_55_09\\"
-ten_robots = 'C:\\SAP 2000\\Jul-08\\18_09_43\\'
+revisualize = 'C:\\SAP 2000\\2014-Jul\\Jul-10\\00_10_25\\'
+#'C:\\SAP 2000\\2014-May\\May-11\\ \\'
+# 15_12_43*
+#'C:\\SAP 2000\\2014-Jul\\Jul-03\\ \\'
+# 16_42_37
+# 17_01_07
+# 17_24_31
+#'C:\\SAP 2000\\2014-Jul\\Jul-08\\ \\'
+# 13_47_27
+#'C:\\SAP 2000\\2014-Jul\\Jul-10\\ \\'
+# 00_10_25*
+#'C:\\SAP 2000\\2014-Jul\\Jul-23\\ \\'
+# 16_43_21*
+# 16_59_08
+# 17_15_36
+#'C:\\SAP 2000\\2014-Jul\\Jul-25\\ \\'
+# 01_36_49
+# 10_26_30
+# 19_40_22
+#'C:\\SAP 2000\\2014-Jul\\Jul-29\\ \\'
+# 01_09_23
+# 14_05_26*
+# 18_31_53
+# 21_10_41
+#'C:\\SAP 2000\\2014-Jul\\Jul-30\\ \\'
+# 15_59_17
+#'C:\\SAP 2000\\2014-Aug\\Aug-08\\ \\'
+# 10_18_23
+# 14_59_23
+# 16_17_23
+# 16_24_44
 
-to_test = 'C:\\SAP 2000\\Aug-15\\19_39_21\\'
-latest = 'C:\\SAP 2000\\Aug-16\\15_33_11\\'
-
-spring = 'C:\\SAP 2000\\Apr-25\\00_03_58\\'
-
-new_brain = 'C:\\SAP 2000\\2014-May\\May-14\\12_56_07\\'
-
-vis = Visualization(new_brain)
+vis = Visualization(revisualize)
 vis.load_data()
 vis.run(False,inverse_speed=.1)

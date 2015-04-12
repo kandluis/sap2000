@@ -1,6 +1,7 @@
 # Python default libraries
 import operator
 import math
+from random import *
 from abc import ABCMeta, abstractmethod
 
 # import errors
@@ -11,7 +12,8 @@ from Helpers import helpers
 from variables import BEAM, MATERIAL, PROGRAM, ROBOT, VISUALIZATION
 from construction import HOME, CONSTRUCTION
 
-class BaseBody(metaclass=ABCMeta):
+class BaseBody:
+  __metaclass__=ABCMeta
   '''
   These are the methods that need to be implemented in order for the
   current brains to continue functioning correctly. Look at comments on
@@ -199,7 +201,7 @@ class Body(BaseBody):
     '''
     Returns whether or not this particular robot needs the structure to be analyzed
     '''
-    return self.onStructure()
+    return self.onStructure() and self.atJoint()
 
   def getGenuineLocation(self):
     '''
@@ -248,6 +250,9 @@ class Body(BaseBody):
     return helpers.within(HOME['corner'], HOME['size'],
       self.location)
 
+  def at_construction_site(self):
+    return helpers.compare(helpers.distance(self.location, CONSTRUCTION['center']), 0)
+
   def atSite(self):
     '''
     True if the robot is in the area designated as the construction site 
@@ -256,7 +261,18 @@ class Body(BaseBody):
     return helpers.within(CONSTRUCTION['corner'], 
       CONSTRUCTION['size'], self.location)
 
+
   def atTop(self):
+    info = self.getAvailableDirections()
+    direction = (0,0,0)
+    beam = None
+    for beam_name, loc in info['directions'].items():
+      for (x,y,z) in loc:
+        # is there a direction that goes up?
+        if z >= 0: return False 
+    return True
+
+  def atTrueTop(self):
     '''
     Returns if we really are at the top
     '''
@@ -298,8 +314,7 @@ class Body(BaseBody):
     Adds into the robot memory the information specified by value accessible 
     throught the key. If the key already exists, it simply replaces the value.
     '''
-    mult.update({key : value})
-    self.memory.update(mult)
+    self.memory.update({key : value})
     return True
 
   def popFromMemory(self,key):
@@ -360,7 +375,7 @@ class Body(BaseBody):
     def removeload(location):
       '''
       Removes the load assigned to a specific location based on where the robot 
-      existed (assumes the robot is on a beams
+      existed (assumes the robot is on a beam)
       '''
       # Sanity check
       assert not self.model.GetModelIsLocked()
@@ -526,16 +541,18 @@ class Body(BaseBody):
     robot can detect (though, this should only be used for finding a connection,
     as the robot itself SHOULD only measure the stresses on its current beam)
     '''
-    # Run analysys before deciding to get the next direction
+    # Run analysis before deciding to get the next direction
     if not self.model.GetModelIsLocked() and self.needData():
-      errors = helpers.run_analysis(self.model)
-      if errors != '':
-        self.error_data += "getAvailableDirections(): " + errors + "\n"
+      if self.atJoint():
+        errors = helpers.run_analysis(self.model)
+        if errors != '':
+          self.error_data += "getAvailableDirections(): " + errors + "\n"
 
     # Verify that the robot is on its beam and correct if necessary. 
     # This is done so that floating-point arithmethic errors don't add up.
     (e1, e2) = self.beam.endpoints
     if not (helpers.on_line (e1,e2,self.location)):
+      self.model.SetModelIsLocked(False) #added in to prevent assertion error FIX?
       self.changeLocationOnStructure(helpers.correct(e1,e2,self.location), self.beam)
 
     # Obtain all local objects
@@ -543,7 +560,7 @@ class Body(BaseBody):
 
     # Debugging
     if box == {}:
-      pdb.set_trace()
+      #pdb.set_trace() FIX?
       pass
 
     # Find the beams and directions (ie, where can he walk?)
@@ -666,11 +683,12 @@ class Body(BaseBody):
   def nearestOnGround(self):
     return ground(self)
 
-  def ground(self):
+  def ground(self,random=False):
     '''
     This function finds the nearest beam to the robot that is connected 
     to the xy-plane (ground). It returns that beam and its direction from the 
-    robot.
+    robot. If random = True, the function picks a random beam from those connected
+    to the xy-plane.
     '''
     # Get local boxes
     boxes = self.structure.get_boxes(self.location)
@@ -687,18 +705,19 @@ class Body(BaseBody):
         # So e1 is in the form (x,y,z)
         e1, e2 = box[name].endpoints 
         # beam is lying on the ground (THIS IS NOT FUNCTIONAL)
+        
         if helpers.compare(e1[2],0) and helpers.compare(e2[0],0):
           # pdb.set_trace()
           vectors[name] = helpers.vector_to_line(e1,e2,self.location)
           distances[name] = helpers.length(vectors[name])
-
+        
         # Only one point is on the ground
-        elif helpers.compare(e1[2],0):
+        if helpers.compare(e1[2],0):
           vectors[name] = helpers.make_vector(self.location, e1)
           distances[name] = helpers.distance(e1, self.location)
         elif helpers.compare(e2[2],0):
           vectors[name] = helpers.make_vector(self.location, e2)
-          distances[name] = helpers.distances(e2, self.location)
+          distances[name] = helpers.distance(e2, self.location)
 
         # No points on the ground
         else:
@@ -708,8 +727,10 @@ class Body(BaseBody):
     if distances == {}:
       return None
     else:
+      # Random key
+      if random: name = choice(list(distances.keys()))
       # This returns the key (ie, name) of the minimum value in distances
-      name = min(distances, key=distances.get)
+      else: name = min(distances, key=distances.get)
 
       # So far away that we can't "see it"      
       if distances[name] > ROBOT['local_radius']:
@@ -798,7 +819,7 @@ class Body(BaseBody):
         print("Failed in addbeam. Adding beam {} at points {} and {} didn't \
           work.".format(name,str(p1),str(p2)))
         return False
-
+    
       # Cycle through the joints and add the necessary points
       for coord in beam.joints:
         if coord != p1 and coord != p2:

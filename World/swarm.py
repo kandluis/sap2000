@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from Helpers import helpers
 
 # import brain module, we need it to add into the robot body when making robots
-from Behaviour import brains as Brains
+from Behaviour import brain_v1 as Brains
 from World import robot as Robot
 
 # import construction constants and robot/visualization constants
@@ -14,7 +14,8 @@ from variables import ROBOT, VISUALIZATION
 # for visualization
 import visual
 
-class BaseSwarm(metaclass=ABCMeta):
+class BaseSwarm:
+  __metaclass__=ABCMeta
   '''
   Interface abstraction for Swarm. See implementation and documentation for
   explanation of class methods
@@ -69,7 +70,7 @@ class SmartSwarm(BaseSwarm):
     # create repairers
     self.repairers = {}
     for i in range(size):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot_" + str(i)
 
       # repairers start at home
       location = helpers.sum_vectors(self.home,(120*i,0,0)) 
@@ -162,13 +163,13 @@ class SmartSwarm(BaseSwarm):
     '''
     self.repairers = {}
     for i in range(self.original_size):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot" + str(i)
       location = helpers.sum_vectors(self.home,(i,0,0)) 
       self.repairers[name] = self.create(name,self.structure,location,self.model)
 
   def need_data(self):
     '''
-    Returns whether or not the robots will need to data in order to make 
+    Returns whether or not the robots will need data in order to make 
     decisions. This basically checks to see if they are moving down. If so, then
     they don't need data.
     '''
@@ -185,7 +186,7 @@ class SmartSwarm(BaseSwarm):
     x-axis. The names are a continuation of the size of the swarm.
     '''
     for i in range(self.num_created, self.num_created + num):
-      name = "smartrepairer_" + str(i)
+      name = "SwarmRobot_" + str(i)
       location = helpers.sum_vectors(self.home,(i - num, 0, 0))
       self.repairers[name] = self.create(name,self.structure,location,self.model)
 
